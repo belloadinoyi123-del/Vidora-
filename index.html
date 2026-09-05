@@ -1,185 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Vidora</title>
+<title>Vidora</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:Arial,sans-serif;
+}
 
-    body {
-      background: #0f0f12;
-      color: white;
-    }
+body{
+  background:#101014;
+  color:white;
+  padding-bottom:80px;
+}
 
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: #15151b;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #292932;
-    }
+header{
+  background:#18181f;
+  padding:18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  position:sticky;
+  top:0;
+}
 
-    .logo {
-      font-size: 26px;
-      font-weight: bold;
-      color: #ffffff;
-    }
+.logo{
+  font-size:28px;
+  font-weight:bold;
+}
 
-    .logo span {
-      color: #ff2d75;
-    }
+.logo span{
+  color:#ff2d75;
+}
 
-    .header-icons {
-      display: flex;
-      gap: 15px;
-      font-size: 22px;
-    }
+.icons{
+  font-size:24px;
+}
 
-    .stories {
-      display: flex;
-      gap: 15px;
-      padding: 15px;
-      overflow-x: auto;
-      background: #15151b;
-    }
+.stories{
+  display:flex;
+  gap:15px;
+  overflow:auto;
+  padding:15px;
+}
 
-    .story {
-      text-align: center;
-      font-size: 12px;
-      min-width: 65px;
-    }
+.story{
+  text-align:center;
+  font-size:12px;
+}
 
-    .story-circle {
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
-      border: 3px solid #ff2d75;
-      margin-bottom: 5px;
-      background: linear-gradient(135deg, #333, #777);
-    }
+.circle{
+  width:58px;
+  height:58px;
+  border-radius:50%;
+  background:#444;
+  border:3px solid #ff2d75;
+  margin-bottom:5px;
+}
 
-    .feed {
-      max-width: 600px;
-      margin: auto;
-      padding-bottom: 90px;
-    }
+.feed{
+  max-width:600px;
+  margin:auto;
+}
 
-    .post {
-      margin: 15px;
-      background: #19191f;
-      border-radius: 15px;
-      overflow: hidden;
-      border: 1px solid #292932;
-    }
+.post{
+  margin:15px;
+  background:#1b1b22;
+  border-radius:15px;
+  overflow:hidden;
+}
 
-    .post-header {
-      padding: 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+.user{
+  padding:15px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
 
-    .avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #ff2d75, #6b4eff);
-    }
+.avatar{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:linear-gradient(45deg,#ff2d75,#6b4eff);
+}
 
-    .username {
-      font-weight: bold;
-    }
+.video{
+  height:330px;
+  background:#292936;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:60px;
+}
 
-    .post-video {
-      height: 350px;
-      background: linear-gradient(135deg, #28283a, #111);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 55px;
-    }
+.actions{
+  padding:15px;
+  font-size:24px;
+  display:flex;
+  gap:20px;
+}
 
-    .post-actions {
-      padding: 15px;
-      display: flex;
-      gap: 22px;
-      font-size: 23px;
-    }
+.caption{
+  padding:0 15px 20px;
+}
 
-    .post-text {
-      padding: 0 15px 18px;
-      color: #ddd;
-    }
+nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#18181f;
+  display:flex;
+  justify-content:space-around;
+  padding:15px 5px;
+}
 
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #18181e;
-      display: flex;
-      justify-content: space-around;
-      padding: 14px 5px;
-      border-top: 1px solid #292932;
-    }
+.nav{
+  text-align:center;
+  font-size:12px;
+}
 
-    .nav-item {
-      text-align: center;
-      font-size: 11px;
-      cursor: pointer;
-    }
+.nav span{
+  display:block;
+  font-size:22px;
+}
 
-    .nav-icon {
-      font-size: 24px;
-      display: block;
-      margin-bottom: 3px;
-    }
+</style>
+</head>
 
-    .create-btn {
-      background: #ff2d75;
-      width: 45px;
-      height: 38px;
-      border-radius: 10px;
-      font-size: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+<body>
 
-    .section {
-      display: none;
-      padding: 25px 15px 100px;
-      max-width: 600px;
-      margin: auto;
-    }
+<header>
+  <div class="logo">Vi<span>dora</span></div>
+  <div class="icons">💬 🔔</div>
+</header>
 
-    .section.active {
-      display: block;
-    }
+<div class="stories">
+  <div class="story"><div class="circle"></div>Your Story</div>
+  <div class="story"><div class="circle"></div>James</div>
+  <div class="story"><div class="circle"></div>Sarah</div>
+  <div class="story"><div class="circle"></div>Daniel</div>
+</div>
 
-    .home.active {
-      display: block;
-    }
+<div class="feed">
 
-    .home {
-      display: block;
-    }
+  <div class="post">
+    <div class="user">
+      <div class="avatar"></div>
+      <div>
+        <b>@vidora_creator</b><br>
+        <small>Just now</small>
+      </div>
+    </div>
 
-    button {
-      border: none;
-      padding: 12px 18px;
-      border-radius: 10px;
-      background: #ff2d75;
-      color: white;
+    <div class="video">▶</div>
+
+    <div class="actions">♡ 💬 ↗</div>
+
+    <div class="caption">
+      Welcome to <b>Vidora!</b> 🚀<br>
+      Share videos and connect with people.
+    </div>
+  </div>
+
+  <div class="post">
+    <div class="user">
+      <div class="avatar"></div>
+      <div>
+        <b>@explore</b><br>
+        <small>Trending now</small>
+      </div>
+    </div>
+
+    <div class="video">🎬</div>
+
+    <div class="actions">♡ 💬 ↗</div>
+
+    <div class="caption">
+      Discover amazing content on Vidora.
+    </div>
+  </div>
+
+</div>
+
+<nav>
+  <div class="nav"><span>🏠</span>Home</div>
+  <div class="nav"><span>🔍</span>Discover</div>
+  <div class="nav"><span>➕</span>Create</div>
+  <div class="nav"><span>💬</span>Chat</div>
+  <div class="nav"><span>👤</span>Profile</div>
+</nav>
+
+</body>
+</html>
