@@ -212,10 +212,68 @@ nav{
 
   console.log("Vidora connected to Supabase!");
 </script>
+<script>
+async function signUp() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("authMessage");
 
+  const { error } = await supabase.auth.signUp({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    message.textContent = error.message;
+  } else {
+    message.textContent = "Account created! Check your email if verification is required.";
+  }
+}
+
+async function logIn() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("authMessage");
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    message.textContent = error.message;
+  } else {
+    message.textContent = "Login successful!";
+  }
+}
+</script>
 
   
 
 
+
+
+<div id="authScreen" style="padding:30px; text-align:center;">
+  <h1>Welcome to Vidora</h1>
+  <p>Create an account or log in</p>
+
+  <input id="email" type="email" placeholder="Email"
+    style="display:block;width:100%;padding:12px;margin:15px 0;">
+
+  <input id="password" type="password" placeholder="Password"
+    style="display:block;width:100%;padding:12px;margin:15px 0;">
+
+  <button onclick="signUp()"
+    style="padding:12px 20px;margin:5px;">
+    Sign Up
+  </button>
+
+  <button onclick="logIn()"
+    style="padding:12px 20px;margin:5px;">
+    Log In
+  </button>
+
+  <p id="authMessage"></p>
+</div>
 </body>
 </html>
