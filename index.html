@@ -198,9 +198,24 @@ nav{
 </nav>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-  console.log("Vidora is ready for Supabase connection!");
+  const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
+
+  const SUPABASE_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
+
+  const supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  console.log("Vidora connected to Supabase!");
 </script>
+
+
+  
+
 
 </body>
 </html>
