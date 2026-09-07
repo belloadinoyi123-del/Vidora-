@@ -199,20 +199,17 @@ nav{
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 
-
 <script>
-  const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
+const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
+const SUPABASE_KEY = "YOUR_PUBLISHABLE_KEY";
 
-  const SUPABASE_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
-  const supabaseClient =
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+console.log("Vidora connected to Supabase!");
 
-  console.log("Vidora connected to Supabase!");
-</script>
-<script>
 async function signUp() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -221,7 +218,7 @@ async function signUp() {
   message.textContent = "Processing...";
 
   try {
-    const { data, error } = await supabaseClient.auth.signUp(
+    const { data, error } = await supabaseClient.auth.signUp({
       email: email,
       password: password
     });
@@ -234,7 +231,6 @@ async function signUp() {
     }
   } catch (err) {
     message.textContent = "Connection error: " + err.message;
-    console.error(err);
   }
 }
 
@@ -243,7 +239,7 @@ async function logIn() {
   const password = document.getElementById("password").value;
   const message = document.getElementById("authMessage");
 
-  const { error } = await supabaseClient.auth.signInWithPassword(
+  const { error } = await supabaseClient.auth.signInWithPassword({
     email: email,
     password: password
   });
@@ -253,8 +249,9 @@ async function logIn() {
   } else {
     message.textContent = "Login successful!";
   }
-  }
+}
 </script>
+
   <div id="authScreen" style="padding:30px; text-align:center;">
   <h1>Welcome to Vidora</h1>
   <p>Create an account or log in</p>
