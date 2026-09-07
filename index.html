@@ -205,7 +205,7 @@ nav{
 
   const SUPABASE_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
 
-  const supabase = window.supabase.createClient(
+  const supabaseClient =
     SUPABASE_URL,
     SUPABASE_KEY
   );
@@ -221,7 +221,7 @@ async function signUp() {
   message.textContent = "Processing...";
 
   try {
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp(
       email: email,
       password: password
     });
@@ -243,7 +243,7 @@ async function logIn() {
   const password = document.getElementById("password").value;
   const message = document.getElementById("authMessage");
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabaseClient.auth.signInWithPassword(
     email: email,
     password: password
   });
