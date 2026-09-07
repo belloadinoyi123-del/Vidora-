@@ -265,14 +265,16 @@ function showVidora() {
   document.getElementById("authScreen").style.display = "none";
 }
 async function checkUser() {
-  const { data } = await supabaseClient.auth.getSession();
+  const { data: { session } } = await supabaseClient.auth.getSession();
 
-  if (data.session) {
+  if (session) {
     showVidora();
+  } else {
+    document.getElementById("authScreen").style.display = "block";
   }
 }
 
-checkUser();
+window.addEventListener("load", checkUser);
 </script>
 
   <div id="authScreen" style="padding:30px; text-align:center;">
