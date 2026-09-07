@@ -1,307 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vidora</title>
 
-<title>Vidora</title>
+  <link rel="stylesheet" href="style.css">
 
-<style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-  font-family:Arial,sans-serif;
-}
-
-body{
-  background:#101014;
-  color:white;
-  padding-bottom:80px;
-}
-
-header{
-  background:#18181f;
-  padding:18px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  position:sticky;
-  top:0;
-}
-
-.logo{
-  font-size:28px;
-  font-weight:bold;
-}
-
-.logo span{
-  color:#ff2d75;
-}
-
-.icons{
-  font-size:24px;
-}
-
-.stories{
-  display:flex;
-  gap:15px;
-  overflow:auto;
-  padding:15px;
-}
-
-.story{
-  text-align:center;
-  font-size:12px;
-}
-
-.circle{
-  width:58px;
-  height:58px;
-  border-radius:50%;
-  background:#444;
-  border:3px solid #ff2d75;
-  margin-bottom:5px;
-}
-
-.feed{
-  max-width:600px;
-  margin:auto;
-}
-
-.post{
-  margin:15px;
-  background:#1b1b22;
-  border-radius:15px;
-  overflow:hidden;
-}
-
-.user{
-  padding:15px;
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
-
-.avatar{
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  background:linear-gradient(45deg,#ff2d75,#6b4eff);
-}
-
-.video{
-  height:330px;
-  background:#292936;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:60px;
-}
-
-.actions{
-  padding:15px;
-  font-size:24px;
-  display:flex;
-  gap:20px;
-}
-
-.caption{
-  padding:0 15px 20px;
-}
-
-nav{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#18181f;
-  display:flex;
-  justify-content:space-around;
-  padding:15px 5px;
-}
-
-.nav{
-  text-align:center;
-  font-size:12px;
-}
-
-.nav span{
-  display:block;
-  font-size:22px;
-}
-
-</style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-<header>
-  <div class="logo">Vi<span>dora</span></div>
-  <div class="icons">💬 🔔</div>
-</header>
+<!-- ================= AUTH ================= -->
 
-<div class="stories">
-  <div class="story"><div class="circle"></div>Your Story</div>
-  <div class="story"><div class="circle"></div>James</div>
-  <div class="story"><div class="circle"></div>Sarah</div>
-  <div class="story"><div class="circle"></div>Daniel</div>
-</div>
+<section id="authScreen">
 
-<div class="feed">
+  <div class="authBox">
 
-  <div class="post">
-    <div class="user">
-      <div class="avatar"></div>
-      <div>
-        <b>@vidora_creator</b><br>
-        <small>Just now</small>
-      </div>
+    <div class="brand">
+      Vi<span>dora</span>
     </div>
 
-    <div class="video">▶</div>
+    <p class="tagline">Watch. Create. Connect.</p>
 
-    <div class="actions">♡ 💬 ↗</div>
+    <input
+      id="email"
+      type="email"
+      placeholder="Email address"
+    >
 
-    <div class="caption">
-      Welcome to <b>Vidora!</b> 🚀<br>
-      Share videos and connect with people.
-    </div>
+    <input
+      id="password"
+      type="password"
+      placeholder="Password"
+    >
+
+    <button id="signUpBtn">
+      Create Account
+    </button>
+
+    <button id="loginBtn" class="secondary">
+      Log In
+    </button>
+
+    <p id="authMessage"></p>
+
   </div>
 
-  <div class="post">
-    <div class="user">
-      <div class="avatar"></div>
-      <div>
-        <b>@explore</b><br>
-        <small>Trending now</small>
+</section>
+
+
+<!-- ================= MAIN APP ================= -->
+
+<section id="app" class="hidden">
+
+  <!-- HEADER -->
+
+  <header>
+
+    <div class="logo">
+      Vi<span>dora</span>
+    </div>
+
+    <div class="headerButtons">
+      <button id="searchBtn">🔍</button>
+      <button id="notificationBtn">🔔</button>
+    </div>
+
+  </header>
+
+
+  <!-- ================= HOME ================= -->
+
+  <main id="homePage">
+
+    <!-- STORIES -->
+
+    <div class="stories">
+
+      <div class="story">
+        <div class="storyCircle">+</div>
+        <small>Your Story</small>
       </div>
+
+      <div class="story">
+        <div class="storyCircle"></div>
+        <small>James</small>
+      </div>
+
+      <div class="story">
+        <div class="storyCircle"></div>
+        <small>Sarah</small>
+      </div>
+
+      <div class="story">
+        <div class="storyCircle"></div>
+        <small>Daniel</small>
+      </div>
+
     </div>
 
-    <div class="video">🎬</div>
 
-    <div class="actions">♡ 💬 ↗</div>
+    <!-- CREATE POST -->
 
-    <div class="caption">
-      Discover amazing content on Vidora.
+    <section class="createCard">
+
+      <h2>Create Post</h2>
+
+      <textarea
+        id="caption"
+        placeholder="What's happening?"
+      ></textarea>
+
+      <input
+        id="mediaFile"
+        type="file"
+        accept="image/*,video/*"
+      >
+
+      <button id="publishBtn">
+        📤 Publish
+      </button>
+
+      <p id="uploadMessage"></p>
+
+    </section>
+
+
+    <!-- FEED -->
+
+    <section id="feed">
+
+      <div class="loading">
+        Loading Vidora...
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ================= PROFILE ================= -->
+
+  <main id="profilePage" class="hidden">
+
+    <section class="profileCard">
+
+      <div id="profileAvatar" class="profileAvatar">
+        V
+      </div>
+
+      <h2 id="profileUsername">
+        User
+      </h2>
+
+      <p id="profileEmail"></p>
+
+      <button id="logoutBtn">
+        Log Out
+      </button>
+
+    </section>
+
+  </main>
+
+
+  <!-- ================= DISCOVER ================= -->
+
+  <main id="discoverPage" class="hidden">
+
+    <div class="searchBox">
+
+      <input
+        id="discoverSearch"
+        placeholder="Search Vidora..."
+      >
+
     </div>
-  </div>
 
-</div>
+    <div id="discoverResults"></div>
 
-<nav>
-  <div class="nav"><span>🏠</span>Home</div>
-  <div class="nav"><span>🔍</span>Discover</div>
-  <div class="nav"><span>➕</span>Create</div>
-  <div class="nav"><span>💬</span>Chat</div>
-  <div class="nav"><span>👤</span>Profile</div>
-</nav>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </main>
 
 
-<script>
-const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
-const SUPABASE_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h"
+  <!-- ================= BOTTOM NAV ================= -->
+
+  <nav class="bottomNav">
+
+    <button data-page="homePage" class="navButton active">
+      <span>🏠</span>
+      Home
+    </button>
+
+    <button data-page="discoverPage" class="navButton">
+      <span>🔍</span>
+      Discover
+    </button>
+
+    <button data-page="homePage" id="createNav" class="navButton createButton">
+      <span>＋</span>
+      Create
+    </button>
+
+    <button data-page="profilePage" class="navButton">
+      <span>👤</span>
+      Profile
+    </button>
+
+  </nav>
+
+</section>
 
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true
-    }
-  }
-);
-
-console.log("Vidora connected to Supabase!");
-
-async function signUp() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const message = document.getElementById("authMessage");
-
-  message.textContent = "Processing...";
-
-  try {
-    const { data, error } = await supabaseClient.auth.signUp({
-      email: email,
-      password: password
-    });
-
-    if (error) {
-      message.textContent = "Error: " + error.message;
-    } else {
-      message.textContent = "Account created! Check your email.";
-      console.log(data);
-    }
-  } catch (err) {
-    message.textContent = "Connection error: " + err.message;
-  }
-}
-
-async function logIn() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const message = document.getElementById("authMessage");
-
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
-
-  if (error) {
-    message.textContent = error.message;
-  } else {
-    message.textContent = "Login successful!";
-console.log("Login data:", data);
-showVidora();
-
-
-    }
-}
-
-function showVidora() {
-  document.getElementById("authScreen").style.display = "none";
-}
-async function checkUser() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-
-  if (session) {
-    showVidora();
-  } else {
-    document.getElementById("authScreen").style.display = "block";
-  }
-}
-
-window.addEventListener("load", function() {
-  setTimeout(checkUser, 100);
-});
-</script>
-
-  <div id="authScreen" style="padding:30px; text-align:center;">
-  <h1>Welcome to Vidora</h1>
-  <p>Create an account or log in</p>
-
-  <input id="email" type="email" placeholder="Email"
-    style="display:block;width:100%;padding:12px;margin:15px 0;">
-
-  <input id="password" type="password" placeholder="Password"
-    style="display:block;width:100%;padding:12px;margin:15px 0;">
-
-  <button onclick="signUp()"
-    style="padding:12px 20px;margin:5px;">
-    Sign Up
-  </button>
-
-  <button onclick="logIn()"
-    style="padding:12px 20px;margin:5px;">
-    Log In
-  </button>
-
-  <p id="authMessage"></p>
-</div>
+<script src="app.js"></script>
 
 </body>
 </html>
