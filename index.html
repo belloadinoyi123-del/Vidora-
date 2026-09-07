@@ -217,16 +217,24 @@ async function signUp() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
   const message = document.getElementById("authMessage");
-message.textContent = "Processing...";
-  const { error } = await supabase.auth.signUp({
-    email: email,
-    password: password
-  });
 
-  if (error) {
-    message.textContent = error.message;
-  } else {
-    message.textContent = "Account created! Check your email if verification is required.";
+  message.textContent = "Processing...";
+
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password
+    });
+
+    if (error) {
+      message.textContent = "Error: " + error.message;
+    } else {
+      message.textContent = "Account created! Check your email.";
+      console.log(data);
+    }
+  } catch (err) {
+    message.textContent = "Connection error: " + err.message;
+    console.error(err);
   }
 }
 
