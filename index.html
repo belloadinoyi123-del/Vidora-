@@ -257,7 +257,15 @@ showVidora();
 function showVidora() {
   document.getElementById("authScreen").style.display = "none";
 }
+async function checkUser() {
+  const { data } = await supabaseClient.auth.getSession();
 
+  if (data.session) {
+    showVidora();
+  }
+}
+
+checkUser();
 </script>
 
   <div id="authScreen" style="padding:30px; text-align:center;">
