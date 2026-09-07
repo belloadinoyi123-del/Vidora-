@@ -275,7 +275,9 @@ async function checkUser() {
   }
 }
 
-window.addEventListener("load", checkUser);
+window.addEventListener("load", function() {
+  setTimeout(checkUser, 100);
+});
 </script>
 
   <div id="authScreen" style="padding:30px; text-align:center;">
