@@ -1,0 +1,570 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0d0d12;
+  color: white;
+  font-family: Arial, sans-serif;
+  padding-bottom: 80px;
+}
+
+button,
+input,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.hidden {
+  display: none !important;
+}
+
+
+/* ================= AUTH ================= */
+
+#authScreen {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 20px;
+
+  background:
+    radial-gradient(
+      circle at top,
+      #5224a5,
+      #0d0d12 55%
+    );
+}
+
+.authBox {
+  width: 100%;
+  max-width: 420px;
+
+  padding: 30px;
+
+  border-radius: 20px;
+
+  background: #181820;
+
+  border: 1px solid #30303b;
+
+  text-align: center;
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.4);
+}
+
+.brand {
+  font-size: 42px;
+  font-weight: bold;
+}
+
+.brand span,
+.logo span {
+  color: #ff2d75;
+}
+
+.tagline {
+  color: #999;
+  margin: 8px 0 25px;
+}
+
+.authBox input {
+  width: 100%;
+
+  padding: 14px;
+
+  margin: 8px 0;
+
+  border-radius: 10px;
+
+  border: 1px solid #33333e;
+
+  background: #101016;
+
+  color: white;
+
+  outline: none;
+}
+
+.authBox input:focus {
+  border-color: #8b5cf6;
+}
+
+.authBox button {
+  width: 100%;
+
+  padding: 14px;
+
+  margin-top: 10px;
+
+  border: 0;
+
+  border-radius: 10px;
+
+  background: #8b5cf6;
+
+  color: white;
+
+  font-weight: bold;
+}
+
+.authBox .secondary {
+  background: #292934;
+}
+
+#authMessage {
+  margin-top: 15px;
+  color: #bbb;
+}
+
+
+/* ================= HEADER ================= */
+
+header {
+  height: 62px;
+
+  position: sticky;
+
+  top: 0;
+
+  z-index: 20;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 0 16px;
+
+  background: #15151c;
+
+  border-bottom: 1px solid #292934;
+}
+
+.logo {
+  font-size: 27px;
+  font-weight: bold;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.headerButtons button {
+  background: transparent;
+  border: 0;
+  color: white;
+  font-size: 20px;
+}
+
+
+/* ================= MAIN ================= */
+
+main {
+  width: 100%;
+  max-width: 680px;
+  margin: auto;
+  padding: 12px 14px;
+}
+
+
+/* ================= STORIES ================= */
+
+.stories {
+  display: flex;
+
+  gap: 15px;
+
+  overflow-x: auto;
+
+  padding: 10px 0 18px;
+}
+
+.story {
+  min-width: 65px;
+  text-align: center;
+}
+
+.storyCircle {
+  width: 58px;
+  height: 58px;
+
+  margin: auto auto 5px;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ff2d75,
+      #8b5cf6
+    );
+
+  border: 3px solid #ff2d75;
+}
+
+.story small {
+  color: #aaa;
+}
+
+
+/* ================= CREATE ================= */
+
+.createCard,
+.post,
+.profileCard {
+  background: #181820;
+
+  border: 1px solid #292934;
+
+  border-radius: 16px;
+
+  padding: 16px;
+
+  margin-bottom: 15px;
+}
+
+.createCard h2 {
+  margin-bottom: 12px;
+}
+
+.createCard textarea {
+  width: 100%;
+
+  min-height: 80px;
+
+  padding: 12px;
+
+  resize: vertical;
+
+  background: #101016;
+
+  border: 1px solid #33333e;
+
+  border-radius: 10px;
+
+  color: white;
+}
+
+.createCard input {
+  width: 100%;
+  margin-top: 10px;
+  color: #ccc;
+}
+
+.createCard button {
+  width: 100%;
+
+  padding: 12px;
+
+  margin-top: 12px;
+
+  background: #8b5cf6;
+
+  color: white;
+
+  border: 0;
+
+  border-radius: 10px;
+
+  font-weight: bold;
+}
+
+#uploadMessage {
+  margin-top: 10px;
+  color: #aaa;
+}
+
+
+/* ================= POSTS ================= */
+
+.postHeader {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 12px;
+}
+
+.avatar {
+  width: 43px;
+  height: 43px;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #8b5cf6,
+      #ec4899
+    );
+
+  font-weight: bold;
+}
+
+.postUser {
+  font-weight: bold;
+}
+
+.postTime {
+  color: #777;
+  font-size: 12px;
+}
+
+.postCaption {
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.postMedia {
+  width: 100%;
+
+  max-height: 650px;
+
+  display: block;
+
+  object-fit: contain;
+
+  background: black;
+
+  border-radius: 10px;
+}
+
+.actions {
+  display: flex;
+
+  gap: 8px;
+
+  margin-top: 12px;
+}
+
+.actions button {
+  flex: 1;
+
+  padding: 10px;
+
+  background: #282832;
+
+  color: white;
+
+  border: 0;
+
+  border-radius: 8px;
+}
+
+.actions button.liked {
+  color: #ff2d75;
+}
+
+
+/* ================= COMMENTS ================= */
+
+.comments {
+  margin-top: 14px;
+
+  border-top: 1px solid #292934;
+
+  padding-top: 12px;
+}
+
+.comment {
+  padding: 7px 0;
+
+  border-bottom: 1px solid #24242d;
+
+  line-height: 1.4;
+}
+
+.comment strong {
+  color: #ddd;
+}
+
+.commentForm {
+  display: flex;
+
+  gap: 6px;
+
+  margin-top: 10px;
+}
+
+.commentForm input {
+  flex: 1;
+
+  padding: 10px;
+
+  border-radius: 8px;
+
+  border: 1px solid #333;
+
+  background: #101016;
+
+  color: white;
+}
+
+.commentForm button {
+  padding: 10px 13px;
+
+  border: 0;
+
+  border-radius: 8px;
+
+  background: #8b5cf6;
+
+  color: white;
+}
+
+
+/* ================= PROFILE ================= */
+
+.profileCard {
+  text-align: center;
+}
+
+.profileAvatar {
+  width: 90px;
+  height: 90px;
+
+  margin: 10px auto 15px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #8b5cf6,
+      #ec4899
+    );
+
+  font-size: 35px;
+  font-weight: bold;
+}
+
+#profileEmail {
+  color: #888;
+  margin: 8px 0 20px;
+}
+
+#logoutBtn {
+  width: 100%;
+
+  padding: 12px;
+
+  background: #292934;
+
+  border: 0;
+
+  border-radius: 10px;
+
+  color: white;
+}
+
+
+/* ================= DISCOVER ================= */
+
+.searchBox input {
+  width: 100%;
+
+  padding: 13px;
+
+  border-radius: 10px;
+
+  border: 1px solid #333;
+
+  background: #181820;
+
+  color: white;
+}
+
+
+/* ================= NAV ================= */
+
+.bottomNav {
+  position: fixed;
+
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  height: 68px;
+
+  z-index: 50;
+
+  display: flex;
+
+  justify-content: space-around;
+
+  background: #15151c;
+
+  border-top: 1px solid #292934;
+}
+
+.navButton {
+  flex: 1;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #888;
+
+  font-size: 12px;
+}
+
+.navButton span {
+  display: block;
+
+  font-size: 21px;
+
+  margin-bottom: 3px;
+}
+
+.navButton.active {
+  color: #9b6cff;
+}
+
+.createButton span {
+  color: #ff2d75;
+  font-size: 28px;
+}
+
+
+/* ================= DESKTOP ================= */
+
+@media (min-width: 700px) {
+
+  main {
+    padding-top: 20px;
+  }
+
+  .bottomNav {
+    width: 680px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    border-radius: 18px 18px 0 0;
+  }
+
+}
