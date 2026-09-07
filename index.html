@@ -217,7 +217,7 @@ async function signUp() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
   const message = document.getElementById("authMessage");
-
+message.textContent = "Processing...";
   const { error } = await supabase.auth.signUp({
     email: email,
     password: password
