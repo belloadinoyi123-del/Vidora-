@@ -248,8 +248,16 @@ async function logIn() {
     message.textContent = error.message;
   } else {
     message.textContent = "Login successful!";
-  }
+showVidora();  
+
+
+    }
 }
+
+function showVidora() {
+  document.getElementById("authScreen").style.display = "none";
+}
+
 </script>
 
   <div id="authScreen" style="padding:30px; text-align:center;">
