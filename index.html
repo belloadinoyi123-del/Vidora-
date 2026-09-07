@@ -246,7 +246,7 @@ async function logIn() {
   const password = document.getElementById("password").value;
   const message = document.getElementById("authMessage");
 
-  const { error } = await supabaseClient.auth.signInWithPassword({
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
     email: email,
     password: password
   });
@@ -255,7 +255,8 @@ async function logIn() {
     message.textContent = error.message;
   } else {
     message.textContent = "Login successful!";
-showVidora();  
+console.log("Login data:", data);
+showVidora();
 
 
     }
