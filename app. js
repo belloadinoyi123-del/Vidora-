@@ -1,0 +1,1031 @@
+/* =========================================
+   VIDORA CORE
+========================================= */
+
+
+/* =========================================
+   SUPABASE
+========================================= */
+
+const SUPABASE_URL =
+  "https://htnrqgzxkfktwoioscjr.supabase.co";
+
+/*
+ IMPORTANT:
+
+ Use your Supabase PUBLISHABLE key here.
+
+ Never put a Supabase service_role/secret key
+ inside this browser file.
+*/
+
+const SUPABASE_KEY =
+  "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
+
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    }
+  );
+
+
+/* =========================================
+   HELPERS
+========================================= */
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+
+function escapeHTML(value) {
+
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================================
+   AUTH
+========================================= */
+
+async function signUp() {
+
+  const email =
+    $("email").value.trim();
+
+  const password =
+    $("password").value;
+
+
+  if (!email) {
+
+    $("authMessage").textContent =
+      "Enter your email.";
+
+    return;
+  }
+
+
+  if (password.length < 6) {
+
+    $("authMessage").textContent =
+      "Password must be at least 6 characters.";
+
+    return;
+  }
+
+
+  $("authMessage").textContent =
+    "Creating account...";
+
+
+  const { data, error } =
+    await supabaseClient.auth.signUp({
+
+      email: email,
+
+      password: password
+
+    });
+
+
+  if (error) {
+
+    $("authMessage").textContent =
+      error.message;
+
+    return;
+  }
+
+
+  if (!data.session) {
+
+    $("authMessage").textContent =
+      "Account created. Check your email if verification is required.";
+
+  } else {
+
+    $("authMessage").textContent =
+      "Account created!";
+
+  }
+
+}
+
+
+/* =========================================
+   LOGIN
+========================================= */
+
+async function login() {
+
+  const email =
+    $("email").value.trim();
+
+  const password =
+    $("password").value;
+
+
+  $("authMessage").textContent =
+    "Logging in...";
+
+
+  const { data, error } =
+    await supabaseClient.auth
+      .signInWithPassword({
+
+        email: email,
+
+        password: password
+
+      });
+
+
+  if (error) {
+
+    $("authMessage").textContent =
+      error.message;
+
+    return;
+  }
+
+
+  showApp(data.session);
+
+}
+
+
+/* =========================================
+   LOGOUT
+========================================= */
+
+async function logout() {
+
+  await supabaseClient.auth.signOut();
+
+  $("app").classList.add("hidden");
+
+  $("authScreen").classList.remove("hidden");
+
+}
+
+
+/* =========================================
+   SHOW APP
+========================================= */
+
+async function showApp(session) {
+
+  if (!session) return;
+
+
+  $("authScreen")
+    .classList
+    .add("hidden");
+
+
+  $("app")
+    .classList
+    .remove("hidden");
+
+
+  await loadProfile();
+
+  await loadFeed();
+
+}
+
+
+/* =========================================
+   PROFILE
+========================================= */
+
+async function loadProfile() {
+
+  const {
+    data: {
+      user
+    }
+  } =
+    await supabaseClient.auth.getUser();
+
+
+  if (!user) return;
+
+
+  $("profileEmail").textContent =
+    user.email || "";
+
+
+  const { data } =
+    await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+
+  if (data) {
+
+    $("profileUsername").textContent =
+      "@" + data.username;
+
+
+    $("profileAvatar").textContent =
+      data.username
+        ? data.username.charAt(0).toUpperCase()
+        : "V";
+
+  }
+
+}
+
+
+/* =========================================
+   UPLOAD POST
+========================================= */
+
+async function publishPost() {
+
+  const file =
+    $("mediaFile").files[0];
+
+  const caption =
+    $("caption").value.trim();
+
+
+  if (!file) {
+
+    $("uploadMessage").textContent =
+      "Choose an image or video first.";
+
+    return;
+  }
+
+
+  const {
+    data: {
+      user
+    }
+  } =
+    await supabaseClient.auth.getUser();
+
+
+  if (!user) {
+
+    $("uploadMessage").textContent =
+      "Please log in again.";
+
+    return;
+  }
+
+
+  $("uploadMessage").textContent =
+    "Uploading...";
+
+
+  try {
+
+    const extension =
+      file.name
+        .split(".")
+        .pop()
+        .toLowerCase();
+
+
+    const filePath =
+      `${user.id}/${crypto.randomUUID()}.${extension}`;
+
+
+    const { error: uploadError } =
+      await supabaseClient.storage
+        .from("media")
+        .upload(
+          filePath,
+          file,
+          {
+            contentType: file.type,
+            upsert: false
+          }
+        );
+
+
+    if (uploadError) {
+
+      $("uploadMessage").textContent =
+        uploadError.message;
+
+      return;
+    }
+
+
+    const {
+      data: publicData
+    } =
+      supabaseClient.storage
+        .from("media")
+        .getPublicUrl(filePath);
+
+
+    const mediaType =
+      file.type.startsWith("video/")
+        ? "video"
+        : "image";
+
+
+    const { error: postError } =
+      await supabaseClient
+        .from("posts")
+        .insert({
+
+          user_id: user.id,
+
+          media_url:
+            publicData.publicUrl,
+
+          media_type:
+            mediaType,
+
+          caption:
+            caption
+
+        });
+
+
+    if (postError) {
+
+      $("uploadMessage").textContent =
+        postError.message;
+
+      return;
+    }
+
+
+    $("uploadMessage").textContent =
+      "Published successfully!";
+
+
+    $("mediaFile").value = "";
+
+    $("caption").value = "";
+
+
+    await loadFeed();
+
+
+  } catch (error) {
+
+    $("uploadMessage").textContent =
+      error.message;
+
+  }
+
+}
+
+
+/* =========================================
+   LOAD FEED
+========================================= */
+
+async function loadFeed() {
+
+  const feed =
+    $("feed");
+
+
+  feed.innerHTML =
+    `<div class="loading">Loading posts...</div>`;
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("posts")
+      .select(`
+        id,
+        user_id,
+        media_url,
+        media_type,
+        caption,
+        created_at,
+        profiles (
+          username,
+          avatar_url
+        ),
+        likes (
+          id,
+          user_id
+        ),
+        comments (
+          id,
+          user_id,
+          body,
+          created_at,
+          profiles (
+            username
+          )
+        )
+      `)
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (error) {
+
+    feed.innerHTML =
+      `<div class="post">
+        ${escapeHTML(error.message)}
+      </div>`;
+
+    return;
+  }
+
+
+  if (!data || data.length === 0) {
+
+    feed.innerHTML =
+      `<div class="post">
+        <h3>No posts yet</h3>
+        <p>Be the first person to upload!</p>
+      </div>`;
+
+    return;
+  }
+
+
+  feed.innerHTML = "";
+
+
+  data.forEach(post => {
+
+    feed.appendChild(
+      createPostElement(post)
+    );
+
+  });
+
+}
+
+
+/* =========================================
+   CREATE POST ELEMENT
+========================================= */
+
+function createPostElement(post) {
+
+  const article =
+    document.createElement("article");
+
+
+  article.className =
+    "post";
+
+
+  const username =
+    post.profiles?.username ||
+    "Vidora User";
+
+
+  const firstLetter =
+    username
+      .charAt(0)
+      .toUpperCase();
+
+
+  const mediaHTML =
+    post.media_type === "video"
+
+      ?
+
+      `
+      <video
+        class="postMedia"
+        controls
+        playsinline
+        preload="metadata"
+        src="${escapeHTML(post.media_url)}">
+      </video>
+      `
+
+      :
+
+      `
+      <img
+        class="postMedia"
+        src="${escapeHTML(post.media_url)}"
+        alt="Vidora post">
+      `;
+
+
+  const comments =
+    (post.comments || [])
+      .map(comment => {
+
+        const name =
+          comment.profiles?.username ||
+          "User";
+
+
+        return `
+          <div class="comment">
+
+            <strong>
+              @${escapeHTML(name)}
+            </strong>
+
+            ${escapeHTML(comment.body)}
+
+          </div>
+        `;
+
+      })
+      .join("");
+
+
+  const likeCount =
+    (post.likes || []).length;
+
+
+  article.innerHTML = `
+
+    <div class="postHeader">
+
+      <div class="avatar">
+        ${escapeHTML(firstLetter)}
+      </div>
+
+      <div>
+
+        <div class="postUser">
+          @${escapeHTML(username)}
+        </div>
+
+        <div class="postTime">
+          ${new Date(post.created_at).toLocaleString()}
+        </div>
+
+      </div>
+
+    </div>
+
+
+    ${
+      post.caption
+        ?
+        `<div class="postCaption">
+          ${escapeHTML(post.caption)}
+        </div>`
+        :
+        ""
+    }
+
+
+    ${mediaHTML}
+
+
+    <div class="actions">
+
+      <button class="likeButton">
+        ❤️ Like (${likeCount})
+      </button>
+
+      <button class="shareButton">
+        ↗ Share
+      </button>
+
+    </div>
+
+
+    <div class="comments">
+
+      <strong>
+        Comments
+      </strong>
+
+      <div class="commentList">
+
+        ${
+          comments ||
+          `<p class="postTime">
+            No comments yet.
+          </p>`
+        }
+
+      </div>
+
+
+      <div class="commentForm">
+
+        <input
+          type="text"
+          placeholder="Write a comment..."
+          class="commentInput"
+        >
+
+        <button class="commentButton">
+          Send
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  article
+    .querySelector(".likeButton")
+    .onclick =
+      () => toggleLike(post);
+
+
+  article
+    .querySelector(".shareButton")
+    .onclick =
+      () => sharePost(post);
+
+
+  article
+    .querySelector(".commentButton")
+    .onclick =
+      async () => {
+
+        const input =
+          article.querySelector(
+            ".commentInput"
+          );
+
+
+        const body =
+          input.value.trim();
+
+
+        if (!body) return;
+
+
+        await addComment(
+          post.id,
+          body
+        );
+
+
+        input.value = "";
+
+
+        await loadFeed();
+
+      };
+
+
+  return article;
+
+}
+
+
+/* =========================================
+   LIKE
+========================================= */
+
+async function toggleLike(post) {
+
+  const {
+    data: {
+      user
+    }
+  } =
+    await supabaseClient.auth.getUser();
+
+
+  if (!user) return;
+
+
+  const existingLike =
+    (post.likes || [])
+      .find(
+        like =>
+          like.user_id === user.id
+      );
+
+
+  if (existingLike) {
+
+    await supabaseClient
+      .from("likes")
+      .delete()
+      .eq(
+        "id",
+        existingLike.id
+      );
+
+  } else {
+
+    await supabaseClient
+      .from("likes")
+      .insert({
+
+        post_id:
+          post.id,
+
+        user_id:
+          user.id
+
+      });
+
+  }
+
+
+  await loadFeed();
+
+}
+
+
+/* =========================================
+   COMMENTS
+========================================= */
+
+async function addComment(
+  postId,
+  body
+) {
+
+  const {
+    data: {
+      user
+    }
+  } =
+    await supabaseClient.auth.getUser();
+
+
+  if (!user) return;
+
+
+  const {
+    error
+  } =
+    await supabaseClient
+      .from("comments")
+      .insert({
+
+        post_id:
+          postId,
+
+        user_id:
+          user.id,
+
+        body:
+          body
+
+      });
+
+
+  if (error) {
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =========================================
+   SHARE
+========================================= */
+
+async function sharePost(post) {
+
+  try {
+
+    if (
+      navigator.share
+    ) {
+
+      await navigator.share({
+
+        title:
+          "Vidora",
+
+        text:
+          "Check out this Vidora post!",
+
+        url:
+          post.media_url
+
+      });
+
+    } else {
+
+      await navigator.clipboard.writeText(
+        post.media_url
+      );
+
+      alert(
+        "Post link copied!"
+      );
+
+    }
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+
+}
+
+
+/* =========================================
+   PAGE NAVIGATION
+========================================= */
+
+function showPage(pageId) {
+
+  [
+    "homePage",
+    "profilePage",
+    "discoverPage"
+  ]
+  .forEach(id => {
+
+    $(id)
+      .classList
+      .add("hidden");
+
+  });
+
+
+  $(pageId)
+    .classList
+    .remove("hidden");
+
+
+  document
+    .querySelectorAll(".navButton")
+    .forEach(button => {
+
+      button.classList.remove(
+        "active"
+      );
+
+      if (
+        button.dataset.page === pageId
+      ) {
+
+        button.classList.add(
+          "active"
+        );
+
+      }
+
+    });
+
+}
+
+
+/* =========================================
+   INITIALIZE
+========================================= */
+
+async function initialize() {
+
+  const {
+    data: {
+      session
+    }
+  } =
+    await supabaseClient.auth.getSession();
+
+
+  if (session) {
+
+    await showApp(session);
+
+  }
+
+}
+
+
+/* =========================================
+   AUTH EVENTS
+========================================= */
+
+supabaseClient.auth
+  .onAuthStateChange(
+    (event, session) => {
+
+      if (
+        event === "SIGNED_IN" &&
+        session
+      ) {
+
+        showApp(session);
+
+      }
+
+
+      if (
+        event === "SIGNED_OUT"
+      ) {
+
+        $("app")
+          .classList
+          .add("hidden");
+
+
+        $("authScreen")
+          .classList
+          .remove("hidden");
+
+      }
+
+    }
+  );
+
+
+/* =========================================
+   BUTTON EVENTS
+========================================= */
+
+$("signUpBtn")
+  .addEventListener(
+    "click",
+    signUp
+  );
+
+
+$("loginBtn")
+  .addEventListener(
+    "click",
+    login
+  );
+
+
+$("logoutBtn")
+  .addEventListener(
+    "click",
+    logout
+  );
+
+
+$("publishBtn")
+  .addEventListener(
+    "click",
+    publishPost
+  );
+
+
+document
+  .querySelectorAll(".navButton")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        showPage(
+          button.dataset.page
+        );
+
+      }
+    );
+
+  });
+
+
+$("createNav")
+  .addEventListener(
+    "click",
+    () => {
+
+      showPage("homePage");
+
+      $("caption").focus();
+
+    }
+  );
+
+
+/* =========================================
+   START
+========================================= */
+
+initialize();
