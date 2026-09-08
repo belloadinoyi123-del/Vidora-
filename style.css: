@@ -522,6 +522,564 @@ main {
 
   font-weight: 700;
 
-  font-size
-  
-    
+  font-size: 15px;
+
+  box-shadow:
+    0 10px 25px
+    rgba(139,92,246,0.25);
+
+  transition:
+    .2s;
+}
+
+.createCard button:active {
+  transform:
+    scale(.98);
+}
+
+#uploadMessage {
+  min-height: 18px;
+
+  margin-top: 12px;
+
+  color: var(--muted);
+
+  font-size: 13px;
+
+  text-align: center;
+}
+
+
+/* =========================================
+   POSTS
+========================================= */
+
+.post {
+  overflow: hidden;
+
+  padding: 0;
+
+  margin-bottom: 18px;
+
+  animation:
+    fadeUp .45s ease;
+}
+
+.postHeader {
+  display: flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  padding: 15px;
+}
+
+.avatar {
+  width: 46px;
+  height: 46px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 50%;
+
+  background:
+    var(--gradient);
+
+  color: white;
+
+  font-weight: 800;
+
+  box-shadow:
+    0 6px 20px
+    rgba(139,92,246,0.3);
+}
+
+.postUser {
+  font-size: 14px;
+
+  font-weight: 700;
+}
+
+.postTime {
+  color: #777786;
+
+  font-size: 11px;
+
+  margin-top: 3px;
+}
+
+.postCaption {
+  padding:
+    0 15px 14px;
+
+  color: #e2e2e8;
+
+  font-size: 14px;
+
+  line-height: 1.55;
+}
+
+
+/* =========================================
+   MEDIA
+========================================= */
+
+.postMedia {
+  width: 100%;
+
+  max-height: 700px;
+
+  display: block;
+
+  object-fit: contain;
+
+  background:
+    #050507;
+
+  border-top:
+    1px solid
+    rgba(255,255,255,0.04);
+
+  border-bottom:
+    1px solid
+    rgba(255,255,255,0.04);
+}
+
+
+/* =========================================
+   ACTION BUTTONS
+========================================= */
+
+.actions {
+  display: flex;
+
+  gap: 8px;
+
+  padding:
+    14px 15px;
+}
+
+.actions button {
+  flex: 1;
+
+  padding: 11px 8px;
+
+  border:
+    1px solid
+    rgba(255,255,255,0.07);
+
+  border-radius: 12px;
+
+  background:
+    rgba(255,255,255,0.05);
+
+  color: #ddd;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  transition:
+    .2s;
+}
+
+.actions button:hover {
+  background:
+    rgba(255,255,255,0.09);
+}
+
+.actions button:active {
+  transform:
+    scale(.96);
+}
+
+.actions button.liked {
+  color:
+    var(--pink);
+
+  background:
+    rgba(255,45,117,0.1);
+
+  border-color:
+    rgba(255,45,117,0.2);
+}
+
+
+/* =========================================
+   COMMENTS
+========================================= */
+
+.comments {
+  padding:
+    14px 15px 16px;
+
+  border-top:
+    1px solid
+    rgba(255,255,255,0.06);
+}
+
+.comments > strong {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 14px;
+}
+
+.comment {
+  padding:
+    9px 0;
+
+  color: #c7c7d0;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+
+  border-bottom:
+    1px solid
+    rgba(255,255,255,0.04);
+}
+
+.comment strong {
+  color: white;
+
+  margin-right: 5px;
+}
+
+.commentForm {
+  display: flex;
+
+  gap: 8px;
+
+  margin-top: 12px;
+}
+
+.commentForm input {
+  flex: 1;
+
+  min-width: 0;
+
+  padding:
+    11px 13px;
+
+  border-radius: 12px;
+
+  border:
+    1px solid
+    rgba(255,255,255,0.08);
+
+  background:
+    #101017;
+
+  color: white;
+
+  outline: none;
+}
+
+.commentForm input:focus {
+  border-color:
+    var(--purple);
+}
+
+.commentForm button {
+  padding:
+    10px 15px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background:
+    var(--gradient);
+
+  color: white;
+
+  font-weight: 600;
+}
+
+
+/* =========================================
+   PROFILE
+========================================= */
+
+.profileCard {
+  padding: 30px 20px;
+
+  text-align: center;
+}
+
+.profileAvatar {
+  width: 105px;
+  height: 105px;
+
+  display: grid;
+
+  place-items: center;
+
+  margin:
+    5px auto 18px;
+
+  border-radius: 50%;
+
+  background:
+    var(--gradient);
+
+  border:
+    5px solid
+    rgba(255,255,255,0.08);
+
+  font-size: 40px;
+
+  font-weight: 800;
+
+  box-shadow:
+    0 15px 40px
+    rgba(139,92,246,0.3);
+}
+
+#profileUsername {
+  font-size: 22px;
+}
+
+#profileEmail {
+  color: var(--muted);
+
+  margin:
+    8px 0 24px;
+
+  font-size: 13px;
+}
+
+#logoutBtn {
+  width: 100%;
+
+  padding: 14px;
+
+  border:
+    1px solid
+    rgba(255,255,255,0.08);
+
+  border-radius: 14px;
+
+  background:
+    rgba(255,255,255,0.06);
+
+  color: white;
+
+  font-weight: 700;
+}
+
+
+/* =========================================
+   DISCOVER
+========================================= */
+
+.searchBox {
+  margin-bottom: 18px;
+}
+
+.searchBox input {
+  width: 100%;
+
+  padding:
+    15px 17px;
+
+  border-radius: 16px;
+
+  border:
+    1px solid
+    rgba(255,255,255,0.08);
+
+  background:
+    #181820;
+
+  color: white;
+
+  outline: none;
+
+  font-size: 14px;
+}
+
+.searchBox input:focus {
+  border-color:
+    var(--purple);
+}
+
+
+/* =========================================
+   BOTTOM NAVIGATION
+========================================= */
+
+.bottomNav {
+  position: fixed;
+
+  bottom: 0;
+
+  left: 0;
+  right: 0;
+
+  z-index: 200;
+
+  height: 76px;
+
+  display: flex;
+
+  justify-content: space-around;
+
+  padding:
+    8px 5px 12px;
+
+  background:
+    rgba(15,15,23,0.9);
+
+  border-top:
+    1px solid
+    rgba(255,255,255,0.07);
+
+  backdrop-filter:
+    blur(18px);
+}
+
+.navButton {
+  flex: 1;
+
+  border: none;
+
+  background:
+    transparent;
+
+  color:
+    #777786;
+
+  font-size:
+    11px;
+
+  transition:
+    .2s;
+}
+
+.navButton span {
+  display: block;
+
+  font-size:
+    22px;
+
+  margin-bottom:
+    4px;
+}
+
+.navButton.active {
+  color:
+    white;
+}
+
+.navButton.active span {
+  color:
+    var(--purple);
+}
+
+.createButton span {
+  width: 45px;
+  height: 45px;
+
+  display: grid;
+
+  place-items: center;
+
+  margin:
+    -18px auto 3px;
+
+  border-radius: 16px;
+
+  background:
+    var(--gradient);
+
+  color: white;
+
+  font-size: 28px;
+
+  box-shadow:
+    0 10px 30px
+    rgba(139,92,246,0.45);
+}
+
+
+/* =========================================
+   LOADING
+========================================= */
+
+.loading {
+  padding: 35px;
+
+  text-align: center;
+
+  color:
+    var(--muted);
+}
+
+
+/* =========================================
+   ANIMATIONS
+========================================= */
+
+@keyframes fadeUp {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+
+}
+
+
+/* =========================================
+   TABLET / DESKTOP
+========================================= */
+
+@media (min-width: 700px) {
+
+  body {
+    background:
+      radial-gradient(
+        circle at top,
+        rgba(139,92,246,0.12),
+        transparent 40%
+      ),
+      #09090f;
+  }
+
+  main {
+    padding-top: 25px;
+  }
+
+  .bottomNav {
+    width: 680px;
+
+    left: 50%;
+
+    right: auto;
+
+    transform:
+      translateX(-50%);
+
+    border-radius:
+      20px 20px 0 0;
+  }
+
+}
