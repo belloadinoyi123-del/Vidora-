@@ -13,7 +13,8 @@ const SUPABASE_URL =
 /*
  IMPORTANT:
 
- Use your Supabase PUBLISHABLE key here.
+ const SUPABASE_KEY =
+  "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
 
  Never put a Supabase service_role/secret key
  inside this browser file.
