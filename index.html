@@ -1,8 +1,9 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#09090f">
   <title>Vidora</title>
 
   <link rel="stylesheet" href="style.css">
@@ -12,208 +13,374 @@
 
 <body>
 
-<!-- ================= AUTH ================= -->
+  <!-- =========================
+       AUTHENTICATION
+  ========================== -->
 
-<section id="authScreen">
+  <section id="authScreen">
 
-  <div class="authBox">
+    <div class="authBox">
 
-    <div class="brand">
-      Vi<span>dora</span>
+      <div class="brand">
+        Vi<span>dora</span>
+      </div>
+
+      <p class="tagline">
+        Watch. Share. Connect.
+      </p>
+
+      <input
+        id="email"
+        type="email"
+        placeholder="Email address"
+        autocomplete="email"
+      >
+
+      <input
+        id="password"
+        type="password"
+        placeholder="Password"
+        autocomplete="current-password"
+      >
+
+      <button id="signUpBtn" onclick="signUp()">
+        Create Account
+      </button>
+
+      <button
+        id="loginBtn"
+        class="secondary"
+        onclick="logIn()"
+      >
+        Log In
+      </button>
+
+      <p id="authMessage"></p>
+
     </div>
 
-    <p class="tagline">Watch. Create. Connect.</p>
+  </section>
 
-    <input
-      id="email"
-      type="email"
-      placeholder="Email address"
-    >
 
-    <input
-      id="password"
-      type="password"
-      placeholder="Password"
-    >
+  <!-- =========================
+       MAIN VIDORA APP
+  ========================== -->
 
-    <button id="signUpBtn">
-      Create Account
-    </button>
+  <div id="app" class="hidden">
 
-    <button id="loginBtn" class="secondary">
-      Log In
-    </button>
+    <!-- HEADER -->
 
-    <p id="authMessage"></p>
+    <header>
+
+      <div class="logo">
+        Vi<span>dora</span>
+      </div>
+
+      <div class="headerButtons">
+
+        <button
+          onclick="showScreen('discover')"
+          aria-label="Search"
+        >
+          🔍
+        </button>
+
+        <button
+          onclick="showScreen('notifications')"
+          aria-label="Notifications"
+        >
+          🔔
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <!-- MAIN CONTENT -->
+
+    <main>
+
+      <!-- HOME -->
+
+      <section id="homeScreen" class="screen">
+
+        <!-- STORIES -->
+
+        <div class="stories">
+
+          <div class="story">
+            <div class="storyCircle">
+              <span>+</span>
+            </div>
+            <small>Your Story</small>
+          </div>
+
+          <div class="story">
+            <div class="storyCircle">
+              <span>J</span>
+            </div>
+            <small>James</small>
+          </div>
+
+          <div class="story">
+            <div class="storyCircle">
+              <span>S</span>
+            </div>
+            <small>Sarah</small>
+          </div>
+
+          <div class="story">
+            <div class="storyCircle">
+              <span>D</span>
+            </div>
+            <small>Daniel</small>
+          </div>
+
+          <div class="story">
+            <div class="storyCircle">
+              <span>A</span>
+            </div>
+            <small>Alex</small>
+          </div>
+
+        </div>
+
+
+        <!-- CREATE POST -->
+
+        <div class="createCard">
+
+          <h2>
+            Create something ✨
+          </h2>
+
+          <textarea
+            id="postCaption"
+            placeholder="What's happening?"
+          ></textarea>
+
+          <input
+            id="mediaFile"
+            type="file"
+            accept="image/*,video/*"
+          >
+
+          <button onclick="uploadPost()">
+            📤 Publish
+          </button>
+
+          <p id="uploadMessage"></p>
+
+        </div>
+
+
+        <!-- FEED -->
+
+        <div id="feed">
+
+          <div class="loading">
+            Loading Vidora...
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- DISCOVER -->
+
+      <section
+        id="discoverScreen"
+        class="screen hidden"
+      >
+
+        <div class="searchBox">
+
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="Search Vidora..."
+            oninput="searchPosts()"
+          >
+
+        </div>
+
+        <div id="discoverResults">
+
+          <div class="loading">
+            Discover what's trending.
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- CREATE -->
+
+      <section
+        id="createScreen"
+        class="screen hidden"
+      >
+
+        <div class="createCard">
+
+          <h2>
+            Create a post
+          </h2>
+
+          <textarea
+            id="createCaption"
+            placeholder="Write a caption..."
+          ></textarea>
+
+          <input
+            id="createFile"
+            type="file"
+            accept="image/*,video/*"
+          >
+
+          <button onclick="publishFromCreate()">
+            🚀 Publish to Vidora
+          </button>
+
+          <p id="createMessage"></p>
+
+        </div>
+
+      </section>
+
+
+      <!-- CHAT -->
+
+      <section
+        id="chatScreen"
+        class="screen hidden"
+      >
+
+        <div class="profileCard">
+
+          <h2>
+            💬 Vidora Chat
+          </h2>
+
+          <p id="chatStatus">
+            Messaging foundation ready.
+          </p>
+
+        </div>
+
+      </section>
+
+
+      <!-- PROFILE -->
+
+      <section
+        id="profileScreen"
+        class="screen hidden"
+      >
+
+        <div class="profileCard">
+
+          <div class="profileAvatar">
+            V
+          </div>
+
+          <h2 id="profileUsername">
+            Vidora User
+          </h2>
+
+          <p id="profileEmail">
+            Loading account...
+          </p>
+
+          <button
+            id="logoutBtn"
+            onclick="logOut()"
+          >
+            Log Out
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- NOTIFICATIONS -->
+
+      <section
+        id="notificationsScreen"
+        class="screen hidden"
+      >
+
+        <div class="profileCard">
+
+          <h2>
+            🔔 Notifications
+          </h2>
+
+          <p>
+            Your notifications will appear here.
+          </p>
+
+        </div>
+
+      </section>
+
+    </main>
+
+
+    <!-- BOTTOM NAVIGATION -->
+
+    <nav class="bottomNav">
+
+      <button
+        class="navButton active"
+        onclick="showScreen('home')"
+      >
+        <span>🏠</span>
+        Home
+      </button>
+
+      <button
+        class="navButton"
+        onclick="showScreen('discover')"
+      >
+        <span>🔍</span>
+        Discover
+      </button>
+
+      <button
+        class="navButton createButton"
+        onclick="showScreen('create')"
+      >
+        <span>+</span>
+        Create
+      </button>
+
+      <button
+        class="navButton"
+        onclick="showScreen('chat')"
+      >
+        <span>💬</span>
+        Chat
+      </button>
+
+      <button
+        class="navButton"
+        onclick="showScreen('profile')"
+      >
+        <span>👤</span>
+        Profile
+      </button>
+
+    </nav>
 
   </div>
 
-</section>
 
-
-<!-- ================= MAIN APP ================= -->
-
-<section id="app" class="hidden">
-
-  <!-- HEADER -->
-
-  <header>
-
-    <div class="logo">
-      Vi<span>dora</span>
-    </div>
-
-    <div class="headerButtons">
-      <button id="searchBtn">🔍</button>
-      <button id="notificationBtn">🔔</button>
-    </div>
-
-  </header>
-
-
-  <!-- ================= HOME ================= -->
-
-  <main id="homePage">
-
-    <!-- STORIES -->
-
-    <div class="stories">
-
-      <div class="story">
-        <div class="storyCircle">+</div>
-        <small>Your Story</small>
-      </div>
-
-      <div class="story">
-        <div class="storyCircle"></div>
-        <small>James</small>
-      </div>
-
-      <div class="story">
-        <div class="storyCircle"></div>
-        <small>Sarah</small>
-      </div>
-
-      <div class="story">
-        <div class="storyCircle"></div>
-        <small>Daniel</small>
-      </div>
-
-    </div>
-
-
-    <!-- CREATE POST -->
-
-    <section class="createCard">
-
-      <h2>Create Post</h2>
-
-      <textarea
-        id="caption"
-        placeholder="What's happening?"
-      ></textarea>
-
-      <input
-        id="mediaFile"
-        type="file"
-        accept="image/*,video/*"
-      >
-
-      <button id="publishBtn">
-        📤 Publish
-      </button>
-
-      <p id="uploadMessage"></p>
-
-    </section>
-
-
-    <!-- FEED -->
-
-    <section id="feed">
-
-      <div class="loading">
-        Loading Vidora...
-      </div>
-
-    </section>
-
-  </main>
-
-
-  <!-- ================= PROFILE ================= -->
-
-  <main id="profilePage" class="hidden">
-
-    <section class="profileCard">
-
-      <div id="profileAvatar" class="profileAvatar">
-        V
-      </div>
-
-      <h2 id="profileUsername">
-        User
-      </h2>
-
-      <p id="profileEmail"></p>
-
-      <button id="logoutBtn">
-        Log Out
-      </button>
-
-    </section>
-
-  </main>
-
-
-  <!-- ================= DISCOVER ================= -->
-
-  <main id="discoverPage" class="hidden">
-
-    <div class="searchBox">
-
-      <input
-        id="discoverSearch"
-        placeholder="Search Vidora..."
-      >
-
-    </div>
-
-    <div id="discoverResults"></div>
-
-  </main>
-
-
-  <!-- ================= BOTTOM NAV ================= -->
-
-  <nav class="bottomNav">
-
-    <button data-page="homePage" class="navButton active">
-      <span>🏠</span>
-      Home
-    </button>
-
-    <button data-page="discoverPage" class="navButton">
-      <span>🔍</span>
-      Discover
-    </button>
-
-    <button data-page="homePage" id="createNav" class="navButton createButton">
-      <span>＋</span>
-      Create
-    </button>
-
-    <button data-page="profilePage" class="navButton">
-      <span>👤</span>
-      Profile
-    </button>
-
-  </nav>
-
-</section>
-
-
-<script src="app.js"></script>
+  <script src="app.js"></script>
 
 </body>
 </html>
