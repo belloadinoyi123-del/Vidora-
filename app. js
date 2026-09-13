@@ -14,6 +14,7 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
   "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
 
+
 const supabaseClient =
   window.supabase.createClient(
     SUPABASE_URL,
@@ -66,11 +67,24 @@ function setAuthMessage(message) {
 
 async function signUp() {
 
+  const emailElement =
+    $("email");
+
+  const passwordElement =
+    $("password");
+
+
+  if (!emailElement || !passwordElement) {
+    console.error("Email or password input not found.");
+    return;
+  }
+
+
   const email =
-    $("email").value.trim();
+    emailElement.value.trim();
 
   const password =
-    $("password").value;
+    passwordElement.value;
 
 
   if (!email) {
@@ -122,6 +136,11 @@ async function signUp() {
 
     if (error) {
 
+      console.error(
+        "Signup error:",
+        error
+      );
+
       setAuthMessage(
         error.message
       );
@@ -140,11 +159,18 @@ async function signUp() {
     }
 
 
+    /*
+      If email confirmation is enabled
+      in Supabase, user exists but session
+      may be null.
+    */
+
     if (data.session) {
 
       setAuthMessage(
         "Account created successfully!"
       );
+
 
       await showApp(
         data.session
@@ -161,12 +187,13 @@ async function signUp() {
   } catch (error) {
 
     console.error(
-      "Signup error:",
+      "Signup JavaScript error:",
       error
     );
 
     setAuthMessage(
-      error.message
+      error.message ||
+      "Something went wrong."
     );
 
   }
@@ -180,11 +207,24 @@ async function signUp() {
 
 async function login() {
 
+  const emailElement =
+    $("email");
+
+  const passwordElement =
+    $("password");
+
+
+  if (!emailElement || !passwordElement) {
+    console.error("Login inputs not found.");
+    return;
+  }
+
+
   const email =
-    $("email").value.trim();
+    emailElement.value.trim();
 
   const password =
-    $("password").value;
+    passwordElement.value;
 
 
   if (!email || !password) {
@@ -216,6 +256,11 @@ async function login() {
 
     if (error) {
 
+      console.error(
+        "Login error:",
+        error
+      );
+
       setAuthMessage(
         error.message
       );
@@ -246,12 +291,13 @@ async function login() {
   } catch (error) {
 
     console.error(
-      "Login error:",
+      "Login JavaScript error:",
       error
     );
 
     setAuthMessage(
-      error.message
+      error.message ||
+      "Something went wrong."
     );
 
   }
@@ -280,23 +326,47 @@ async function logout() {
         error
       );
 
+      setAuthMessage(
+        error.message
+      );
+
       return;
     }
 
 
-    $("app")
-      .classList
-      .add("hidden");
+    const app =
+      $("app");
+
+    const authScreen =
+      $("authScreen");
 
 
-    $("authScreen")
-      .classList
-      .remove("hidden");
+    if (app) {
+
+      app.classList.add(
+        "hidden"
+      );
+
+    }
 
 
-    $("email").value = "";
+    if (authScreen) {
 
-    $("password").value = "";
+      authScreen.classList.remove(
+        "hidden"
+      );
+
+    }
+
+
+    if ($("email")) {
+      $("email").value = "";
+    }
+
+
+    if ($("password")) {
+      $("password").value = "";
+    }
 
 
     setAuthMessage(
@@ -306,10 +376,11 @@ async function logout() {
 
     showPage("home");
 
+
   } catch (error) {
 
     console.error(
-      "Logout error:",
+      "Logout JavaScript error:",
       error
     );
 
@@ -329,14 +400,29 @@ async function showApp(session) {
   }
 
 
-  $("authScreen")
-    .classList
-    .add("hidden");
+  const authScreen =
+    $("authScreen");
+
+  const app =
+    $("app");
 
 
-  $("app")
-    .classList
-    .remove("hidden");
+  if (authScreen) {
+
+    authScreen.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+  if (app) {
+
+    app.classList.remove(
+      "hidden"
+    );
+
+  }
 
 
   showPage("home");
@@ -409,8 +495,8 @@ async function loadProfile() {
 
     if (profileError) {
 
-      console.log(
-        "Profile table:",
+      console.warn(
+        "Could not load profile:",
         profileError.message
       );
 
@@ -425,10 +511,13 @@ async function loadProfile() {
         "Vidora User";
 
 
-      if ($("profileUsername")) {
+      const profileUsername =
+        $("profileUsername");
 
-        $("profileUsername")
-          .textContent =
+
+      if (profileUsername) {
+
+        profileUsername.textContent =
           "@" + username;
 
       }
@@ -469,16 +558,38 @@ async function loadProfile() {
 
 async function uploadPost() {
 
+  const fileElement =
+    $("mediaFile");
+
+  const captionElement =
+    $("postCaption");
+
+  const messageElement =
+    $("uploadMessage");
+
+
+  if (!fileElement ||
+      !captionElement ||
+      !messageElement) {
+
+    console.error(
+      "Home upload elements not found."
+    );
+
+    return;
+  }
+
+
   const file =
-    $("mediaFile").files[0];
+    fileElement.files[0];
 
   const caption =
-    $("postCaption").value.trim();
+    captionElement.value.trim();
 
 
   if (!file) {
 
-    $("uploadMessage").textContent =
+    messageElement.textContent =
       "Choose an image or video first.";
 
     return;
@@ -502,16 +613,38 @@ async function uploadPost() {
 
 async function publishFromCreate() {
 
+  const fileElement =
+    $("createFile");
+
+  const captionElement =
+    $("createCaption");
+
+  const messageElement =
+    $("createMessage");
+
+
+  if (!fileElement ||
+      !captionElement ||
+      !messageElement) {
+
+    console.error(
+      "Create page elements not found."
+    );
+
+    return;
+  }
+
+
   const file =
-    $("createFile").files[0];
+    fileElement.files[0];
 
   const caption =
-    $("createCaption").value.trim();
+    captionElement.value.trim();
 
 
   if (!file) {
 
-    $("createMessage").textContent =
+    messageElement.textContent =
       "Choose an image or video first.";
 
     return;
@@ -553,6 +686,11 @@ async function createPost(
     $(messageId);
 
 
+  if (!message) {
+    return false;
+  }
+
+
   try {
 
     const {
@@ -574,6 +712,15 @@ async function createPost(
 
     message.textContent =
       "Uploading...";
+
+
+    if (!file.type) {
+
+      message.textContent =
+        "This file type is not supported.";
+
+      return false;
+    }
 
 
     const extension =
@@ -600,13 +747,21 @@ async function createPost(
           filePath,
           file,
           {
-            contentType: file.type,
-            upsert: false
+            contentType:
+              file.type,
+
+            upsert:
+              false
           }
         );
 
 
     if (uploadError) {
+
+      console.error(
+        "Storage upload error:",
+        uploadError
+      );
 
       message.textContent =
         uploadError.message;
@@ -623,6 +778,16 @@ async function createPost(
         .getPublicUrl(
           filePath
         );
+
+
+    if (!publicData ||
+        !publicData.publicUrl) {
+
+      message.textContent =
+        "Could not create media URL.";
+
+      return false;
+    }
 
 
     const mediaType =
@@ -655,6 +820,11 @@ async function createPost(
 
     if (postError) {
 
+      console.error(
+        "Post database error:",
+        postError
+      );
+
       message.textContent =
         postError.message;
 
@@ -666,9 +836,22 @@ async function createPost(
       "Published successfully!";
 
 
-    $(fileInputId).value = "";
+    const fileInput =
+      $(fileInputId);
 
-    $(captionInputId).value = "";
+
+    const captionInput =
+      $(captionInputId);
+
+
+    if (fileInput) {
+      fileInput.value = "";
+    }
+
+
+    if (captionInput) {
+      captionInput.value = "";
+    }
 
 
     await loadFeed();
@@ -685,7 +868,8 @@ async function createPost(
 
 
     message.textContent =
-      error.message;
+      error.message ||
+      "Upload failed.";
 
 
     return false;
@@ -711,9 +895,11 @@ async function loadFeed() {
 
 
   feed.innerHTML =
-    `<div class="loading">
-      Loading Vidora...
-    </div>`;
+    `
+      <div class="loading">
+        Loading Vidora...
+      </div>
+    `;
 
 
   try {
@@ -759,22 +945,35 @@ async function loadFeed() {
 
     if (error) {
 
+      console.error(
+        "Feed error:",
+        error
+      );
+
+
       feed.innerHTML =
-        `<div class="post">
-          ${escapeHTML(error.message)}
-        </div>`;
+        `
+          <div class="post">
+            ${escapeHTML(error.message)}
+          </div>
+        `;
 
       return;
     }
 
 
-    if (!data || data.length === 0) {
+    if (!data ||
+        data.length === 0) {
 
       feed.innerHTML =
-        `<div class="post">
-          <h3>No posts yet</h3>
-          <p>Be the first person to upload!</p>
-        </div>`;
+        `
+          <div class="post">
+            <h3>No posts yet</h3>
+            <p>
+              Be the first person to upload!
+            </p>
+          </div>
+        `;
 
       return;
     }
@@ -795,10 +994,18 @@ async function loadFeed() {
 
   } catch (error) {
 
+    console.error(
+      "loadFeed error:",
+      error
+    );
+
+
     feed.innerHTML =
-      `<div class="post">
-        ${escapeHTML(error.message)}
-      </div>`;
+      `
+        <div class="post">
+          ${escapeHTML(error.message)}
+        </div>
+      `;
 
   }
 
@@ -812,7 +1019,9 @@ async function loadFeed() {
 function createPostElement(post) {
 
   const article =
-    document.createElement("article");
+    document.createElement(
+      "article"
+    );
 
 
   article.className =
@@ -830,31 +1039,39 @@ function createPostElement(post) {
       .toUpperCase();
 
 
-  let mediaHTML;
+  let mediaHTML =
+    "";
 
 
   if (
-    post.media_type === "video"
+    post.media_type ===
+    "video"
   ) {
 
-    mediaHTML = `
-      <video
-        class="postMedia"
-        controls
-        playsinline
-        preload="metadata"
-        src="${escapeHTML(post.media_url)}">
-      </video>
-    `;
+    mediaHTML =
+      `
+        <video
+          class="postMedia"
+          controls
+          playsinline
+          preload="metadata"
+          src="${escapeHTML(
+            post.media_url
+          )}">
+        </video>
+      `;
 
   } else {
 
-    mediaHTML = `
-      <img
-        class="postMedia"
-        src="${escapeHTML(post.media_url)}"
-        alt="Vidora post">
-    `;
+    mediaHTML =
+      `
+        <img
+          class="postMedia"
+          src="${escapeHTML(
+            post.media_url
+          )}"
+          alt="Vidora post">
+      `;
 
   }
 
@@ -871,11 +1088,15 @@ function createPostElement(post) {
 
           return `
             <div class="comment">
+
               <strong>
                 @${escapeHTML(name)}
               </strong>
 
-              ${escapeHTML(comment.body)}
+              ${escapeHTML(
+                comment.body
+              )}
+
             </div>
           `;
 
@@ -1011,44 +1232,61 @@ function createPostElement(post) {
     );
 
 
-  likeButton.onclick =
-    () => toggleLike(post);
+  if (likeButton) {
+
+    likeButton.onclick =
+      () => toggleLike(post);
+
+  }
 
 
-  shareButton.onclick =
-    () => sharePost(post);
+  if (shareButton) {
+
+    shareButton.onclick =
+      () => sharePost(post);
+
+  }
 
 
-  commentButton.onclick =
-    async () => {
+  if (commentButton) {
 
-      const input =
-        article.querySelector(
-          ".commentInput"
+    commentButton.onclick =
+      async () => {
+
+        const input =
+          article.querySelector(
+            ".commentInput"
+          );
+
+
+        if (!input) {
+          return;
+        }
+
+
+        const body =
+          input.value.trim();
+
+
+        if (!body) {
+          return;
+        }
+
+
+        await addComment(
+          post.id,
+          body
         );
 
 
-      const body =
-        input.value.trim();
+        input.value = "";
 
 
-      if (!body) {
-        return;
-      }
+        await loadFeed();
 
+      };
 
-      await addComment(
-        post.id,
-        body
-      );
-
-
-      input.value = "";
-
-
-      await loadFeed();
-
-    };
+  }
 
 
   return article;
@@ -1081,7 +1319,8 @@ async function toggleLike(post) {
       (post.likes || [])
         .find(
           like =>
-            like.user_id === user.id
+            like.user_id ===
+            user.id
         );
 
 
@@ -1100,7 +1339,12 @@ async function toggleLike(post) {
 
 
       if (error) {
-        alert(error.message);
+
+        alert(
+          error.message
+        );
+
+        return;
       }
 
     } else {
@@ -1122,7 +1366,12 @@ async function toggleLike(post) {
 
 
       if (error) {
-        alert(error.message);
+
+        alert(
+          error.message
+        );
+
+        return;
       }
 
     }
@@ -1195,6 +1444,12 @@ async function addComment(
 
   } catch (error) {
 
+    console.error(
+      "Comment error:",
+      error
+    );
+
+
     alert(
       error.message
     );
@@ -1229,7 +1484,9 @@ async function sharePost(post) {
 
       });
 
-    } else {
+    } else if (
+      navigator.clipboard
+    ) {
 
       await navigator.clipboard.writeText(
         post.media_url
@@ -1238,6 +1495,12 @@ async function sharePost(post) {
 
       alert(
         "Post link copied!"
+      );
+
+    } else {
+
+      alert(
+        post.media_url
       );
 
     }
@@ -1271,257 +1534,4 @@ function showPage(pageName) {
 
 
   screens.forEach(
-    name => {
-
-      const screen =
-        $(name + "Screen");
-
-
-      if (screen) {
-
-        screen.classList.add(
-          "hidden"
-        );
-
-      }
-
-    }
-  );
-
-
-  const selectedScreen =
-    $(pageName + "Screen");
-
-
-  if (selectedScreen) {
-
-    selectedScreen.classList.remove(
-      "hidden"
-    );
-
-  }
-
-
-  updateNavigation(
-    pageName
-  );
-
-
-  if (
-    pageName === "home"
-  ) {
-
-    loadFeed();
-
-  }
-
-
-  if (
-    pageName === "profile"
-  ) {
-
-    loadProfile();
-
-  }
-
-
-  if (
-    pageName === "discover"
-  ) {
-
-    searchPosts();
-
-  }
-
-}
-
-
-/*
- HTML bottom navigation
-uses showpage() with lowercase p.
-
-JavaScript is case-sensitive,
-so we provide both versions.
-*/
-
-function showpage(pageName) {
-
-  showPage(pageName);
-
-}
-
-
-/* =========================================
-   NAVIGATION ACTIVE STATE
-========================================= */
-
-function updateNavigation(pageName) {
-
-  const buttons =
-    document.querySelectorAll(
-      ".navButton"
-    );
-
-
-  buttons.forEach(
-    button => {
-
-      button.classList.remove(
-        "active"
-      );
-
-    }
-  );
-
-
-  buttons.forEach(
-    button => {
-
-      const text =
-        button.textContent
-          .trim()
-          .toLowerCase();
-
-
-      if (
-        pageName === "home" &&
-        text.includes("home")
-      ) {
-
-        button.classList.add(
-          "active"
-        );
-
-      }
-
-
-      if (
-        pageName === "discover" &&
-        text.includes("discover")
-      ) {
-
-        button.classList.add(
-          "active"
-        );
-
-      }
-
-
-      if (
-        pageName === "create" &&
-        text.includes("create")
-      ) {
-
-        button.classList.add(
-          "active"
-        );
-
-      }
-
-
-      if (
-        pageName === "chat" &&
-        text.includes("chat")
-      ) {
-
-        button.classList.add(
-          "active"
-        );
-
-      }
-
-
-      if (
-        pageName === "profile" &&
-        text.includes("profile")
-      ) {
-
-        button.classList.add(
-          "active"
-        );
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================
-   SEARCH POSTS
-========================================= */
-
-let searchTimer = null;
-
-
-async function searchPosts() {
-
-  clearTimeout(
-    searchTimer
-  );
-
-
-  searchTimer =
-    setTimeout(
-      async () => {
-
-        const input =
-          $("searchInput");
-
-
-        const results =
-          $("discoverResults");
-
-
-        if (!input || !results) {
-          return;
-        }
-
-
-        const query =
-          input.value
-            .trim();
-
-
-        if (!query) {
-
-          results.innerHTML =
-            `
-              <div class="loading">
-                Discover what's trending.
-              </div>
-            `;
-
-          return;
-        }
-
-
-        results.innerHTML =
-          `
-            <div class="loading">
-              Searching...
-            </div>
-          `;
-
-
-        try {
-
-          const {
-            data,
-            error
-          } =
-            await supabaseClient
-              .from("posts")
-              .select(`
-                id,
-                user_id,
-                media_url,
-                media_type,
-                caption,
-                created_at,
-                profiles (
-                  username,
-                  avatar_url
-                ),
     
