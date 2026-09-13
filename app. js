@@ -95,13 +95,26 @@ alert("SIGNUP BUTTON WORKS");
 
 
   const { data, error } =
-    await supabaseClient.auth.signUp({
+  await supabaseClient.auth.signUp({
+    email: email,
+    password: password
+  });
 
-      email: email,
+if (error) {
+  alert("SUPABASE ERROR: " + error.message);
 
-      password: password
+  $("authMessage").textContent =
+    error.message;
 
-    });
+  return;
+}
+
+alert("SUPABASE SIGNUP REACHED");
+
+if (data.user) {
+  $("authMessage").textContent =
+    "Account created! Check your email if verification is enabled.";
+}
 
 
   if (error) {
