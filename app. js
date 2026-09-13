@@ -985,7 +985,11 @@ $("logoutBtn")
     "click",
     logout
   );
-
+$("publishBtn")
+  .addEventListener(
+    "click",
+    publishPost
+  );
 
 
 
