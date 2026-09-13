@@ -13,16 +13,15 @@ const SUPABASE_URL =
 /*
  IMPORTANT:
 
- const SUPABASE_KEY =
-  "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h"
+ 
 
  Never put a Supabase service_role/secret key
  inside this browser file.
 */
 
 const SUPABASE_KEY =
-  "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h"
-";
+  "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
+
 
 
 const supabaseClient =
