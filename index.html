@@ -1,13 +1,15 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#09090f">
+  <meta name="description" content="Vidora - Watch. Share. Connect.">
   <title>Vidora</title>
 
   <link rel="stylesheet" href="style.css">
 
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -43,12 +45,17 @@
         autocomplete="current-password"
       >
 
-      <button id="signUpBtn" onclick="signUp()">
+      <button
+        id="signUpBtn"
+        type="button"
+        onclick="signUp()"
+      >
         Create Account
       </button>
 
       <button
         id="loginBtn"
+        type="button"
         class="secondary"
         onclick="login()"
       >
@@ -79,6 +86,7 @@
       <div class="headerButtons">
 
         <button
+          type="button"
           onclick="showPage('discover')"
           aria-label="Search"
         >
@@ -86,6 +94,7 @@
         </button>
 
         <button
+          type="button"
           onclick="showPage('notifications')"
           aria-label="Notifications"
         >
@@ -101,7 +110,9 @@
 
     <main>
 
-      <!-- HOME -->
+      <!-- =========================
+           HOME
+      ========================== -->
 
       <section id="homeScreen" class="screen">
 
@@ -166,7 +177,10 @@
             accept="image/*,video/*"
           >
 
-          <button onclick="uploadPost()">
+          <button
+            type="button"
+            onclick="uploadPost()"
+          >
             📤 Publish
           </button>
 
@@ -188,7 +202,9 @@
       </section>
 
 
-      <!-- DISCOVER -->
+      <!-- =========================
+           DISCOVER
+      ========================== -->
 
       <section
         id="discoverScreen"
@@ -201,6 +217,7 @@
             id="searchInput"
             type="search"
             placeholder="Search Vidora..."
+            autocomplete="off"
             oninput="searchPosts()"
           >
 
@@ -217,7 +234,9 @@
       </section>
 
 
-      <!-- CREATE -->
+      <!-- =========================
+           CREATE
+      ========================== -->
 
       <section
         id="createScreen"
@@ -241,7 +260,10 @@
             accept="image/*,video/*"
           >
 
-          <button onclick="publishFromCreate()">
+          <button
+            type="button"
+            onclick="publishFromCreate()"
+          >
             🚀 Publish to Vidora
           </button>
 
@@ -252,7 +274,9 @@
       </section>
 
 
-      <!-- CHAT -->
+      <!-- =========================
+           CHAT
+      ========================== -->
 
       <section
         id="chatScreen"
@@ -274,7 +298,9 @@
       </section>
 
 
-      <!-- PROFILE -->
+      <!-- =========================
+           PROFILE
+      ========================== -->
 
       <section
         id="profileScreen"
@@ -297,6 +323,7 @@
 
           <button
             id="logoutBtn"
+            type="button"
             onclick="logout()"
           >
             Log Out
@@ -307,7 +334,9 @@
       </section>
 
 
-      <!-- NOTIFICATIONS -->
+      <!-- =========================
+           NOTIFICATIONS
+      ========================== -->
 
       <section
         id="notificationsScreen"
@@ -331,11 +360,14 @@
     </main>
 
 
-    <!-- BOTTOM NAVIGATION -->
+    <!-- =========================
+         BOTTOM NAVIGATION
+    ========================== -->
 
     <nav class="bottomNav">
 
       <button
+        type="button"
         class="navButton active"
         onclick="showpage('home')"
       >
@@ -344,6 +376,7 @@
       </button>
 
       <button
+        type="button"
         class="navButton"
         onclick="showpage('discover')"
       >
@@ -352,6 +385,7 @@
       </button>
 
       <button
+        type="button"
         class="navButton createButton"
         onclick="showpage('create')"
       >
@@ -360,6 +394,7 @@
       </button>
 
       <button
+        type="button"
         class="navButton"
         onclick="showpage('chat')"
       >
@@ -368,6 +403,7 @@
       </button>
 
       <button
+        type="button"
         class="navButton"
         onclick="showpage('profile')"
       >
@@ -380,6 +416,7 @@
   </div>
 
 
+  <!-- Vidora JavaScript -->
   <script src="app.js"></script>
 
 </body>
