@@ -1,6 +1,6 @@
 /* =========================================
    VIDORA APP.JS
-   Matches the supplied Vidora HTML
+   MATCHES THE SUPPLIED VIDORA HTML
 ========================================= */
 
 
@@ -48,10 +48,6 @@ function escapeHTML(value) {
 
 }
 
-
-/* =========================================
-   AUTH MESSAGE
-========================================= */
 
 function setAuthMessage(message) {
 
@@ -119,11 +115,8 @@ async function signUp() {
       error
     } =
       await supabaseClient.auth.signUp({
-
         email: email,
-
         password: password
-
       });
 
 
@@ -137,7 +130,7 @@ async function signUp() {
     }
 
 
-    if (!data.user) {
+    if (!data || !data.user) {
 
       setAuthMessage(
         "Account could not be created."
@@ -166,6 +159,11 @@ async function signUp() {
     }
 
   } catch (error) {
+
+    console.error(
+      "Signup error:",
+      error
+    );
 
     setAuthMessage(
       error.message
@@ -211,11 +209,8 @@ async function login() {
       error
     } =
       await supabaseClient.auth.signInWithPassword({
-
         email: email,
-
         password: password
-
       });
 
 
@@ -229,7 +224,7 @@ async function login() {
     }
 
 
-    if (!data.session) {
+    if (!data || !data.session) {
 
       setAuthMessage(
         "Login failed. Please try again."
@@ -249,6 +244,11 @@ async function login() {
     );
 
   } catch (error) {
+
+    console.error(
+      "Login error:",
+      error
+    );
 
     setAuthMessage(
       error.message
@@ -297,6 +297,7 @@ async function logout() {
     $("email").value = "";
 
     $("password").value = "";
+
 
     setAuthMessage(
       "You have been logged out."
@@ -366,7 +367,7 @@ async function loadProfile() {
     if (error) {
 
       console.error(
-        "Profile user error:",
+        "User error:",
         error
       );
 
@@ -433,10 +434,15 @@ async function loadProfile() {
       }
 
 
-      if ($("profileAvatar")) {
+      const avatar =
+        document.querySelector(
+          ".profileAvatar"
+        );
 
-        $("profileAvatar")
-          .textContent =
+
+      if (avatar) {
+
+        avatar.textContent =
           username
             .charAt(0)
             .toUpperCase();
@@ -458,8 +464,7 @@ async function loadProfile() {
 
 
 /* =========================================
-   UPLOAD POST
-   HOME PAGE
+   HOME PAGE UPLOAD
 ========================================= */
 
 async function uploadPost() {
@@ -492,7 +497,7 @@ async function uploadPost() {
 
 
 /* =========================================
-   CREATE PAGE POST
+   CREATE PAGE UPLOAD
 ========================================= */
 
 async function publishFromCreate() {
@@ -595,11 +600,8 @@ async function createPost(
           filePath,
           file,
           {
-            contentType:
-              file.type,
-
-            upsert:
-              false
+            contentType: file.type,
+            upsert: false
           }
         );
 
@@ -750,8 +752,7 @@ async function loadFeed() {
         .order(
           "created_at",
           {
-            ascending:
-              false
+            ascending: false
           }
         );
 
@@ -786,9 +787,7 @@ async function loadFeed() {
       post => {
 
         feed.appendChild(
-          createPostElement(
-            post
-          )
+          createPostElement(post)
         );
 
       }
@@ -813,9 +812,7 @@ async function loadFeed() {
 function createPostElement(post) {
 
   const article =
-    document.createElement(
-      "article"
-    );
+    document.createElement("article");
 
 
   article.className =
@@ -833,12 +830,11 @@ function createPostElement(post) {
       .toUpperCase();
 
 
-  let mediaHTML = "";
+  let mediaHTML;
 
 
   if (
-    post.media_type ===
-    "video"
+    post.media_type === "video"
   ) {
 
     mediaHTML = `
@@ -942,6 +938,7 @@ function createPostElement(post) {
         ❤️ Like (${likeCount})
       </button>
 
+
       <button
         class="shareButton"
         type="button"
@@ -980,6 +977,7 @@ function createPostElement(post) {
           placeholder="Write a comment..."
           class="commentInput"
         >
+
 
         <button
           type="button"
@@ -1083,8 +1081,7 @@ async function toggleLike(post) {
       (post.likes || [])
         .find(
           like =>
-            like.user_id ===
-            user.id
+            like.user_id === user.id
         );
 
 
@@ -1261,22 +1258,7 @@ async function sharePost(post) {
    PAGE NAVIGATION
 ========================================= */
 
-/*
- Your HTML uses both:
-
- showPage(...)
-
- and
-
- showpage(...)
-
- JavaScript is case-sensitive,
- so both functions are provided.
-*/
-
-function showPage(
-  pageName
-) {
+function showPage(pageName) {
 
   const screens = [
     "home",
@@ -1326,8 +1308,16 @@ function showPage(
 
 
   if (
-    pageName ===
-    "profile"
+    pageName === "home"
+  ) {
+
+    loadFeed();
+
+  }
+
+
+  if (
+    pageName === "profile"
   ) {
 
     loadProfile();
@@ -1336,11 +1326,10 @@ function showPage(
 
 
   if (
-    pageName ===
-    "home"
+    pageName === "discover"
   ) {
 
-    loadFeed();
+    searchPosts();
 
   }
 
@@ -1348,18 +1337,16 @@ function showPage(
 
 
 /*
- Lowercase version because
- your bottom navigation uses
- showpage(...)
+ HTML bottom navigation
+uses showpage() with lowercase p.
+
+JavaScript is case-sensitive,
+so we provide both versions.
 */
 
-function showpage(
-  pageName
-) {
+function showpage(pageName) {
 
-  showPage(
-    pageName
-  );
+  showPage(pageName);
 
 }
 
@@ -1368,9 +1355,7 @@ function showpage(
    NAVIGATION ACTIVE STATE
 ========================================= */
 
-function updateNavigation(
-  pageName
-) {
+function updateNavigation(pageName) {
 
   const buttons =
     document.querySelectorAll(
@@ -1464,7 +1449,7 @@ function updateNavigation(
 
 
 /* =========================================
-   SEARCH
+   SEARCH POSTS
 ========================================= */
 
 let searchTimer = null;
@@ -1536,4 +1521,7 @@ async function searchPosts() {
                 caption,
                 created_at,
                 profiles (
-                
+                  username,
+                  avatar_url
+                ),
+    
