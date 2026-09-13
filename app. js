@@ -1,5 +1,6 @@
 /* =========================================
-   VIDORA CORE
+   VIDORA APP.JS
+   Matches the supplied Vidora HTML
 ========================================= */
 
 
@@ -12,7 +13,6 @@ const SUPABASE_URL =
 
 const SUPABASE_KEY =
   "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
-
 
 const supabaseClient =
   window.supabase.createClient(
@@ -29,7 +29,7 @@ const supabaseClient =
 
 
 /* =========================================
-   HELPERS
+   HELPER
 ========================================= */
 
 function $(id) {
@@ -39,12 +39,27 @@ function $(id) {
 
 function escapeHTML(value) {
 
-  return String(value || "")
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================================
+   AUTH MESSAGE
+========================================= */
+
+function setAuthMessage(message) {
+
+  const element = $("authMessage");
+
+  if (element) {
+    element.textContent = message;
+  }
 
 }
 
@@ -64,8 +79,19 @@ async function signUp() {
 
   if (!email) {
 
-    $("authMessage").textContent =
-      "Enter your email.";
+    setAuthMessage(
+      "Enter your email."
+    );
+
+    return;
+  }
+
+
+  if (!password) {
+
+    setAuthMessage(
+      "Enter your password."
+    );
 
     return;
   }
@@ -73,20 +99,25 @@ async function signUp() {
 
   if (password.length < 6) {
 
-    $("authMessage").textContent =
-      "Password must be at least 6 characters.";
+    setAuthMessage(
+      "Password must be at least 6 characters."
+    );
 
     return;
   }
 
 
-  $("authMessage").textContent =
-    "Creating account...";
+  setAuthMessage(
+    "Creating account..."
+  );
 
 
   try {
 
-    const { data, error } =
+    const {
+      data,
+      error
+    } =
       await supabaseClient.auth.signUp({
 
         email: email,
@@ -98,8 +129,19 @@ async function signUp() {
 
     if (error) {
 
-      $("authMessage").textContent =
-        error.message;
+      setAuthMessage(
+        error.message
+      );
+
+      return;
+    }
+
+
+    if (!data.user) {
+
+      setAuthMessage(
+        "Account could not be created."
+      );
 
       return;
     }
@@ -107,23 +149,27 @@ async function signUp() {
 
     if (data.session) {
 
-      $("authMessage").textContent =
-        "Account created successfully!";
+      setAuthMessage(
+        "Account created successfully!"
+      );
 
-      await showApp(data.session);
+      await showApp(
+        data.session
+      );
 
     } else {
 
-      $("authMessage").textContent =
-        "Account created! Check your email to verify your account.";
+      setAuthMessage(
+        "Account created! Check your email to verify your account."
+      );
 
     }
 
-
   } catch (error) {
 
-    $("authMessage").textContent =
-      error.message;
+    setAuthMessage(
+      error.message
+    );
 
   }
 
@@ -145,50 +191,68 @@ async function login() {
 
   if (!email || !password) {
 
-    $("authMessage").textContent =
-      "Enter your email and password.";
+    setAuthMessage(
+      "Enter your email and password."
+    );
 
     return;
   }
 
 
-  $("authMessage").textContent =
-    "Logging in...";
+  setAuthMessage(
+    "Logging in..."
+  );
 
 
   try {
 
-    const { data, error } =
-      await supabaseClient.auth
-        .signInWithPassword({
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.signInWithPassword({
 
-          email: email,
+        email: email,
 
-          password: password
+        password: password
 
-        });
+      });
 
 
     if (error) {
 
-      $("authMessage").textContent =
-        error.message;
+      setAuthMessage(
+        error.message
+      );
 
       return;
     }
 
 
-    $("authMessage").textContent =
-      "Login successful!";
+    if (!data.session) {
+
+      setAuthMessage(
+        "Login failed. Please try again."
+      );
+
+      return;
+    }
 
 
-    await showApp(data.session);
+    setAuthMessage(
+      "Login successful!"
+    );
 
+
+    await showApp(
+      data.session
+    );
 
   } catch (error) {
 
-    $("authMessage").textContent =
-      error.message;
+    setAuthMessage(
+      error.message
+    );
 
   }
 
@@ -201,29 +265,54 @@ async function login() {
 
 async function logout() {
 
-  const { error } =
-    await supabaseClient.auth.signOut();
+  try {
+
+    const {
+      error
+    } =
+      await supabaseClient.auth.signOut();
 
 
-  if (error) {
+    if (error) {
+
+      console.error(
+        "Logout error:",
+        error
+      );
+
+      return;
+    }
+
+
+    $("app")
+      .classList
+      .add("hidden");
+
+
+    $("authScreen")
+      .classList
+      .remove("hidden");
+
+
+    $("email").value = "";
+
+    $("password").value = "";
+
+    setAuthMessage(
+      "You have been logged out."
+    );
+
+
+    showPage("home");
+
+  } catch (error) {
 
     console.error(
       "Logout error:",
       error
     );
 
-    return;
   }
-
-
-  $("app")
-    .classList
-    .add("hidden");
-
-
-  $("authScreen")
-    .classList
-    .remove("hidden");
 
 }
 
@@ -234,7 +323,9 @@ async function logout() {
 
 async function showApp(session) {
 
-  if (!session) return;
+  if (!session) {
+    return;
+  }
 
 
   $("authScreen")
@@ -245,6 +336,9 @@ async function showApp(session) {
   $("app")
     .classList
     .remove("hidden");
+
+
+  showPage("home");
 
 
   await loadProfile();
@@ -260,64 +354,103 @@ async function showApp(session) {
 
 async function loadProfile() {
 
-  const {
-    data: {
-      user
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.getUser();
+
+
+    if (error) {
+
+      console.error(
+        "Profile user error:",
+        error
+      );
+
+      return;
     }
-  } =
-    await supabaseClient.auth.getUser();
 
 
-  if (!user) return;
+    const user =
+      data.user;
 
 
-  if ($("profileEmail")) {
-
-    $("profileEmail").textContent =
-      user.email || "";
-
-  }
+    if (!user) {
+      return;
+    }
 
 
-  const { data, error } =
-    await supabaseClient
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
+    const profileEmail =
+      $("profileEmail");
 
 
-  if (error) {
+    if (profileEmail) {
+
+      profileEmail.textContent =
+        user.email || "";
+
+    }
+
+
+    const {
+      data: profile,
+      error: profileError
+    } =
+      await supabaseClient
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+
+
+    if (profileError) {
+
+      console.log(
+        "Profile table:",
+        profileError.message
+      );
+
+      return;
+    }
+
+
+    if (profile) {
+
+      const username =
+        profile.username ||
+        "Vidora User";
+
+
+      if ($("profileUsername")) {
+
+        $("profileUsername")
+          .textContent =
+          "@" + username;
+
+      }
+
+
+      if ($("profileAvatar")) {
+
+        $("profileAvatar")
+          .textContent =
+          username
+            .charAt(0)
+            .toUpperCase();
+
+      }
+
+    }
+
+  } catch (error) {
 
     console.error(
-      "Profile error:",
+      "loadProfile error:",
       error
     );
-
-    return;
-  }
-
-
-  if (data) {
-
-    if ($("profileUsername")) {
-
-      $("profileUsername").textContent =
-        "@" + data.username;
-
-    }
-
-
-    if ($("profileAvatar")) {
-
-      $("profileAvatar").textContent =
-        data.username
-          ? data.username
-              .charAt(0)
-              .toUpperCase()
-          : "V";
-
-    }
 
   }
 
@@ -326,15 +459,16 @@ async function loadProfile() {
 
 /* =========================================
    UPLOAD POST
+   HOME PAGE
 ========================================= */
 
-async function publishPost() {
+async function uploadPost() {
 
   const file =
     $("mediaFile").files[0];
 
   const caption =
-    $("caption").value.trim();
+    $("postCaption").value.trim();
 
 
   if (!file) {
@@ -346,28 +480,96 @@ async function publishPost() {
   }
 
 
-  const {
-    data: {
-      user
-    }
-  } =
-    await supabaseClient.auth.getUser();
+  await createPost(
+    file,
+    caption,
+    "uploadMessage",
+    "mediaFile",
+    "postCaption"
+  );
+
+}
 
 
-  if (!user) {
+/* =========================================
+   CREATE PAGE POST
+========================================= */
 
-    $("uploadMessage").textContent =
-      "Please log in again.";
+async function publishFromCreate() {
+
+  const file =
+    $("createFile").files[0];
+
+  const caption =
+    $("createCaption").value.trim();
+
+
+  if (!file) {
+
+    $("createMessage").textContent =
+      "Choose an image or video first.";
 
     return;
   }
 
 
-  $("uploadMessage").textContent =
-    "Uploading...";
+  const success =
+    await createPost(
+      file,
+      caption,
+      "createMessage",
+      "createFile",
+      "createCaption"
+    );
+
+
+  if (success) {
+
+    showPage("home");
+
+  }
+
+}
+
+
+/* =========================================
+   CREATE POST
+========================================= */
+
+async function createPost(
+  file,
+  caption,
+  messageId,
+  fileInputId,
+  captionInputId
+) {
+
+  const message =
+    $(messageId);
 
 
   try {
+
+    const {
+      data: {
+        user
+      }
+    } =
+      await supabaseClient.auth.getUser();
+
+
+    if (!user) {
+
+      message.textContent =
+        "Please log in again.";
+
+      return false;
+    }
+
+
+    message.textContent =
+      "Uploading...";
+
 
     const extension =
       file.name
@@ -377,7 +579,11 @@ async function publishPost() {
 
 
     const filePath =
-      `${user.id}/${crypto.randomUUID()}.${extension}`;
+      user.id +
+      "/" +
+      crypto.randomUUID() +
+      "." +
+      extension;
 
 
     const {
@@ -389,18 +595,21 @@ async function publishPost() {
           filePath,
           file,
           {
-            contentType: file.type,
-            upsert: false
+            contentType:
+              file.type,
+
+            upsert:
+              false
           }
         );
 
 
     if (uploadError) {
 
-      $("uploadMessage").textContent =
+      message.textContent =
         uploadError.message;
 
-      return;
+      return false;
     }
 
 
@@ -409,7 +618,9 @@ async function publishPost() {
     } =
       supabaseClient.storage
         .from("media")
-        .getPublicUrl(filePath);
+        .getPublicUrl(
+          filePath
+        );
 
 
     const mediaType =
@@ -442,29 +653,40 @@ async function publishPost() {
 
     if (postError) {
 
-      $("uploadMessage").textContent =
+      message.textContent =
         postError.message;
 
-      return;
+      return false;
     }
 
 
-    $("uploadMessage").textContent =
+    message.textContent =
       "Published successfully!";
 
 
-    $("mediaFile").value = "";
+    $(fileInputId).value = "";
 
-    $("caption").value = "";
+    $(captionInputId).value = "";
 
 
     await loadFeed();
 
 
+    return true;
+
   } catch (error) {
 
-    $("uploadMessage").textContent =
+    console.error(
+      "Create post error:",
+      error
+    );
+
+
+    message.textContent =
       error.message;
+
+
+    return false;
 
   }
 
@@ -481,87 +703,105 @@ async function loadFeed() {
     $("feed");
 
 
-  if (!feed) return;
+  if (!feed) {
+    return;
+  }
 
 
   feed.innerHTML =
     `<div class="loading">
-      Loading posts...
+      Loading Vidora...
     </div>`;
 
 
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from("posts")
-      .select(`
-        id,
-        user_id,
-        media_url,
-        media_type,
-        caption,
-        created_at,
-        profiles (
-          username,
-          avatar_url
-        ),
-        likes (
-          id,
-          user_id
-        ),
-        comments (
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("posts")
+        .select(`
           id,
           user_id,
-          body,
+          media_url,
+          media_type,
+          caption,
           created_at,
           profiles (
-            username
+            username,
+            avatar_url
+          ),
+          likes (
+            id,
+            user_id
+          ),
+          comments (
+            id,
+            user_id,
+            body,
+            created_at,
+            profiles (
+              username
+            )
           )
-        )
-      `)
-      .order(
-        "created_at",
-        {
-          ascending: false
-        }
-      );
+        `)
+        .order(
+          "created_at",
+          {
+            ascending:
+              false
+          }
+        );
 
 
-  if (error) {
+    if (error) {
+
+      feed.innerHTML =
+        `<div class="post">
+          ${escapeHTML(error.message)}
+        </div>`;
+
+      return;
+    }
+
+
+    if (!data || data.length === 0) {
+
+      feed.innerHTML =
+        `<div class="post">
+          <h3>No posts yet</h3>
+          <p>Be the first person to upload!</p>
+        </div>`;
+
+      return;
+    }
+
+
+    feed.innerHTML = "";
+
+
+    data.forEach(
+      post => {
+
+        feed.appendChild(
+          createPostElement(
+            post
+          )
+        );
+
+      }
+    );
+
+  } catch (error) {
 
     feed.innerHTML =
       `<div class="post">
         ${escapeHTML(error.message)}
       </div>`;
 
-    return;
   }
-
-
-  if (!data || data.length === 0) {
-
-    feed.innerHTML =
-      `<div class="post">
-        <h3>No posts yet</h3>
-        <p>Be the first person to upload!</p>
-      </div>`;
-
-    return;
-  }
-
-
-  feed.innerHTML = "";
-
-
-  data.forEach(post => {
-
-    feed.appendChild(
-      createPostElement(post)
-    );
-
-  });
 
 }
 
@@ -573,7 +813,9 @@ async function loadFeed() {
 function createPostElement(post) {
 
   const article =
-    document.createElement("article");
+    document.createElement(
+      "article"
+    );
 
 
   article.className =
@@ -591,12 +833,15 @@ function createPostElement(post) {
       .toUpperCase();
 
 
-  const mediaHTML =
-    post.media_type === "video"
+  let mediaHTML = "";
 
-      ?
 
-      `
+  if (
+    post.media_type ===
+    "video"
+  ) {
+
+    mediaHTML = `
       <video
         class="postMedia"
         controls
@@ -604,40 +849,42 @@ function createPostElement(post) {
         preload="metadata"
         src="${escapeHTML(post.media_url)}">
       </video>
-      `
+    `;
 
-      :
+  } else {
 
-      `
+    mediaHTML = `
       <img
         class="postMedia"
         src="${escapeHTML(post.media_url)}"
         alt="Vidora post">
-      `;
+    `;
+
+  }
 
 
   const comments =
     (post.comments || [])
-      .map(comment => {
+      .map(
+        comment => {
 
-        const name =
-          comment.profiles?.username ||
-          "User";
+          const name =
+            comment.profiles?.username ||
+            "User";
 
 
-        return `
-          <div class="comment">
+          return `
+            <div class="comment">
+              <strong>
+                @${escapeHTML(name)}
+              </strong>
 
-            <strong>
-              @${escapeHTML(name)}
-            </strong>
+              ${escapeHTML(comment.body)}
+            </div>
+          `;
 
-            ${escapeHTML(comment.body)}
-
-          </div>
-        `;
-
-      })
+        }
+      )
       .join("");
 
 
@@ -672,12 +919,14 @@ function createPostElement(post) {
 
     ${
       post.caption
-        ?
-        `<div class="postCaption">
-          ${escapeHTML(post.caption)}
-        </div>`
-        :
-        ""
+        ? `
+          <div class="postCaption">
+            ${escapeHTML(
+              post.caption
+            )}
+          </div>
+        `
+        : ""
     }
 
 
@@ -686,11 +935,17 @@ function createPostElement(post) {
 
     <div class="actions">
 
-      <button class="likeButton">
+      <button
+        class="likeButton"
+        type="button"
+      >
         ❤️ Like (${likeCount})
       </button>
 
-      <button class="shareButton">
+      <button
+        class="shareButton"
+        type="button"
+      >
         ↗ Share
       </button>
 
@@ -708,9 +963,11 @@ function createPostElement(post) {
 
         ${
           comments ||
-          `<p class="postTime">
-            No comments yet.
-          </p>`
+          `
+            <p class="postTime">
+              No comments yet.
+            </p>
+          `
         }
 
       </div>
@@ -724,7 +981,10 @@ function createPostElement(post) {
           class="commentInput"
         >
 
-        <button class="commentButton">
+        <button
+          type="button"
+          class="commentButton"
+        >
           Send
         </button>
 
@@ -735,48 +995,62 @@ function createPostElement(post) {
   `;
 
 
-  article
-    .querySelector(".likeButton")
-    .onclick =
-      () => toggleLike(post);
+  const likeButton =
+    article.querySelector(
+      ".likeButton"
+    );
 
 
-  article
-    .querySelector(".shareButton")
-    .onclick =
-      () => sharePost(post);
+  const shareButton =
+    article.querySelector(
+      ".shareButton"
+    );
 
 
-  article
-    .querySelector(".commentButton")
-    .onclick =
-      async () => {
-
-        const input =
-          article.querySelector(
-            ".commentInput"
-          );
+  const commentButton =
+    article.querySelector(
+      ".commentButton"
+    );
 
 
-        const body =
-          input.value.trim();
+  likeButton.onclick =
+    () => toggleLike(post);
 
 
-        if (!body) return;
+  shareButton.onclick =
+    () => sharePost(post);
 
 
-        await addComment(
-          post.id,
-          body
+  commentButton.onclick =
+    async () => {
+
+      const input =
+        article.querySelector(
+          ".commentInput"
         );
 
 
-        input.value = "";
+      const body =
+        input.value.trim();
 
 
-        await loadFeed();
+      if (!body) {
+        return;
+      }
 
-      };
+
+      await addComment(
+        post.id,
+        body
+      );
+
+
+      input.value = "";
+
+
+      await loadFeed();
+
+    };
 
 
   return article;
@@ -790,53 +1064,83 @@ function createPostElement(post) {
 
 async function toggleLike(post) {
 
-  const {
-    data: {
-      user
+  try {
+
+    const {
+      data: {
+        user
+      }
+    } =
+      await supabaseClient.auth.getUser();
+
+
+    if (!user) {
+      return;
     }
-  } =
-    await supabaseClient.auth.getUser();
 
 
-  if (!user) return;
+    const existingLike =
+      (post.likes || [])
+        .find(
+          like =>
+            like.user_id ===
+            user.id
+        );
 
 
-  const existingLike =
-    (post.likes || [])
-      .find(
-        like =>
-          like.user_id === user.id
-      );
+    if (existingLike) {
+
+      const {
+        error
+      } =
+        await supabaseClient
+          .from("likes")
+          .delete()
+          .eq(
+            "id",
+            existingLike.id
+          );
 
 
-  if (existingLike) {
+      if (error) {
+        alert(error.message);
+      }
 
-    await supabaseClient
-      .from("likes")
-      .delete()
-      .eq(
-        "id",
-        existingLike.id
-      );
+    } else {
 
-  } else {
+      const {
+        error
+      } =
+        await supabaseClient
+          .from("likes")
+          .insert({
 
-    await supabaseClient
-      .from("likes")
-      .insert({
+            post_id:
+              post.id,
 
-        post_id:
-          post.id,
+            user_id:
+              user.id
 
-        user_id:
-          user.id
+          });
 
-      });
+
+      if (error) {
+        alert(error.message);
+      }
+
+    }
+
+
+    await loadFeed();
+
+  } catch (error) {
+
+    console.error(
+      "Like error:",
+      error
+    );
 
   }
-
-
-  await loadFeed();
 
 }
 
@@ -850,39 +1154,53 @@ async function addComment(
   body
 ) {
 
-  const {
-    data: {
-      user
+  try {
+
+    const {
+      data: {
+        user
+      }
+    } =
+      await supabaseClient.auth.getUser();
+
+
+    if (!user) {
+      return;
     }
-  } =
-    await supabaseClient.auth.getUser();
 
 
-  if (!user) return;
+    const {
+      error
+    } =
+      await supabaseClient
+        .from("comments")
+        .insert({
+
+          post_id:
+            postId,
+
+          user_id:
+            user.id,
+
+          body:
+            body
+
+        });
 
 
-  const {
-    error
-  } =
-    await supabaseClient
-      .from("comments")
-      .insert({
+    if (error) {
 
-        post_id:
-          postId,
+      alert(
+        error.message
+      );
 
-        user_id:
-          user.id,
+    }
 
-        body:
-          body
+  } catch (error) {
 
-      });
-
-
-  if (error) {
-
-    alert(error.message);
+    alert(
+      error.message
+    );
 
   }
 
@@ -897,7 +1215,9 @@ async function sharePost(post) {
 
   try {
 
-    if (navigator.share) {
+    if (
+      navigator.share
+    ) {
 
       await navigator.share({
 
@@ -918,6 +1238,7 @@ async function sharePost(post) {
         post.media_url
       );
 
+
       alert(
         "Post link copied!"
       );
@@ -926,7 +1247,10 @@ async function sharePost(post) {
 
   } catch (error) {
 
-    console.log(error);
+    console.log(
+      "Share cancelled:",
+      error
+    );
 
   }
 
@@ -937,7 +1261,22 @@ async function sharePost(post) {
    PAGE NAVIGATION
 ========================================= */
 
-function showScreen(screenName) {
+/*
+ Your HTML uses both:
+
+ showPage(...)
+
+ and
+
+ showpage(...)
+
+ JavaScript is case-sensitive,
+ so both functions are provided.
+*/
+
+function showPage(
+  pageName
+) {
 
   const screens = [
     "home",
@@ -949,25 +1288,27 @@ function showScreen(screenName) {
   ];
 
 
-  screens.forEach(name => {
+  screens.forEach(
+    name => {
 
-    const screen =
-      $(name + "Screen");
+      const screen =
+        $(name + "Screen");
 
 
-    if (screen) {
+      if (screen) {
 
-      screen.classList.add(
-        "hidden"
-      );
+        screen.classList.add(
+          "hidden"
+        );
+
+      }
 
     }
-
-  });
+  );
 
 
   const selectedScreen =
-    $(screenName + "Screen");
+    $(pageName + "Screen");
 
 
   if (selectedScreen) {
@@ -978,122 +1319,221 @@ function showScreen(screenName) {
 
   }
 
-}
+
+  updateNavigation(
+    pageName
+  );
 
 
-/* =========================================
-   INITIALIZE
-========================================= */
+  if (
+    pageName ===
+    "profile"
+  ) {
 
-async function initialize() {
+    loadProfile();
 
-  const {
-    data: {
-      session
-    }
-  } =
-    await supabaseClient.auth.getSession();
+  }
 
 
-  if (session) {
+  if (
+    pageName ===
+    "home"
+  ) {
 
-    await showApp(session);
+    loadFeed();
 
   }
 
 }
 
 
+/*
+ Lowercase version because
+ your bottom navigation uses
+ showpage(...)
+*/
+
+function showpage(
+  pageName
+) {
+
+  showPage(
+    pageName
+  );
+
+}
+
+
 /* =========================================
-   AUTH EVENTS
+   NAVIGATION ACTIVE STATE
 ========================================= */
 
-supabaseClient.auth
-  .onAuthStateChange(
-    (event, session) => {
+function updateNavigation(
+  pageName
+) {
+
+  const buttons =
+    document.querySelectorAll(
+      ".navButton"
+    );
+
+
+  buttons.forEach(
+    button => {
+
+      button.classList.remove(
+        "active"
+      );
+
+    }
+  );
+
+
+  buttons.forEach(
+    button => {
+
+      const text =
+        button.textContent
+          .trim()
+          .toLowerCase();
+
 
       if (
-        event === "SIGNED_IN" &&
-        session
+        pageName === "home" &&
+        text.includes("home")
       ) {
 
-        showApp(session);
+        button.classList.add(
+          "active"
+        );
 
       }
 
 
       if (
-        event === "SIGNED_OUT"
+        pageName === "discover" &&
+        text.includes("discover")
       ) {
 
-        $("app")
-          .classList
-          .add("hidden");
+        button.classList.add(
+          "active"
+        );
+
+      }
 
 
-        $("authScreen")
-          .classList
-          .remove("hidden");
+      if (
+        pageName === "create" &&
+        text.includes("create")
+      ) {
+
+        button.classList.add(
+          "active"
+        );
+
+      }
+
+
+      if (
+        pageName === "chat" &&
+        text.includes("chat")
+      ) {
+
+        button.classList.add(
+          "active"
+        );
+
+      }
+
+
+      if (
+        pageName === "profile" &&
+        text.includes("profile")
+      ) {
+
+        button.classList.add(
+          "active"
+        );
 
       }
 
     }
   );
 
-
-/* =========================================
-   BUTTON EVENTS
-========================================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    const signUpBtn =
-      $("signUpBtn");
-
-    const loginBtn =
-      $("loginBtn");
-
-    const logoutBtn =
-      $("logoutBtn");
-
-
-    if (signUpBtn) {
-
-      signUpBtn.addEventListener(
-        "click",
-        signUp
-      );
-
-    }
-
-
-    if (loginBtn) {
-
-      loginBtn.addEventListener(
-        "click",
-        login
-      );
-
-    }
-
-
-    if (logoutBtn) {
-
-      logoutBtn.addEventListener(
-        "click",
-        logout
-      );
-
-    }
-
-  }
-);
+}
 
 
 /* =========================================
-   START
+   SEARCH
 ========================================= */
 
-initialize();
+let searchTimer = null;
+
+
+async function searchPosts() {
+
+  clearTimeout(
+    searchTimer
+  );
+
+
+  searchTimer =
+    setTimeout(
+      async () => {
+
+        const input =
+          $("searchInput");
+
+
+        const results =
+          $("discoverResults");
+
+
+        if (!input || !results) {
+          return;
+        }
+
+
+        const query =
+          input.value
+            .trim();
+
+
+        if (!query) {
+
+          results.innerHTML =
+            `
+              <div class="loading">
+                Discover what's trending.
+              </div>
+            `;
+
+          return;
+        }
+
+
+        results.innerHTML =
+          `
+            <div class="loading">
+              Searching...
+            </div>
+          `;
+
+
+        try {
+
+          const {
+            data,
+            error
+          } =
+            await supabaseClient
+              .from("posts")
+              .select(`
+                id,
+                user_id,
+                media_url,
+                media_type,
+                caption,
+                created_at,
+                profiles (
+                
