@@ -145,7 +145,9 @@ if (data.user) {
    LOGIN
 ========================================= */
 
-async function login() {
+async function signUp() {
+
+  alert("SIGNUP BUTTON WORKS");
 
   const email =
     $("email").value.trim();
@@ -153,20 +155,53 @@ async function login() {
   const password =
     $("password").value;
 
+  if (!email) {
+    $("authMessage").textContent =
+      "Enter your email.";
+    return;
+  }
+
+  if (password.length < 6) {
+    $("authMessage").textContent =
+      "Password must be at least 6 characters.";
+    return;
+  }
 
   $("authMessage").textContent =
-    "Logging in...";
+    "Creating account...";
 
+  try {
 
-  const { data, error } =
-    await supabaseClient.auth
-      .signInWithPassword({
-
+    const { data, error } =
+      await supabaseClient.auth.signUp({
         email: email,
-
         password: password
-
       });
+
+    if (error) {
+      alert("SUPABASE ERROR: " + error.message);
+
+      $("authMessage").textContent =
+        error.message;
+
+      return;
+    }
+
+    alert("SUPABASE SIGNUP REACHED");
+
+    if (data.user) {
+      $("authMessage").textContent =
+        "Account created! Check your email if verification is enabled.";
+    }
+
+  } catch (error) {
+
+    alert("JAVASCRIPT ERROR: " + error.message);
+
+    $("authMessage").textContent =
+      error.message;
+  }
+}
 
 
   if (error) {
