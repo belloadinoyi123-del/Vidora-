@@ -1303,43 +1303,42 @@ async function toggleLike(
 /* =========================================================
    18. LOAD COMMENTS
    ========================================================= */
+async function loadComments(postId, article) {
+  if (!article) return;
 
-async function loadComments(
-  postId,
-  article
-) {
-  if (!article) {
-    return;
-  }
+  const commentsList = article.querySelector(".commentsList");
 
-  const commentsList =
-    article.querySelector(".commentsList");
+  if (!commentsList) return;
 
-  if (!commentsList) {
-    return;
-  }
+  commentsList.innerHTML = `
+    <small>Loading comments...</small>
+  `;
 
   try {
-    const { data, error } =
-      await supabaseClient
-        .from("comments")
-        .select(
-          "id,user_id,body,created_at"
-        )
-        .eq("post_id", postId)
-        .order("created_at", {
-          ascending: true
-        });
+    const { data, error } = await supabaseClient
+      .from("comments")
+      .select("id,user_id,body,created_at")
+      .eq("post_id", postId)
+      .order("created_at", {
+        ascending: true
+      });
 
     if (error) {
-      commentsList.innerHTML = "";
+      console.error("LOAD COMMENTS ERROR:", error);
+
+      commentsList.innerHTML = `
+        <small>
+          Comments are unavailable right now.
+        </small>
+      `;
+
       return;
     }
 
     if (!data || data.length === 0) {
       commentsList.innerHTML = `
         <small>
-          No comments yet.
+          No comments yet. Be the first to comment!
         </small>
       `;
 
@@ -1348,83 +1347,99 @@ async function loadComments(
 
     commentsList.innerHTML = "";
 
-    for (const comment of data) {
-
-      const item =
-        document.createElement("div");
+    data.forEach(comment => {
+      const item = document.createElement("div");
 
       item.className = "comment";
 
       item.innerHTML = `
-        <strong>
+        <div class="commentUser">
           Vidora User
-        </strong>
+        </div>
 
-        <span>
+        <div class="commentBody">
           ${escapeHTML(comment.body)}
-        </span>
+        </div>
+
+        <small class="commentDate">
+          ${escapeHTML(formatDate(comment.created_at))}
+        </small>
       `;
 
       commentsList.appendChild(item);
-    }
+    });
 
   } catch (error) {
-    commentsList.innerHTML = "";
+    console.error("COMMENTS EXCEPTION:", error);
+
+    commentsList.innerHTML = `
+      <small>
+        Unable to load comments.
+      </small>
+    `;
   }
 }
-
-
 /* =========================================================
    19. ADD COMMENT
    ========================================================= */
-
-async function addComment(
-  postId,
-  body,
-  article
-) {
+async function addComment(postId, body, article) {
   if (!currentUser) {
     alert("Please log in first.");
     return;
   }
 
-  if (!body) {
+  if (!postId || !body.trim()) {
     return;
   }
 
   try {
-    const { error } =
+    const { data: sessionData } =
+      await supabaseClient.auth.getSession();
+
+    const session = sessionData?.session;
+
+    if (!session || !session.user) {
+      alert("Your login session has expired. Please log in again.");
+      return;
+    }
+
+    const userId = session.user.id;
+
+    console.log("Adding comment...");
+    console.log("Post ID:", postId);
+    console.log("User ID:", userId);
+
+    const { data, error } =
       await supabaseClient
         .from("comments")
         .insert({
           post_id: postId,
-          user_id: currentUser.id,
-          body: body
-        });
+          user_id: userId,
+          body: body.trim()
+        })
+        .select()
+        .single();
 
     if (error) {
-      console.error(
-        "COMMENT ERROR:",
-        error
-      );
+      console.error("COMMENT INSERT ERROR:", error);
 
       alert(
-        "Comment could not be added: " +
+        "Comment could not be added:\n\n" +
         error.message
       );
 
       return;
     }
 
-    await loadComments(
-      postId,
-      article
-    );
+    console.log("COMMENT CREATED:", data);
+
+    await loadComments(postId, article);
 
   } catch (error) {
-    console.error(
-      "COMMENT EXCEPTION:",
-      error
+    console.error("COMMENT EXCEPTION:", error);
+
+    alert(
+      "Something went wrong while adding your comment."
     );
   }
 }
