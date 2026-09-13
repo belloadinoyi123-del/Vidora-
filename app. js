@@ -858,48 +858,47 @@ async function sharePost(post) {
    PAGE NAVIGATION
 ========================================= */
 
-function showPage(pageId) {
+function showScreen(screenName) {
 
-  [
-    "homePage",
-    "profilePage",
-    "discoverPage"
-  ]
-  .forEach(id => {
+  const screens = [
+    "home",
+    "discover",
+    "create",
+    "chat",
+    "profile",
+    "notifications"
+  ];
 
-    $(id)
-      .classList
-      .add("hidden");
+  screens.forEach(name => {
+
+    const screen = $(name + "Screen");
+
+    if (screen) {
+      screen.classList.add("hidden");
+    }
 
   });
 
 
-  $(pageId)
-    .classList
-    .remove("hidden");
+  const selectedScreen =
+    $(screenName + "Screen");
+
+  if (selectedScreen) {
+    selectedScreen.classList.remove("hidden");
+  }
 
 
   document
     .querySelectorAll(".navButton")
     .forEach(button => {
 
-      button.classList.remove(
-        "active"
-      );
-
-      if (
-        button.dataset.page === pageId
-      ) {
-
-        button.classList.add(
-          "active"
-        );
-
-      }
+      button.classList.remove("active");
 
     });
 
 }
+
+
 
 
 /* =========================================
