@@ -64,100 +64,14 @@ function escapeHTML(value) {
 ========================================= */
 
 async function signUp() {
-alert("SIGNUP BUTTON WORKS");
-  const email =
-    $("email").value.trim();
-
-  const password =
-    $("password").value;
-
-
-  if (!email) {
-
-    $("authMessage").textContent =
-      "Enter your email.";
-
-    return;
-  }
-
-
-  if (password.length < 6) {
-
-    $("authMessage").textContent =
-      "Password must be at least 6 characters.";
-
-    return;
-  }
-
-
-  $("authMessage").textContent =
-    "Creating account...";
-
-
-  const { data, error } =
-  await supabaseClient.auth.signUp({
-    email: email,
-    password: password
-  });
-
-if (error) {
-  alert("SUPABASE ERROR: " + error.message);
-
-  $("authMessage").textContent =
-    error.message;
-
-  return;
-}
-
-alert("SUPABASE SIGNUP REACHED");
-
-if (data.user) {
-  $("authMessage").textContent =
-    "Account created! Check your email if verification is enabled.";
-}
-
-
-  if (error) {
-
-    $("authMessage").textContent =
-      error.message;
-
-    return;
-  }
-
-
-  if (!data.session) {
-
-    $("authMessage").textContent =
-      "Account created. Check your email if verification is required.";
-
-  } else {
-
-    $("authMessage").textContent =
-      "Account created!";
-
-  }
-
-}
-
-
-/* =========================================
-   LOGIN
-========================================= */
-
-async function signUp() {
 
   alert("SIGNUP BUTTON WORKS");
 
-  const email =
-    $("email").value.trim();
-
-  const password =
-    $("password").value;
+  const email = $("email").value.trim();
+  const password = $("password").value;
 
   if (!email) {
-    $("authMessage").textContent =
-      "Enter your email.";
+    $("authMessage").textContent = "Enter your email.";
     return;
   }
 
@@ -179,6 +93,7 @@ async function signUp() {
       });
 
     if (error) {
+
       alert("SUPABASE ERROR: " + error.message);
 
       $("authMessage").textContent =
@@ -190,8 +105,21 @@ async function signUp() {
     alert("SUPABASE SIGNUP REACHED");
 
     if (data.user) {
-      $("authMessage").textContent =
-        "Account created! Check your email if verification is enabled.";
+
+      if (data.session) {
+
+        $("authMessage").textContent =
+          "Account created successfully!";
+
+        await showApp(data.session);
+
+      } else {
+
+        $("authMessage").textContent =
+          "Account created! Check your email to verify your account.";
+
+      }
+
     }
 
   } catch (error) {
@@ -200,23 +128,67 @@ async function signUp() {
 
     $("authMessage").textContent =
       error.message;
+
   }
+
 }
 
 
-  if (error) {
+/* =========================================
+   LOGIN
+========================================= */
+
+async function login() {
+
+  const email =
+    $("email").value.trim();
+
+  const password =
+    $("password").value;
+
+  if (!email || !password) {
 
     $("authMessage").textContent =
-      error.message;
+      "Enter your email and password.";
 
     return;
   }
 
+  $("authMessage").textContent =
+    "Logging in...";
 
-  showApp(data.session);
+  try {
+
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+
+        email: email,
+
+        password: password
+
+      });
+
+    if (error) {
+
+      $("authMessage").textContent =
+        error.message;
+
+      return;
+    }
+
+    $("authMessage").textContent =
+      "Login successful!";
+
+    await showApp(data.session);
+
+  } catch (error) {
+
+    $("authMessage").textContent =
+      error.message;
+
+  }
 
 }
-
 
 /* =========================================
    LOGOUT
