@@ -978,27 +978,6 @@ $("logoutBtn")
 
 
 
-
-document
-  .querySelectorAll(".navButton")
-  .forEach(button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        showPage(
-          button.dataset.page
-        );
-
-      }
-    );
-
-  });
-
-
-
-
 /* =========================================
    START
 ========================================= */
