@@ -10,18 +10,8 @@
 const SUPABASE_URL =
   "https://htnrqgzxkfktwoioscjr.supabase.co";
 
-/*
- IMPORTANT:
-
- 
-
- Never put a Supabase service_role/secret key
- inside this browser file.
-*/
-
 const SUPABASE_KEY =
   "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
-
 
 
 const supabaseClient =
@@ -60,41 +50,53 @@ function escapeHTML(value) {
 
 
 /* =========================================
-   AUTH
+   SIGN UP
 ========================================= */
 
 async function signUp() {
 
-  alert("SIGNUP BUTTON WORKS");
+  const email =
+    $("email").value.trim();
 
-  const email = $("email").value.trim();
-  const password = $("password").value;
+  const password =
+    $("password").value;
+
 
   if (!email) {
-    $("authMessage").textContent = "Enter your email.";
+
+    $("authMessage").textContent =
+      "Enter your email.";
+
     return;
   }
 
+
   if (password.length < 6) {
+
     $("authMessage").textContent =
       "Password must be at least 6 characters.";
+
     return;
   }
+
 
   $("authMessage").textContent =
     "Creating account...";
+
 
   try {
 
     const { data, error } =
       await supabaseClient.auth.signUp({
+
         email: email,
+
         password: password
+
       });
 
-    if (error) {
 
-      alert("SUPABASE ERROR: " + error.message);
+    if (error) {
 
       $("authMessage").textContent =
         error.message;
@@ -102,29 +104,23 @@ async function signUp() {
       return;
     }
 
-    alert("SUPABASE SIGNUP REACHED");
 
-    if (data.user) {
+    if (data.session) {
 
-      if (data.session) {
+      $("authMessage").textContent =
+        "Account created successfully!";
 
-        $("authMessage").textContent =
-          "Account created successfully!";
+      await showApp(data.session);
 
-        await showApp(data.session);
+    } else {
 
-      } else {
-
-        $("authMessage").textContent =
-          "Account created! Check your email to verify your account.";
-
-      }
+      $("authMessage").textContent =
+        "Account created! Check your email to verify your account.";
 
     }
 
-  } catch (error) {
 
-    alert("JAVASCRIPT ERROR: " + error.message);
+  } catch (error) {
 
     $("authMessage").textContent =
       error.message;
@@ -146,6 +142,7 @@ async function login() {
   const password =
     $("password").value;
 
+
   if (!email || !password) {
 
     $("authMessage").textContent =
@@ -154,19 +151,23 @@ async function login() {
     return;
   }
 
+
   $("authMessage").textContent =
     "Logging in...";
+
 
   try {
 
     const { data, error } =
-      await supabaseClient.auth.signInWithPassword({
+      await supabaseClient.auth
+        .signInWithPassword({
 
-        email: email,
+          email: email,
 
-        password: password
+          password: password
 
-      });
+        });
+
 
     if (error) {
 
@@ -176,10 +177,13 @@ async function login() {
       return;
     }
 
+
     $("authMessage").textContent =
       "Login successful!";
 
+
     await showApp(data.session);
+
 
   } catch (error) {
 
@@ -190,17 +194,36 @@ async function login() {
 
 }
 
+
 /* =========================================
    LOGOUT
 ========================================= */
 
 async function logout() {
 
-  await supabaseClient.auth.signOut();
+  const { error } =
+    await supabaseClient.auth.signOut();
 
-  $("app").classList.add("hidden");
 
-  $("authScreen").classList.remove("hidden");
+  if (error) {
+
+    console.error(
+      "Logout error:",
+      error
+    );
+
+    return;
+  }
+
+
+  $("app")
+    .classList
+    .add("hidden");
+
+
+  $("authScreen")
+    .classList
+    .remove("hidden");
 
 }
 
@@ -248,11 +271,15 @@ async function loadProfile() {
   if (!user) return;
 
 
-  $("profileEmail").textContent =
-    user.email || "";
+  if ($("profileEmail")) {
+
+    $("profileEmail").textContent =
+      user.email || "";
+
+  }
 
 
-  const { data } =
+  const { data, error } =
     await supabaseClient
       .from("profiles")
       .select("*")
@@ -260,16 +287,37 @@ async function loadProfile() {
       .maybeSingle();
 
 
+  if (error) {
+
+    console.error(
+      "Profile error:",
+      error
+    );
+
+    return;
+  }
+
+
   if (data) {
 
-    $("profileUsername").textContent =
-      "@" + data.username;
+    if ($("profileUsername")) {
+
+      $("profileUsername").textContent =
+        "@" + data.username;
+
+    }
 
 
-    $("profileAvatar").textContent =
-      data.username
-        ? data.username.charAt(0).toUpperCase()
-        : "V";
+    if ($("profileAvatar")) {
+
+      $("profileAvatar").textContent =
+        data.username
+          ? data.username
+              .charAt(0)
+              .toUpperCase()
+          : "V";
+
+    }
 
   }
 
@@ -332,7 +380,9 @@ async function publishPost() {
       `${user.id}/${crypto.randomUUID()}.${extension}`;
 
 
-    const { error: uploadError } =
+    const {
+      error: uploadError
+    } =
       await supabaseClient.storage
         .from("media")
         .upload(
@@ -368,12 +418,15 @@ async function publishPost() {
         : "image";
 
 
-    const { error: postError } =
+    const {
+      error: postError
+    } =
       await supabaseClient
         .from("posts")
         .insert({
 
-          user_id: user.id,
+          user_id:
+            user.id,
 
           media_url:
             publicData.publicUrl,
@@ -428,8 +481,13 @@ async function loadFeed() {
     $("feed");
 
 
+  if (!feed) return;
+
+
   feed.innerHTML =
-    `<div class="loading">Loading posts...</div>`;
+    `<div class="loading">
+      Loading posts...
+    </div>`;
 
 
   const {
@@ -602,7 +660,9 @@ function createPostElement(post) {
         </div>
 
         <div class="postTime">
-          ${new Date(post.created_at).toLocaleString()}
+          ${new Date(
+            post.created_at
+          ).toLocaleString()}
         </div>
 
       </div>
@@ -642,6 +702,7 @@ function createPostElement(post) {
       <strong>
         Comments
       </strong>
+
 
       <div class="commentList">
 
@@ -836,9 +897,7 @@ async function sharePost(post) {
 
   try {
 
-    if (
-      navigator.share
-    ) {
+    if (navigator.share) {
 
       await navigator.share({
 
@@ -889,26 +948,37 @@ function showScreen(screenName) {
     "notifications"
   ];
 
+
   screens.forEach(name => {
 
-    const screen = $(name + "Screen");
+    const screen =
+      $(name + "Screen");
+
 
     if (screen) {
-      screen.classList.add("hidden");
+
+      screen.classList.add(
+        "hidden"
+      );
+
     }
 
   });
 
+
   const selectedScreen =
     $(screenName + "Screen");
 
+
   if (selectedScreen) {
-    selectedScreen.classList.remove("hidden");
+
+    selectedScreen.classList.remove(
+      "hidden"
+    );
+
   }
 
 }
-
-
 
 
 /* =========================================
@@ -975,27 +1045,51 @@ supabaseClient.auth
    BUTTON EVENTS
 ========================================= */
 
-$("signUpBtn")
-  .addEventListener(
-    "click",
-    signUp
-  );
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    const signUpBtn =
+      $("signUpBtn");
+
+    const loginBtn =
+      $("loginBtn");
+
+    const logoutBtn =
+      $("logoutBtn");
 
 
-$("loginBtn")
-  .addEventListener(
-    "click",
-    login
-  );
+    if (signUpBtn) {
+
+      signUpBtn.addEventListener(
+        "click",
+        signUp
+      );
+
+    }
 
 
-$("logoutBtn")
-  .addEventListener(
-    "click",
-    logout
-  );
+    if (loginBtn) {
+
+      loginBtn.addEventListener(
+        "click",
+        login
+      );
+
+    }
 
 
+    if (logoutBtn) {
+
+      logoutBtn.addEventListener(
+        "click",
+        logout
+      );
+
+    }
+
+  }
+);
 
 
 /* =========================================
