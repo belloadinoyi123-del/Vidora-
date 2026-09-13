@@ -132,100 +132,68 @@ function formatDate(dateString) {
    ========================================================= */
 
 async function signUp() {
-  const emailInput = getElement("email");
-  const passwordInput = getElement("password");
-  const button = getElement("signUpBtn");
+  const email = document.getElementById("email")?.value.trim();
+  const password = document.getElementById("password")?.value.trim();
+  const message = document.getElementById("authMessage");
+  const button = document.getElementById("signUpBtn");
 
-  if (!emailInput || !passwordInput) {
-    console.error("Authentication inputs were not found.");
-    return;
-  }
-
-  const email = emailInput.value.trim();
-  const password = passwordInput.value;
-
-  clearMessage("authMessage");
-
-  if (!email) {
-    setMessage("authMessage", "Please enter your email.");
-    return;
-  }
-
-  if (!email.includes("@")) {
-    setMessage("authMessage", "Please enter a valid email.");
-    return;
-  }
-
-  if (!password) {
-    setMessage("authMessage", "Please enter a password.");
+  if (!email || !password) {
+    if (message) message.textContent = "Enter your email and password.";
     return;
   }
 
   if (password.length < 6) {
-    setMessage(
-      "authMessage",
-      "Password must be at least 6 characters."
-    );
+    if (message) message.textContent = "Password must be at least 6 characters.";
     return;
   }
 
   if (button) {
     button.disabled = true;
-    button.textContent = "Creating account...";
+    button.textContent = "Creating...";
   }
 
   try {
-    const { data, error } =
-      await supabaseClient.auth.signUp({
-        email: email,
-        password: password
-      });
+    const { data, error } = await supabaseClient.auth.signUp({
+      email: email,
+      password: password
+    });
+
+    console.log("SIGNUP RESULT:", data);
+    console.log("SIGNUP ERROR:", error);
 
     if (error) {
-      console.error("SIGN UP ERROR:", error);
-
-      setMessage(
-        "authMessage",
-        error.message || "Unable to create account."
-      );
-
+      if (message) {
+        message.textContent = error.message;
+        message.style.color = "#ff6b6b";
+      }
       return;
     }
-
-    console.log("SIGN UP SUCCESS:", data);
-
-    /*
-      Supabase may require email confirmation.
-      If confirmation is required, session can be null.
-    */
 
     if (data.session) {
       currentUser = data.user;
 
-      setMessage(
-        "authMessage",
-        "Account created successfully!",
-        true
-      );
+      if (message) {
+        message.textContent = "Account created successfully!";
+        message.style.color = "#4ade80";
+      }
 
-      setTimeout(() => {
-        showApp();
-      }, 500);
+      await showApp();
+
     } else {
-      setMessage(
-        "authMessage",
-        "Account created! Check your email to confirm your account.",
-        true
-      );
+      if (message) {
+        message.textContent =
+          "Account created. Check your email to confirm your account.";
+        message.style.color = "#4ade80";
+      }
     }
 
   } catch (error) {
-    console.error("SIGN UP EXCEPTION:", error);
+    console.error("SIGNUP EXCEPTION:", error);
 
-    setMessage(
-      "authMessage",
-      "Something went wrong while creating your account."
-    );
+    if (message) {
+      message.textContent = error.message || "Sign up failed.";
+      message.style.color = "#ff6b6b";
+    }
 
   } finally {
     if (button) {
@@ -241,32 +209,13 @@ async function signUp() {
    ========================================================= */
 
 async function login() {
-  const emailInput = getElement("email");
-  const passwordInput = getElement("password");
-  const button = getElement("loginBtn");
+  const email = document.getElementById("email")?.value.trim();
+  const password = document.getElementById("password")?.value.trim();
+  const message = document.getElementById("authMessage");
+  const button = document.getElementById("loginBtn");
 
-  if (!emailInput || !passwordInput) {
-    console.error("Login inputs were not found.");
-    return;
-  }
-
-  const email = emailInput.value.trim();
-  const password = passwordInput.value;
-
-  clearMessage("authMessage");
-
-  if (!email) {
-    setMessage("authMessage", "Please enter your email.");
-    return;
-  }
-
-  if (!email.includes("@")) {
-    setMessage("authMessage", "Please enter a valid email.");
-    return;
-  }
-
-  if (!password) {
-    setMessage("authMessage", "Please enter your password.");
+  if (!email || !password) {
+    if (message) message.textContent = "Enter your email and password.";
     return;
   }
 
@@ -276,46 +225,39 @@ async function login() {
   }
 
   try {
-    console.log("Attempting login for:", email);
-
     const { data, error } =
       await supabaseClient.auth.signInWithPassword({
         email: email,
         password: password
       });
 
+    console.log("LOGIN RESULT:", data);
+    console.log("LOGIN ERROR:", error);
+
     if (error) {
-      console.error("LOGIN ERROR:", error);
-
-      setMessage(
-        "authMessage",
-        error.message || "Login failed."
-      );
-
+      if (message) {
+        message.textContent = error.message;
+        message.style.color = "#ff6b6b";
+      }
       return;
     }
 
-    console.log("LOGIN SUCCESS:", data);
-
     currentUser = data.user;
 
-    setMessage(
-      "authMessage",
-      "Login successful!",
-      true
-    );
+    if (message) {
+      message.textContent = "Login successful!";
+      message.style.color = "#4ade80";
+    }
 
-    setTimeout(() => {
-      showApp();
-    }, 300);
+    await showApp();
 
   } catch (error) {
     console.error("LOGIN EXCEPTION:", error);
 
-    setMessage(
-      "authMessage",
-      "Unable to log in. Please try again."
-    );
+    if (message) {
+      message.textContent = error.message || "Login failed.";
+      message.style.color = "#ff6b6b";
+    }
 
   } finally {
     if (button) {
