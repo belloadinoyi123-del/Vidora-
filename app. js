@@ -1,6 +1,7 @@
 /* =========================================================
    VIDORA - COMPLETE APP.JS
-   Matches the supplied Vidora HTML
+   Supabase + Authentication + Posts + Video/Image + Likes
+   Comments + Search + Share + Navigation + Profile
    ========================================================= */
 
 
@@ -8,17 +9,20 @@
    1. SUPABASE CONFIGURATION
    ========================================================= */
 
-const SUPABASE_URL =
-  "https://htnrqgzxkfktwoioscjr.supabase.co";
+const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
 
 const SUPABASE_KEY =
   "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
 
 
-if (!window.supabase) {
-  console.error("Supabase library was not loaded.");
-} else {
-  window.supabaseClient = window.supabase.createClient(
+let supabaseClient = null;
+
+try {
+  if (!window.supabase) {
+    throw new Error("Supabase library was not loaded.");
+  }
+
+  supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY,
     {
@@ -29,14 +33,15 @@ if (!window.supabase) {
       }
     }
   );
+
+  console.log("Vidora connected to Supabase.");
+} catch (error) {
+  console.error("Supabase initialization error:", error);
 }
 
 
-const supabaseClient = window.supabaseClient;
-
-
 /* =========================================================
-   2. HELPER FUNCTIONS
+   2. BASIC HELPERS
    ========================================================= */
 
 function $(id) {
@@ -44,8 +49,27 @@ function $(id) {
 }
 
 
+function setMessage(elementId, message, type = "") {
+  const element = $(elementId);
+
+  if (!element) return;
+
+  element.textContent = message;
+
+  element.className = "";
+
+  if (type) {
+    element.classList.add(type);
+  }
+}
+
+
 function escapeHTML(value) {
-  return String(value ?? "")
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -54,21 +78,69 @@ function escapeHTML(value) {
 }
 
 
-function setAuthMessage(message) {
-  const element = $("authMessage");
-
-  if (element) {
-    element.textContent = message;
+function getFileExtension(file) {
+  if (!file || !file.name) {
+    return "bin";
   }
+
+  const parts = file.name.split(".");
+
+  if (parts.length < 2) {
+    return "bin";
+  }
+
+  return parts.pop().toLowerCase();
 }
 
 
-function setMessage(id, message) {
-  const element = $(id);
+function createUniqueFileName(file) {
+  const extension = getFileExtension(file);
 
-  if (element) {
-    element.textContent = message;
+  let uniqueId;
+
+  if (
+    window.crypto &&
+    typeof window.crypto.randomUUID === "function"
+  ) {
+    uniqueId = window.crypto.randomUUID();
+  } else {
+    uniqueId =
+      Date.now().toString() +
+      "_" +
+      Math.random().toString(36).substring(2);
   }
+
+  return uniqueId + "." + extension;
+}
+
+
+function formatDate(dateString) {
+  if (!dateString) {
+    return "";
+  }
+
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleString();
+}
+
+
+function getCurrentUser() {
+  if (!supabaseClient) {
+    return null;
+  }
+
+  return supabaseClient.auth.getUser()
+    .then(function(result) {
+      return result.data ? result.data.user : null;
+    })
+    .catch(function() {
+      return null;
+    });
 }
 
 
@@ -77,106 +149,118 @@ function setMessage(id, message) {
    ========================================================= */
 
 async function signUp() {
-
   const emailElement = $("email");
   const passwordElement = $("password");
 
   if (!emailElement || !passwordElement) {
+    alert("Email or password field was not found.");
     return;
   }
 
   const email = emailElement.value.trim();
   const password = passwordElement.value;
 
-  if (!email) {
-    setAuthMessage("Enter your email.");
-    return;
-  }
-
-  if (!email.includes("@")) {
-    setAuthMessage("Enter a valid email address.");
-    return;
-  }
-
-  if (!password) {
-    setAuthMessage("Enter your password.");
-    return;
-  }
-
-  if (password.length < 6) {
-    setAuthMessage(
-      "Password must be at least 6 characters."
+  if (!supabaseClient) {
+    setMessage(
+      "authMessage",
+      "Supabase is not connected.",
+      "error"
     );
     return;
   }
 
-  const button = $("signUpBtn");
-
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Creating account...";
+  if (!email) {
+    setMessage(
+      "authMessage",
+      "Please enter your email.",
+      "error"
+    );
+    return;
   }
 
-  setAuthMessage("Creating account...");
+  if (!password) {
+    setMessage(
+      "authMessage",
+      "Please enter a password.",
+      "error"
+    );
+    return;
+  }
+
+  if (password.length < 6) {
+    setMessage(
+      "authMessage",
+      "Password must be at least 6 characters.",
+      "error"
+    );
+    return;
+  }
+
+  setMessage(
+    "authMessage",
+    "Creating your account..."
+  );
 
   try {
-
-    const result =
-      await supabaseClient.auth.signUp({
-        email: email,
-        password: password
-      });
+    const result = await supabaseClient.auth.signUp({
+      email: email,
+      password: password
+    });
 
     const data = result.data;
     const error = result.error;
 
+    console.log("Sign up response:", data, error);
+
     if (error) {
-      setAuthMessage(error.message);
+      setMessage(
+        "authMessage",
+        "Sign up failed: " + error.message,
+        "error"
+      );
       return;
     }
 
     if (!data || !data.user) {
-      setAuthMessage(
-        "Account could not be created."
+      setMessage(
+        "authMessage",
+        "Account could not be created.",
+        "error"
       );
       return;
     }
 
     /*
-      If email confirmation is enabled in Supabase,
-      Supabase normally returns a user without a session.
+      Supabase may require email confirmation.
+      In that case there is a user but no session.
     */
 
     if (!data.session) {
-
-      setAuthMessage(
-        "Account created! Check your email to verify your account."
+      setMessage(
+        "authMessage",
+        "Account created! Check your email to confirm your account.",
+        "success"
       );
 
       return;
     }
 
-    setAuthMessage(
-      "Account created successfully!"
+    setMessage(
+      "authMessage",
+      "Account created successfully!",
+      "success"
     );
 
     await showApp();
 
   } catch (error) {
+    console.error("Sign up error:", error);
 
-    console.error("Signup error:", error);
-
-    setAuthMessage(
-      error.message || "Signup failed."
+    setMessage(
+      "authMessage",
+      "Sign up error: " + error.message,
+      "error"
     );
-
-  } finally {
-
-    if (button) {
-      button.disabled = false;
-      button.textContent = "Create Account";
-    }
-
   }
 }
 
@@ -186,34 +270,51 @@ async function signUp() {
    ========================================================= */
 
 async function login() {
-
   const emailElement = $("email");
   const passwordElement = $("password");
 
   if (!emailElement || !passwordElement) {
+    alert("Email or password field was not found.");
     return;
   }
 
   const email = emailElement.value.trim();
   const password = passwordElement.value;
 
-  if (!email || !password) {
-    setAuthMessage(
-      "Enter your email and password."
+  if (!supabaseClient) {
+    setMessage(
+      "authMessage",
+      "Supabase is not connected.",
+      "error"
     );
     return;
   }
 
-  const button = $("loginBtn");
-
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Logging in...";
+  if (!email) {
+    setMessage(
+      "authMessage",
+      "Please enter your email.",
+      "error"
+    );
+    return;
   }
 
-  setAuthMessage("Logging in...");
+  if (!password) {
+    setMessage(
+      "authMessage",
+      "Please enter your password.",
+      "error"
+    );
+    return;
+  }
+
+  setMessage(
+    "authMessage",
+    "Logging in..."
+  );
 
   try {
+    console.log("Login button clicked.");
 
     const result =
       await supabaseClient.auth.signInWithPassword({
@@ -224,37 +325,42 @@ async function login() {
     const data = result.data;
     const error = result.error;
 
-    if (error) {
-      setAuthMessage(error.message);
-      return;
-    }
+    console.log("Login response:", data, error);
 
-    if (!data || !data.session) {
-      setAuthMessage(
-        "Login failed. Please try again."
+    if (error) {
+      setMessage(
+        "authMessage",
+        "Login failed: " + error.message,
+        "error"
       );
       return;
     }
 
-    setAuthMessage("Login successful!");
+    if (!data || !data.user) {
+      setMessage(
+        "authMessage",
+        "Login failed. No user was returned.",
+        "error"
+      );
+      return;
+    }
+
+    setMessage(
+      "authMessage",
+      "Login successful!",
+      "success"
+    );
 
     await showApp();
 
   } catch (error) {
-
     console.error("Login error:", error);
 
-    setAuthMessage(
-      error.message || "Login failed."
+    setMessage(
+      "authMessage",
+      "Login error: " + error.message,
+      "error"
     );
-
-  } finally {
-
-    if (button) {
-      button.disabled = false;
-      button.textContent = "Log In";
-    }
-
   }
 }
 
@@ -264,37 +370,28 @@ async function login() {
    ========================================================= */
 
 async function logout() {
-
-  const button = $("logoutBtn");
-
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Logging out...";
+  if (!supabaseClient) {
+    showAuthScreen();
+    return;
   }
 
   try {
-
-    const { error } =
+    const result =
       await supabaseClient.auth.signOut();
 
-    if (error) {
-      console.error("Logout error:", error);
+    if (result.error) {
+      console.error(
+        "Logout error:",
+        result.error
+      );
+
       return;
     }
 
     showAuthScreen();
 
   } catch (error) {
-
     console.error("Logout error:", error);
-
-  } finally {
-
-    if (button) {
-      button.disabled = false;
-      button.textContent = "Log Out";
-    }
-
   }
 }
 
@@ -304,7 +401,6 @@ async function logout() {
    ========================================================= */
 
 function showAuthScreen() {
-
   const authScreen = $("authScreen");
   const app = $("app");
 
@@ -327,9 +423,7 @@ function showAuthScreen() {
     password.value = "";
   }
 
-  setAuthMessage(
-    "You have been logged out."
-  );
+  setMessage("authMessage", "");
 }
 
 
@@ -338,7 +432,6 @@ function showAuthScreen() {
    ========================================================= */
 
 async function showApp() {
-
   const authScreen = $("authScreen");
   const app = $("app");
 
@@ -358,262 +451,268 @@ async function showApp() {
 
 
 /* =========================================================
-   8. PROFILE
+   8. LOAD PROFILE
    ========================================================= */
 
 async function loadProfile() {
+  if (!supabaseClient) {
+    return;
+  }
 
   try {
-
     const result =
       await supabaseClient.auth.getUser();
 
-    const user = result.data?.user;
+    const user = result.data
+      ? result.data.user
+      : null;
 
     if (!user) {
       return;
     }
 
-    const emailElement = $("profileEmail");
-
-    if (emailElement) {
-      emailElement.textContent =
-        user.email || "No email";
-    }
+    let username = "Vidora User";
+    let avatarLetter = "V";
 
     /*
-      We do not require the profiles table just to
-      display the logged-in account.
-
-      This makes the profile button work even if
-      your profiles table is not finished yet.
+      If you later create a profiles table,
+      this will try to use it.
     */
+
+    try {
+      const profileResult =
+        await supabaseClient
+          .from("profiles")
+          .select("username,avatar_url")
+          .eq("id", user.id)
+          .maybeSingle();
+
+      if (
+        !profileResult.error &&
+        profileResult.data
+      ) {
+        if (profileResult.data.username) {
+          username =
+            profileResult.data.username;
+        }
+      }
+    } catch (profileError) {
+      console.log(
+        "Profiles table not available yet."
+      );
+    }
 
     const usernameElement =
       $("profileUsername");
 
+    const emailElement =
+      $("profileEmail");
+
     if (usernameElement) {
       usernameElement.textContent =
-        "Vidora User";
+        username;
     }
 
-    const avatar =
-      document.querySelector(".profileAvatar");
-
-    if (avatar) {
-      avatar.textContent = "V";
+    if (emailElement) {
+      emailElement.textContent =
+        user.email || "";
     }
+
+    document
+      .querySelectorAll(".profileAvatar")
+      .forEach(function(avatar) {
+        avatar.textContent =
+          avatarLetter;
+      });
 
   } catch (error) {
-
     console.error(
-      "Profile error:",
+      "Profile loading error:",
       error
     );
-
   }
 }
 
 
 /* =========================================================
-   9. HOME PAGE PUBLISH
+   9. VALIDATE MEDIA FILE
+   ========================================================= */
+
+function validateMediaFile(file) {
+  if (!file) {
+    return {
+      valid: false,
+      message: "Please select an image or video."
+    };
+  }
+
+  /*
+    50 MB maximum.
+    This matches the limit you mentioned.
+  */
+
+  const MAX_SIZE = 50 * 1024 * 1024;
+
+  if (file.size > MAX_SIZE) {
+    return {
+      valid: false,
+      message: "File is larger than 50 MB."
+    };
+  }
+
+  const isImage =
+    file.type.startsWith("image/");
+
+  const isVideo =
+    file.type.startsWith("video/");
+
+  if (!isImage && !isVideo) {
+    return {
+      valid: false,
+      message:
+        "Only image and video files are supported."
+    };
+  }
+
+  return {
+    valid: true,
+    message: ""
+  };
+}
+
+
+/* =========================================================
+   10. UPLOAD POST
    ========================================================= */
 
 async function uploadPost() {
-
   const fileInput = $("mediaFile");
   const captionInput = $("postCaption");
 
-  if (!fileInput || !captionInput) {
-    return;
-  }
-
-  const file = fileInput.files[0];
-  const caption =
-    captionInput.value.trim();
-
-  if (!file) {
-
+  if (!fileInput) {
     setMessage(
       "uploadMessage",
-      "Choose an image or video first."
+      "Media input was not found.",
+      "error"
     );
-
     return;
   }
+
+  const file =
+    fileInput.files &&
+    fileInput.files.length
+      ? fileInput.files[0]
+      : null;
+
+  const caption =
+    captionInput
+      ? captionInput.value.trim()
+      : "";
 
   await createPost(
     file,
     caption,
-    "uploadMessage",
-    "mediaFile",
-    "postCaption"
+    "uploadMessage"
   );
 }
 
 
 /* =========================================================
-   10. CREATE PAGE PUBLISH
+   11. CREATE PAGE PUBLISH
    ========================================================= */
 
 async function publishFromCreate() {
-
   const fileInput = $("createFile");
   const captionInput = $("createCaption");
 
-  if (!fileInput || !captionInput) {
-    return;
-  }
-
-  const file = fileInput.files[0];
-  const caption =
-    captionInput.value.trim();
-
-  if (!file) {
-
+  if (!fileInput) {
     setMessage(
       "createMessage",
-      "Choose an image or video first."
+      "Media input was not found.",
+      "error"
     );
-
     return;
   }
 
-  const success =
-    await createPost(
-      file,
-      caption,
-      "createMessage",
-      "createFile",
-      "createCaption"
-    );
+  const file =
+    fileInput.files &&
+    fileInput.files.length
+      ? fileInput.files[0]
+      : null;
 
-  if (success) {
-    showPage("home");
-  }
+  const caption =
+    captionInput
+      ? captionInput.value.trim()
+      : "";
+
+  await createPost(
+    file,
+    caption,
+    "createMessage"
+  );
 }
 
 
 /* =========================================================
-   11. CREATE / UPLOAD POST
+   12. CREATE POST
    ========================================================= */
 
 async function createPost(
   file,
   caption,
-  messageId,
-  fileInputId,
-  captionInputId
+  messageElement
 ) {
+  if (!supabaseClient) {
+    setMessage(
+      messageElement,
+      "Supabase is not connected.",
+      "error"
+    );
+    return;
+  }
 
-  const message = $(messageId);
+  const validation =
+    validateMediaFile(file);
+
+  if (!validation.valid) {
+    setMessage(
+      messageElement,
+      validation.message,
+      "error"
+    );
+    return;
+  }
 
   try {
-
-    const result =
+    const userResult =
       await supabaseClient.auth.getUser();
 
-    const user = result.data?.user;
+    const user = userResult.data
+      ? userResult.data.user
+      : null;
 
     if (!user) {
+      setMessage(
+        messageElement,
+        "You must log in first.",
+        "error"
+      );
 
-      if (message) {
-        message.textContent =
-          "Please log in again.";
-      }
+      showAuthScreen();
 
-      return false;
+      return;
     }
 
-    if (!file.type.startsWith("image/") &&
-        !file.type.startsWith("video/")) {
-
-      if (message) {
-        message.textContent =
-          "Only images and videos are allowed.";
-      }
-
-      return false;
-    }
-
-    if (message) {
-      message.textContent =
-        "Uploading...";
-    }
-
-    /*
-      IMPORTANT:
-      Your Supabase Storage bucket is expected
-      to be named exactly:
-
-      media
-    */
-
-    const extension =
-      file.name.includes(".")
-        ? file.name
-            .split(".")
-            .pop()
-            .toLowerCase()
-        : "file";
+    setMessage(
+      messageElement,
+      "Uploading..."
+    );
 
     const fileName =
-      crypto.randomUUID() +
-      "." +
-      extension;
+      createUniqueFileName(file);
 
     const filePath =
       user.id + "/" + fileName;
-
-    const uploadResult =
-      await supabaseClient.storage
-        .from("media")
-        .upload(
-          filePath,
-          file,
-          {
-            contentType: file.type,
-            upsert: false
-          }
-        );
-
-    if (uploadResult.error) {
-
-      console.error(
-        "Storage error:",
-        uploadResult.error
-      );
-
-      if (message) {
-        message.textContent =
-          uploadResult.error.message;
-      }
-
-      return false;
-    }
-
-    /*
-      Get public URL.
-      This requires the "media" bucket to be public.
-    */
-
-    const publicResult =
-      supabaseClient.storage
-        .from("media")
-        .getPublicUrl(filePath);
-
-    const mediaUrl =
-      publicResult.data?.publicUrl;
-
-    if (!mediaUrl) {
-
-      if (message) {
-        message.textContent =
-          "Could not create media URL.";
-      }
-
-      return false;
-    }
 
     const mediaType =
       file.type.startsWith("video/")
@@ -621,101 +720,192 @@ async function createPost(
         : "image";
 
     /*
-      Insert post into the posts table.
+      Upload to Supabase Storage.
+      Bucket name: media
     */
 
-    const postResult =
+    const uploadResult =
+      await supabaseClient
+        .storage
+        .from("media")
+        .upload(
+          filePath,
+          file,
+          {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type
+          }
+        );
+
+    if (uploadResult.error) {
+      console.error(
+        "Storage upload error:",
+        uploadResult.error
+      );
+
+      setMessage(
+        messageElement,
+        "Upload failed: " +
+          uploadResult.error.message,
+        "error"
+      );
+
+      return;
+    }
+
+    /*
+      Get public URL.
+      Your media bucket must be PUBLIC
+      for this URL to display directly.
+    */
+
+    const publicUrlResult =
+      supabaseClient
+        .storage
+        .from("media")
+        .getPublicUrl(filePath);
+
+    const publicUrl =
+      publicUrlResult.data
+        ? publicUrlResult.data.publicUrl
+        : null;
+
+    if (!publicUrl) {
+      setMessage(
+        messageElement,
+        "Could not create media URL.",
+        "error"
+      );
+
+      /*
+        Clean up uploaded file.
+      */
+
+      await supabaseClient
+        .storage
+        .from("media")
+        .remove([filePath]);
+
+      return;
+    }
+
+    setMessage(
+      messageElement,
+      "Saving post..."
+    );
+
+    /*
+      Save post information in database.
+    */
+
+    const insertResult =
       await supabaseClient
         .from("posts")
         .insert({
           user_id: user.id,
-          media_url: mediaUrl,
+          media_url: publicUrl,
           media_type: mediaType,
           caption: caption
-        });
+        })
+        .select()
+        .single();
 
-    if (postResult.error) {
-
+    if (insertResult.error) {
       console.error(
-        "Posts table error:",
-        postResult.error
+        "Post database error:",
+        insertResult.error
       );
 
-      if (message) {
-        message.textContent =
-          postResult.error.message;
-      }
+      /*
+        Remove orphaned storage file
+        if database insertion fails.
+      */
 
-      return false;
+      await supabaseClient
+        .storage
+        .from("media")
+        .remove([filePath]);
+
+      setMessage(
+        messageElement,
+        "Post could not be saved: " +
+          insertResult.error.message,
+        "error"
+      );
+
+      return;
     }
 
-    if (message) {
-      message.textContent =
-        "Published successfully!";
+    setMessage(
+      messageElement,
+      "Posted successfully!",
+      "success"
+    );
+
+    /*
+      Clear upload form.
+    */
+
+    if (fileInputExists("mediaFile")) {
+      $("mediaFile").value = "";
     }
 
-    const fileInput =
-      $(fileInputId);
-
-    const captionInput =
-      $(captionInputId);
-
-    if (fileInput) {
-      fileInput.value = "";
+    if (fileInputExists("postCaption")) {
+      $("postCaption").value = "";
     }
 
-    if (captionInput) {
-      captionInput.value = "";
+    if (fileInputExists("createFile")) {
+      $("createFile").value = "";
+    }
+
+    if (fileInputExists("createCaption")) {
+      $("createCaption").value = "";
     }
 
     await loadFeed();
 
-    return true;
-
   } catch (error) {
-
     console.error(
       "Create post error:",
       error
     );
 
-    if (message) {
-      message.textContent =
-        error.message ||
-        "Upload failed.";
-    }
-
-    return false;
+    setMessage(
+      messageElement,
+      "Error: " + error.message,
+      "error"
+    );
   }
 }
 
 
+function fileInputExists(id) {
+  return !!$(id);
+}
+
+
 /* =========================================================
-   12. LOAD FEED
+   13. LOAD FEED
    ========================================================= */
 
 async function loadFeed() {
-
   const feed = $("feed");
 
   if (!feed) {
     return;
   }
 
+  if (!supabaseClient) {
+    feed.innerHTML =
+      "<p>Supabase is not connected.</p>";
+    return;
+  }
+
   feed.innerHTML =
-    `<div class="loading">
-      Loading Vidora...
-    </div>`;
+    "<p>Loading posts...</p>";
 
   try {
-
-    /*
-      Keep this query simple.
-      It only requires the posts table and avoids
-      breaking the feed because a profiles/likes/comments
-      relationship is not configured yet.
-    */
-
     const result =
       await supabaseClient
         .from("posts")
@@ -729,95 +919,84 @@ async function loadFeed() {
           }
         );
 
-    const data = result.data;
-    const error = result.error;
-
-    if (error) {
-
+    if (result.error) {
       console.error(
         "Feed error:",
-        error
+        result.error
       );
 
       feed.innerHTML =
-        `<div class="post">
-          <h3>Could not load posts</h3>
-          <p>${escapeHTML(error.message)}</p>
-        </div>`;
+        "<p>Could not load posts.</p>" +
+        "<small>" +
+        escapeHTML(result.error.message) +
+        "</small>";
 
       return;
     }
 
-    if (!data || data.length === 0) {
+    const posts =
+      result.data || [];
 
+    if (!posts.length) {
       feed.innerHTML =
-        `<div class="post">
-          <h3>No posts yet</h3>
-          <p>Be the first person to publish on Vidora!</p>
-        </div>`;
+        "<p>No posts yet. Be the first to post!</p>";
 
       return;
     }
 
     feed.innerHTML = "";
 
-    data.forEach(function(post) {
+    for (const post of posts) {
+      const element =
+        await createPostElement(post);
 
-      feed.appendChild(
-        createPostElement(post)
-      );
-
-    });
+      feed.appendChild(element);
+    }
 
   } catch (error) {
-
     console.error(
-      "Feed error:",
+      "Feed loading error:",
       error
     );
 
     feed.innerHTML =
-      `<div class="post">
-        <h3>Something went wrong</h3>
-        <p>${escapeHTML(error.message)}</p>
-      </div>`;
+      "<p>Unable to load feed.</p>";
   }
 }
 
 
 /* =========================================================
-   13. CREATE FEED POST ELEMENT
+   14. CREATE POST ELEMENT
    ========================================================= */
 
-function createPostElement(post) {
-
-  const article =
+async function createPostElement(post) {
+  const container =
     document.createElement("article");
 
-  article.className = "post";
+  container.className = "post";
 
   const username =
-    "Vidora User";
+    await getUsername(post.user_id);
 
-  const initial =
-    username.charAt(0);
+  const likeCount =
+    await getLikeCount(post.id);
+
+  const commentList =
+    await getComments(post.id);
 
   let mediaHTML = "";
 
   if (post.media_type === "video") {
-
     mediaHTML = `
       <video
         class="postMedia"
+        src="${escapeHTML(post.media_url)}"
         controls
         playsinline
-        preload="metadata"
-        src="${escapeHTML(post.media_url)}">
+        preload="metadata">
       </video>
     `;
-
   } else {
-
     mediaHTML = `
       <img
         class="postMedia"
@@ -827,183 +1006,248 @@ function createPostElement(post) {
     `;
   }
 
-  const captionHTML =
-    post.caption
-      ? `
-        <div class="postCaption">
-          ${escapeHTML(post.caption)}
-        </div>
-      `
-      : "";
+  let commentsHTML = "";
 
-  article.innerHTML = `
+  if (commentList.length) {
+    commentsHTML = `
+      <div class="comments">
+        ${commentList.map(function(comment) {
+          return `
+            <div class="comment">
+              <strong>
+                ${escapeHTML(
+                  comment.username
+                )}
+              </strong>
+              <span>
+                ${escapeHTML(
+                  comment.body
+                )}
+              </span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
 
+  container.innerHTML = `
     <div class="postHeader">
+      <strong>
+        @${escapeHTML(username)}
+      </strong>
 
-      <div class="avatar">
-        ${escapeHTML(initial)}
-      </div>
-
-      <div>
-
-        <div class="postUser">
-          @${escapeHTML(username)}
-        </div>
-
-        <div class="postTime">
-          ${post.created_at
-            ? new Date(
-                post.created_at
-              ).toLocaleString()
-            : ""}
-        </div>
-
-      </div>
-
+      <small>
+        ${escapeHTML(
+          formatDate(post.created_at)
+        )}
+      </small>
     </div>
-
-    ${captionHTML}
 
     ${mediaHTML}
 
-    <div class="actions">
+    ${
+      post.caption
+        ? `
+          <div class="postCaption">
+            ${escapeHTML(post.caption)}
+          </div>
+        `
+        : ""
+    }
+
+    <div class="postActions">
 
       <button
-        class="likeButton"
-        type="button">
-        ❤️ Like
+        type="button"
+        onclick="toggleLike('${escapeHTML(post.id)}')">
+        ❤️
+        <span>
+          ${likeCount}
+        </span>
       </button>
 
       <button
-        class="shareButton"
-        type="button">
-        ↗ Share
+        type="button"
+        onclick="sharePost('${escapeHTML(post.media_url)}')">
+        🔗 Share
       </button>
 
     </div>
 
-    <div class="comments">
+    ${commentsHTML}
 
-      <strong>
-        Comments
-      </strong>
+    <div class="commentBox">
 
-      <div class="commentForm">
+      <input
+        type="text"
+        id="comment-${escapeHTML(post.id)}"
+        placeholder="Write a comment...">
 
-        <input
-          type="text"
-          class="commentInput"
-          placeholder="Write a comment...">
-
-        <button
-          type="button"
-          class="commentButton">
-          Send
-        </button>
-
-      </div>
+      <button
+        type="button"
+        onclick="addComment('${escapeHTML(post.id)}')">
+        Comment
+      </button>
 
     </div>
-
   `;
 
-  const likeButton =
-    article.querySelector(
-      ".likeButton"
-    );
-
-  const shareButton =
-    article.querySelector(
-      ".shareButton"
-    );
-
-  const commentButton =
-    article.querySelector(
-      ".commentButton"
-    );
-
-  if (likeButton) {
-
-    likeButton.onclick =
-      function() {
-        toggleLike(post);
-      };
-
-  }
-
-  if (shareButton) {
-
-    shareButton.onclick =
-      function() {
-        sharePost(post);
-      };
-
-  }
-
-  if (commentButton) {
-
-    commentButton.onclick =
-      async function() {
-
-        const input =
-          article.querySelector(
-            ".commentInput"
-          );
-
-        if (!input) {
-          return;
-        }
-
-        const body =
-          input.value.trim();
-
-        if (!body) {
-          return;
-        }
-
-        const success =
-          await addComment(
-            post.id,
-            body
-          );
-
-        if (success) {
-          input.value = "";
-        }
-      };
-  }
-
-  return article;
+  return container;
 }
 
 
 /* =========================================================
-   14. LIKE
+   15. GET USERNAME
    ========================================================= */
 
-async function toggleLike(post) {
+async function getUsername(userId) {
+  if (!supabaseClient || !userId) {
+    return "Vidora User";
+  }
 
   try {
-
     const result =
-      await supabaseClient.auth.getUser();
+      await supabaseClient
+        .from("profiles")
+        .select("username")
+        .eq("id", userId)
+        .maybeSingle();
 
-    const user = result.data?.user;
-
-    if (!user) {
-
-      alert(
-        "Please log in to like posts."
-      );
-
-      return;
+    if (
+      !result.error &&
+      result.data &&
+      result.data.username
+    ) {
+      return result.data.username;
     }
 
-    /*
-      This requires a "likes" table with:
-      post_id
-      user_id
-    */
+  } catch (error) {
+    console.log(
+      "Could not load username."
+    );
+  }
+
+  return "Vidora User";
+}
+
+
+/* =========================================================
+   16. GET LIKE COUNT
+   ========================================================= */
+
+async function getLikeCount(postId) {
+  if (!supabaseClient) {
+    return 0;
+  }
+
+  try {
+    const result =
+      await supabaseClient
+        .from("likes")
+        .select(
+          "id",
+          {
+            count: "exact",
+            head: true
+          }
+        )
+        .eq(
+          "post_id",
+          postId
+        );
+
+    if (result.error) {
+      return 0;
+    }
+
+    return result.count || 0;
+
+  } catch (error) {
+    return 0;
+  }
+}
+
+
+/* =========================================================
+   17. GET COMMENTS
+   ========================================================= */
+
+async function getComments(postId) {
+  if (!supabaseClient) {
+    return [];
+  }
+
+  try {
+    const result =
+      await supabaseClient
+        .from("comments")
+        .select(
+          "id,user_id,body,created_at"
+        )
+        .eq(
+          "post_id",
+          postId
+        )
+        .order(
+          "created_at",
+          {
+            ascending: true
+          }
+        );
+
+    if (result.error) {
+      return [];
+    }
+
+    const comments =
+      result.data || [];
+
+    const finalComments = [];
+
+    for (const comment of comments) {
+      const username =
+        await getUsername(
+          comment.user_id
+        );
+
+      finalComments.push({
+        id: comment.id,
+        body: comment.body,
+        created_at: comment.created_at,
+        username: username
+      });
+    }
+
+    return finalComments;
+
+  } catch (error) {
+    return [];
+  }
+}
+
+
+/* =========================================================
+   18. LIKE / UNLIKE
+   ========================================================= */
+
+async function toggleLike(postId) {
+  if (!supabaseClient) {
+    return;
+  }
+
+  try {
+    const userResult =
+      await supabaseClient.auth.getUser();
+
+    const user = userResult.data
+      ? userResult.data.user
+      : null;
+
+    if (!user) {
+      alert("Please log in first.");
+      return;
+    }
 
     const existing =
       await supabaseClient
@@ -1011,7 +1255,7 @@ async function toggleLike(post) {
         .select("id")
         .eq(
           "post_id",
-          post.id
+          postId
         )
         .eq(
           "user_id",
@@ -1020,18 +1264,15 @@ async function toggleLike(post) {
         .maybeSingle();
 
     if (existing.error) {
-
-      alert(
-        "Likes are not configured yet: " +
-        existing.error.message
+      console.error(
+        "Like check error:",
+        existing.error
       );
-
       return;
     }
 
     if (existing.data) {
-
-      const resultDelete =
+      const deleteResult =
         await supabaseClient
           .from("likes")
           .delete()
@@ -1040,70 +1281,78 @@ async function toggleLike(post) {
             existing.data.id
           );
 
-      if (resultDelete.error) {
-        alert(resultDelete.error.message);
-        return;
+      if (deleteResult.error) {
+        console.error(
+          "Unlike error:",
+          deleteResult.error
+        );
       }
 
     } else {
-
-      const resultInsert =
+      const insertResult =
         await supabaseClient
           .from("likes")
           .insert({
-            post_id: post.id,
+            post_id: postId,
             user_id: user.id
           });
 
-      if (resultInsert.error) {
-        alert(resultInsert.error.message);
-        return;
+      if (insertResult.error) {
+        console.error(
+          "Like error:",
+          insertResult.error
+        );
       }
     }
 
     await loadFeed();
 
   } catch (error) {
-
     console.error(
       "Like error:",
       error
-    );
-
-    alert(
-      error.message ||
-      "Could not like post."
     );
   }
 }
 
 
 /* =========================================================
-   15. COMMENTS
+   19. ADD COMMENT
    ========================================================= */
 
-async function addComment(
-  postId,
-  body
-) {
+async function addComment(postId) {
+  if (!supabaseClient) {
+    return;
+  }
+
+  const input =
+    $("comment-" + postId);
+
+  if (!input) {
+    return;
+  }
+
+  const body =
+    input.value.trim();
+
+  if (!body) {
+    return;
+  }
 
   try {
-
-    const result =
+    const userResult =
       await supabaseClient.auth.getUser();
 
-    const user = result.data?.user;
+    const user = userResult.data
+      ? userResult.data.user
+      : null;
 
     if (!user) {
-
-      alert(
-        "Please log in to comment."
-      );
-
-      return false;
+      alert("Please log in first.");
+      return;
     }
 
-    const insertResult =
+    const result =
       await supabaseClient
         .from("comments")
         .insert({
@@ -1112,53 +1361,51 @@ async function addComment(
           body: body
         });
 
-    if (insertResult.error) {
-
-      alert(
-        "Comments are not configured yet: " +
-        insertResult.error.message
+    if (result.error) {
+      console.error(
+        "Comment error:",
+        result.error
       );
 
-      return false;
+      alert(
+        "Comment failed: " +
+        result.error.message
+      );
+
+      return;
     }
+
+    input.value = "";
 
     await loadFeed();
 
-    return true;
-
   } catch (error) {
-
     console.error(
       "Comment error:",
       error
     );
-
-    alert(
-      error.message ||
-      "Could not add comment."
-    );
-
-    return false;
   }
 }
 
 
 /* =========================================================
-   16. SHARE
+   20. SHARE POST
    ========================================================= */
 
-async function sharePost(post) {
+async function sharePost(url) {
+  if (!url) {
+    return;
+  }
 
   try {
-
     if (
-      navigator.share
+      navigator.share &&
+      typeof navigator.share === "function"
     ) {
-
       await navigator.share({
         title: "Vidora",
-        text: "Check out this Vidora post!",
-        url: post.media_url
+        text: "Check out this post on Vidora!",
+        url: url
       });
 
       return;
@@ -1168,10 +1415,7 @@ async function sharePost(post) {
       navigator.clipboard &&
       navigator.clipboard.writeText
     ) {
-
-      await navigator.clipboard.writeText(
-        post.media_url
-      );
+      await navigator.clipboard.writeText(url);
 
       alert(
         "Post link copied!"
@@ -1180,26 +1424,24 @@ async function sharePost(post) {
       return;
     }
 
-    alert(
-      post.media_url
+    window.prompt(
+      "Copy this link:",
+      url
     );
 
   } catch (error) {
-
     console.log(
-      "Share cancelled:",
-      error
+      "Share cancelled or unavailable."
     );
   }
 }
 
 
 /* =========================================================
-   17. PAGE NAVIGATION
+   21. SHOW PAGE
    ========================================================= */
 
-function showPage(pageName) {
-
+function showPage(page) {
   const pages = [
     "home",
     "discover",
@@ -1210,364 +1452,360 @@ function showPage(pageName) {
   ];
 
   pages.forEach(function(name) {
-
     const screen =
       $(name + "Screen");
 
-    if (screen) {
-      screen.classList.add("hidden");
+    if (!screen) {
+      return;
     }
 
+    if (name === page) {
+      screen.classList.remove("hidden");
+    } else {
+      screen.classList.add("hidden");
+    }
   });
 
-  const selected =
-    $(pageName + "Screen");
+  updateNavigation(page);
 
-  if (selected) {
-    selected.classList.remove("hidden");
-  }
+  /*
+    Load relevant information when opening pages.
+  */
 
-  updateNavigation(pageName);
-
-  if (pageName === "home") {
+  if (page === "home") {
     loadFeed();
   }
 
-  if (pageName === "profile") {
-    loadProfile();
+  if (page === "discover") {
+    searchPosts();
   }
 
-  if (pageName === "discover") {
-    searchPosts();
+  if (page === "profile") {
+    loadProfile();
   }
 }
 
 
 /*
-  Your HTML uses showpage()
-  in the bottom navigation.
+  Your HTML uses BOTH:
+  showPage(...)
+  and
+  showpage(...)
 
-  Your header uses showPage().
-
-  Both now work.
+  JavaScript is case-sensitive,
+  so we support both.
 */
 
-function showpage(pageName) {
-  showPage(pageName);
+function showpage(page) {
+  showPage(page);
 }
 
 
 /* =========================================================
-   18. NAVIGATION ACTIVE STATE
+   22. UPDATE BOTTOM NAVIGATION
    ========================================================= */
 
-function updateNavigation(pageName) {
-
+function updateNavigation(activePage) {
   const buttons =
     document.querySelectorAll(
-      ".navButton"
+      "nav button, .bottom-nav button, .nav button"
     );
 
   buttons.forEach(function(button) {
-
-    button.classList.remove(
-      "active"
-    );
-
-  });
-
-  buttons.forEach(function(button) {
+    button.classList.remove("active");
 
     const text =
-      button.textContent
+      (button.textContent || "")
         .trim()
         .toLowerCase();
 
     if (
-      pageName === "home" &&
+      activePage === "home" &&
       text.includes("home")
     ) {
       button.classList.add("active");
     }
 
     if (
-      pageName === "discover" &&
+      activePage === "discover" &&
       text.includes("discover")
     ) {
       button.classList.add("active");
     }
 
     if (
-      pageName === "create" &&
+      activePage === "create" &&
       text.includes("create")
     ) {
       button.classList.add("active");
     }
 
     if (
-      pageName === "chat" &&
+      activePage === "chat" &&
       text.includes("chat")
     ) {
       button.classList.add("active");
     }
 
     if (
-      pageName === "profile" &&
+      activePage === "profile" &&
       text.includes("profile")
     ) {
       button.classList.add("active");
     }
-
   });
 }
 
 
 /* =========================================================
-   19. SEARCH
+   23. SEARCH POSTS
    ========================================================= */
 
 let searchTimer = null;
 
 
-async function searchPosts() {
-
+function searchPosts() {
   clearTimeout(searchTimer);
 
-  searchTimer =
-    setTimeout(
-      async function() {
-
-        const input =
-          $("searchInput");
-
-        const results =
-          $("discoverResults");
-
-        if (!input || !results) {
-          return;
-        }
-
-        const query =
-          input.value
-            .trim()
-            .toLowerCase();
-
-        if (!query) {
-
-          results.innerHTML =
-            `
-              <div class="loading">
-                Discover what's trending.
-              </div>
-            `;
-
-          return;
-        }
-
-        results.innerHTML =
-          `
-            <div class="loading">
-              Searching...
-            </div>
-          `;
-
-        try {
-
-          /*
-            Search captions.
-
-            This only requires the posts table.
-          */
-
-          const result =
-            await supabaseClient
-              .from("posts")
-              .select(
-                "id,user_id,media_url,media_type,caption,created_at"
-              )
-              .ilike(
-                "caption",
-                "%" + query + "%"
-              )
-              .order(
-                "created_at",
-                {
-                  ascending: false
-                }
-              );
-
-          const data = result.data;
-          const error = result.error;
-
-          if (error) {
-
-            results.innerHTML =
-              `
-                <div class="post">
-                  <p>${escapeHTML(
-                    error.message
-                  )}</p>
-                </div>
-              `;
-
-            return;
-          }
-
-          if (!data || data.length === 0) {
-
-            results.innerHTML =
-              `
-                <div class="post">
-                  <h3>No results</h3>
-                  <p>No posts matched your search.</p>
-                </div>
-              `;
-
-            return;
-          }
-
-          results.innerHTML = "";
-
-          data.forEach(function(post) {
-
-            results.appendChild(
-              createPostElement(post)
-            );
-
-          });
-
-        } catch (error) {
-
-          console.error(
-            "Search error:",
-            error
-          );
-
-          results.innerHTML =
-            `
-              <div class="post">
-                <p>${escapeHTML(
-                  error.message
-                )}</p>
-              </div>
-            `;
-        }
-
-      },
-      300
-    );
+  searchTimer = setTimeout(
+    performSearch,
+    300
+  );
 }
 
 
-/* =========================================================
-   20. AUTH SESSION CHECK
-   ========================================================= */
+async function performSearch() {
+  const input =
+    $("searchInput");
 
-async function checkSession() {
+  const results =
+    $("discoverResults");
+
+  if (!results) {
+    return;
+  }
+
+  if (!supabaseClient) {
+    results.innerHTML =
+      "<p>Supabase is not connected.</p>";
+    return;
+  }
+
+  const query =
+    input
+      ? input.value.trim()
+      : "";
+
+  if (!query) {
+    results.innerHTML =
+      "<p>Search for posts...</p>";
+    return;
+  }
+
+  results.innerHTML =
+    "<p>Searching...</p>";
 
   try {
-
     const result =
-      await supabaseClient.auth.getSession();
-
-    const session =
-      result.data?.session;
-
-    if (session) {
-
-      await showApp();
-
-    } else {
-
-      const authScreen =
-        $("authScreen");
-
-      const app =
-        $("app");
-
-      if (authScreen) {
-        authScreen.classList.remove(
-          "hidden"
+      await supabaseClient
+        .from("posts")
+        .select(
+          "id,user_id,media_url,media_type,caption,created_at"
+        )
+        .ilike(
+          "caption",
+          "%" + query + "%"
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
         );
-      }
 
-      if (app) {
-        app.classList.add(
-          "hidden"
-        );
-      }
+    if (result.error) {
+      console.error(
+        "Search error:",
+        result.error
+      );
+
+      results.innerHTML =
+        "<p>Search failed.</p>";
+
+      return;
+    }
+
+    const posts =
+      result.data || [];
+
+    if (!posts.length) {
+      results.innerHTML =
+        "<p>No posts found.</p>";
+      return;
+    }
+
+    results.innerHTML = "";
+
+    for (const post of posts) {
+      const element =
+        await createPostElement(post);
+
+      results.appendChild(element);
     }
 
   } catch (error) {
-
     console.error(
-      "Session error:",
+      "Search error:",
       error
     );
 
+    results.innerHTML =
+      "<p>Search failed.</p>";
   }
 }
 
 
 /* =========================================================
-   21. AUTH STATE LISTENER
+   24. CHECK SESSION
+   ========================================================= */
+
+async function checkSession() {
+  if (!supabaseClient) {
+    showAuthScreen();
+
+    setMessage(
+      "authMessage",
+      "Supabase could not be loaded.",
+      "error"
+    );
+
+    return;
+  }
+
+  try {
+    const result =
+      await supabaseClient.auth.getSession();
+
+    if (result.error) {
+      console.error(
+        "Session error:",
+        result.error
+      );
+
+      showAuthScreen();
+
+      return;
+    }
+
+    const session =
+      result.data
+        ? result.data.session
+        : null;
+
+    if (session && session.user) {
+      await showApp();
+    } else {
+      showAuthScreen();
+    }
+
+  } catch (error) {
+    console.error(
+      "Check session error:",
+      error
+    );
+
+    showAuthScreen();
+  }
+}
+
+
+/* =========================================================
+   25. AUTH STATE LISTENER
    ========================================================= */
 
 if (supabaseClient) {
-
   supabaseClient.auth.onAuthStateChange(
-    function(event, session) {
-
+    async function(event, session) {
       console.log(
-        "Vidora auth event:",
+        "Auth event:",
         event
       );
 
+      /*
+        Do not call showApp repeatedly for
+        every auth event. Only respond to
+        the important state changes.
+      */
+
       if (
         event === "SIGNED_IN" &&
-        session
+        session &&
+        session.user
       ) {
-
-        showApp();
-
+        await showApp();
       }
 
       if (
         event === "SIGNED_OUT"
       ) {
-
         showAuthScreen();
-
       }
-
     }
   );
 }
 
 
 /* =========================================================
-   22. START VIDORA
+   26. DOM READY
    ========================================================= */
 
 document.addEventListener(
   "DOMContentLoaded",
-  function() {
+  async function() {
 
     console.log(
-      "Vidora JavaScript loaded successfully."
+      "Vidora JavaScript loaded."
     );
 
     /*
-      Make sure the initial page is Home.
+      Make sure the app starts on home.
     */
 
     showPage("home");
 
     /*
-      Check whether the user is already logged in.
+      Check whether the user is already
+      logged in.
     */
 
-    checkSession();
+    await checkSession();
 
   }
 );
+
+
+/* =========================================================
+   27. MAKE FUNCTIONS AVAILABLE TO HTML
+   ========================================================= */
+
+window.signUp = signUp;
+window.login = login;
+window.logout = logout;
+
+window.showPage = showPage;
+window.showpage = showpage;
+
+window.uploadPost = uploadPost;
+window.publishFromCreate =
+  publishFromCreate;
+
+window.toggleLike = toggleLike;
+window.addComment = addComment;
+window.sharePost = sharePost;
+
+window.searchPosts = searchPosts;
+
+
+/* =========================================================
+   VIDORA JAVASCRIPT COMPLETE
+   ========================================================= */
