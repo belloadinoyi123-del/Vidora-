@@ -1317,7 +1317,9 @@ async function loadComments(postId, article) {
   try {
     const { data, error } = await supabaseClient
       .from("comments")
-      .select("id, user_id, body, created_at")
+      .select(
+  "id,user_id,content,created_at"
+)
       .eq("post_id", postId)
       .order("created_at", { ascending: true });
 
@@ -1350,7 +1352,7 @@ async function loadComments(postId, article) {
 
       item.innerHTML = `
         <strong>Vidora User</strong>
-        <span>${escapeHTML(comment.body)}</span>
+        <span>${escapeHTML(comment.content)}</span>
       `;
 
       commentsList.appendChild(item);
@@ -1386,10 +1388,10 @@ async function addComment(postId, body, article) {
     const { data, error } = await supabaseClient
       .from("comments")
       .insert({
-        post_id: postId,
-        user_id: currentUser.id,
-        body: cleanBody
-      })
+  post_id: postId,
+  user_id: currentUser.id,
+  content: body
+});
       .select()
       .single();
 
