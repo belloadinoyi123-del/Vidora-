@@ -987,11 +987,7 @@ $("logoutBtn")
   );
 
 
-$("publishBtn")
-  .addEventListener(
-    "click",
-    publishPost
-  );
+
 
 
 document
@@ -1012,17 +1008,6 @@ document
   });
 
 
-$("createNav")
-  .addEventListener(
-    "click",
-    () => {
-
-      showPage("homePage");
-
-      $("caption").focus();
-
-    }
-  );
 
 
 /* =========================================
