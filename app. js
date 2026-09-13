@@ -64,7 +64,7 @@ function escapeHTML(value) {
 ========================================= */
 
 async function signUp() {
-
+alert("SIGNUP BUTTON WORKS");
   const email =
     $("email").value.trim();
 
