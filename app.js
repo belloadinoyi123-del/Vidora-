@@ -1245,71 +1245,6 @@ async function toggleLike(
 /* =========================================================
    18. LOAD COMMENTS
    ========================================================= */
-async function loadComments(postId, article) {
-  if (!article) return;
-
-  const commentsList = article.querySelector(".commentsList");
-
-  if (!commentsList) return;
-
-  commentsList.innerHTML = `
-    <small>Loading comments...</small>
-  `;
-
-  try {
-    const { data, error } = await supabaseClient
-      .from("comments")
-      .select(
-  "id,user_id,content,created_at"
-)
-      .eq("post_id", postId)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("LOAD COMMENTS ERROR:", error);
-
-      commentsList.innerHTML = `
-        <small>
-          Comments unavailable.
-        </small>
-      `;
-
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      commentsList.innerHTML = `
-        <small>No comments yet. Be the first!</small>
-      `;
-
-      return;
-    }
-
-    commentsList.innerHTML = "";
-
-    data.forEach(comment => {
-      const item = document.createElement("div");
-
-      item.className = "comment";
-
-      item.innerHTML = `
-        <strong>Vidora User</strong>
-        <span>${escapeHTML(comment.content)}</span>
-      `;
-
-      commentsList.appendChild(item);
-    });
-
-  } catch (error) {
-    console.error("LOAD COMMENTS EXCEPTION:", error);
-
-    commentsList.innerHTML = `
-      <small>Unable to load comments.</small>
-    `;
-  }
-}
-
-
 async function addComment(postId, body, article) {
   if (!currentUser) {
     alert("Please log in first.");
@@ -1326,14 +1261,15 @@ async function addComment(postId, body, article) {
     console.log("Adding comment...");
     console.log("User:", currentUser.id);
     console.log("Post:", postId);
+    console.log("Comment:", cleanBody);
 
     const { data, error } = await supabaseClient
       .from("comments")
       .insert({
-  post_id: postId,
-  user_id: currentUser.id,
-  content: body
-});
+        post_id: postId,
+        user_id: currentUser.id,
+        content: cleanBody
+      })
       .select()
       .single();
 
