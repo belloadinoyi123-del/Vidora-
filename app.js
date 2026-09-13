@@ -1317,18 +1317,16 @@ async function loadComments(postId, article) {
   try {
     const { data, error } = await supabaseClient
       .from("comments")
-      .select("id,user_id,body,created_at")
+      .select("id, user_id, body, created_at")
       .eq("post_id", postId)
-      .order("created_at", {
-        ascending: true
-      });
+      .order("created_at", { ascending: true });
 
     if (error) {
       console.error("LOAD COMMENTS ERROR:", error);
 
       commentsList.innerHTML = `
         <small>
-          Comments are unavailable right now.
+          Comments unavailable.
         </small>
       `;
 
@@ -1337,9 +1335,7 @@ async function loadComments(postId, article) {
 
     if (!data || data.length === 0) {
       commentsList.innerHTML = `
-        <small>
-          No comments yet. Be the first to comment!
-        </small>
+        <small>No comments yet. Be the first!</small>
       `;
 
       return;
@@ -1353,72 +1349,49 @@ async function loadComments(postId, article) {
       item.className = "comment";
 
       item.innerHTML = `
-        <div class="commentUser">
-          Vidora User
-        </div>
-
-        <div class="commentBody">
-          ${escapeHTML(comment.body)}
-        </div>
-
-        <small class="commentDate">
-          ${escapeHTML(formatDate(comment.created_at))}
-        </small>
+        <strong>Vidora User</strong>
+        <span>${escapeHTML(comment.body)}</span>
       `;
 
       commentsList.appendChild(item);
     });
 
   } catch (error) {
-    console.error("COMMENTS EXCEPTION:", error);
+    console.error("LOAD COMMENTS EXCEPTION:", error);
 
     commentsList.innerHTML = `
-      <small>
-        Unable to load comments.
-      </small>
+      <small>Unable to load comments.</small>
     `;
   }
 }
-/* =========================================================
-   19. ADD COMMENT
-   ========================================================= */
+
+
 async function addComment(postId, body, article) {
   if (!currentUser) {
     alert("Please log in first.");
     return;
   }
 
-  if (!postId || !body.trim()) {
+  const cleanBody = body.trim();
+
+  if (!cleanBody) {
     return;
   }
 
   try {
-    const { data: sessionData } =
-      await supabaseClient.auth.getSession();
-
-    const session = sessionData?.session;
-
-    if (!session || !session.user) {
-      alert("Your login session has expired. Please log in again.");
-      return;
-    }
-
-    const userId = session.user.id;
-
     console.log("Adding comment...");
-    console.log("Post ID:", postId);
-    console.log("User ID:", userId);
+    console.log("User:", currentUser.id);
+    console.log("Post:", postId);
 
-    const { data, error } =
-      await supabaseClient
-        .from("comments")
-        .insert({
-          post_id: postId,
-          user_id: userId,
-          body: body.trim()
-        })
-        .select()
-        .single();
+    const { data, error } = await supabaseClient
+      .from("comments")
+      .insert({
+        post_id: postId,
+        user_id: currentUser.id,
+        body: cleanBody
+      })
+      .select()
+      .single();
 
     if (error) {
       console.error("COMMENT INSERT ERROR:", error);
@@ -1439,7 +1412,7 @@ async function addComment(postId, body, article) {
     console.error("COMMENT EXCEPTION:", error);
 
     alert(
-      "Something went wrong while adding your comment."
+      "Something went wrong while adding the comment."
     );
   }
 }
