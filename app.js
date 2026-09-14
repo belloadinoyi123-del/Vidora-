@@ -1241,10 +1241,100 @@ async function toggleLike(
   }
 }
 
-
 /* =========================================================
    18. LOAD COMMENTS
    ========================================================= */
+
+async function loadComments(postId, article) {
+  if (!article) {
+    return;
+  }
+
+  const commentsList =
+    article.querySelector(".commentsList");
+
+  if (!commentsList) {
+    return;
+  }
+
+  commentsList.innerHTML = `
+    <small>Loading comments...</small>
+  `;
+
+  try {
+    const { data, error } =
+      await supabaseClient
+        .from("comments")
+        .select(
+          "id,user_id,content,created_at"
+        )
+        .eq("post_id", postId)
+        .order("created_at", {
+          ascending: true
+        });
+
+    if (error) {
+      console.error(
+        "LOAD COMMENTS ERROR:",
+        error
+      );
+
+      commentsList.innerHTML = `
+        <small>
+          Comments unavailable.
+        </small>
+      `;
+
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      commentsList.innerHTML = `
+        <small>
+          No comments yet. Be the first!
+        </small>
+      `;
+
+      return;
+    }
+
+    commentsList.innerHTML = "";
+
+    data.forEach(function(comment) {
+      const item =
+        document.createElement("div");
+
+      item.className = "comment";
+
+      item.innerHTML = `
+        <strong>Vidora User</strong>
+        <span>
+          ${escapeHTML(comment.content)}
+        </span>
+      `;
+
+      commentsList.appendChild(item);
+    });
+
+  } catch (error) {
+    console.error(
+      "LOAD COMMENTS EXCEPTION:",
+      error
+    );
+
+    commentsList.innerHTML = `
+      <small>
+        Unable to load comments.
+      </small>
+    `;
+  }
+}
+
+
+/* =========================================================
+   19. ADD COMMENT
+   ========================================================= */
+
 async function addComment(postId, body, article) {
   if (!currentUser) {
     alert("Please log in first.");
@@ -1263,18 +1353,22 @@ async function addComment(postId, body, article) {
     console.log("Post:", postId);
     console.log("Comment:", cleanBody);
 
-    const { data, error } = await supabaseClient
-      .from("comments")
-      .insert({
-        post_id: postId,
-        user_id: currentUser.id,
-        content: cleanBody
-      })
-      .select()
-      .single();
+    const { data, error } =
+      await supabaseClient
+        .from("comments")
+        .insert({
+          post_id: postId,
+          user_id: currentUser.id,
+          content: cleanBody
+        })
+        .select()
+        .single();
 
     if (error) {
-      console.error("COMMENT INSERT ERROR:", error);
+      console.error(
+        "COMMENT INSERT ERROR:",
+        error
+      );
 
       alert(
         "Comment could not be added:\n\n" +
@@ -1284,19 +1378,27 @@ async function addComment(postId, body, article) {
       return;
     }
 
-    console.log("COMMENT CREATED:", data);
+    console.log(
+      "COMMENT CREATED:",
+      data
+    );
 
-    await loadComments(postId, article);
+    await loadComments(
+      postId,
+      article
+    );
 
   } catch (error) {
-    console.error("COMMENT EXCEPTION:", error);
+    console.error(
+      "COMMENT EXCEPTION:",
+      error
+    );
 
     alert(
       "Something went wrong while adding the comment."
     );
   }
 }
-
 
 /* =========================================================
    20. SHARE POST
