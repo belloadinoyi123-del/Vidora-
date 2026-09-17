@@ -1686,6 +1686,32 @@ function searchPosts() {
     300
   );
 }
+/* =========================================================
+   PUBLIC FEED - WATCH WITHOUT ACCOUNT
+   ========================================================= */
+
+async function showPublicFeed() {
+
+  const authScreen =
+    getElement("authScreen");
+
+  const app =
+    getElement("app");
+
+  if (authScreen) {
+    authScreen.classList.add("hidden");
+  }
+
+  if (app) {
+    app.classList.remove("hidden");
+  }
+
+  currentUser = null;
+
+  showPage("home");
+
+  await loadFeed();
+}
 
 
 /* =========================================================
@@ -1708,7 +1734,7 @@ async function checkSession() {
         error
       );
 
-      showAuthScreen();
+      showPublicFeed();
       return;
     }
 
@@ -1727,12 +1753,12 @@ async function checkSession() {
     } else {
 
       console.log(
-        "No active session."
+        "No active session. Showing public feed."
       );
 
       currentUser = null;
 
-      showAuthScreen();
+      showPublicFeed();
     }
 
   } catch (error) {
@@ -1742,11 +1768,11 @@ async function checkSession() {
       error
     );
 
-    showAuthScreen();
+    currentUser = null;
+
+    showPublicFeed();
   }
 }
-
-
 /* =========================================================
    26. SUPABASE AUTH STATE LISTENER
    ========================================================= */
