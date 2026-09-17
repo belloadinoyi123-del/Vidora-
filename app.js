@@ -1357,10 +1357,11 @@ async function addComment(postId, body, article) {
       await supabaseClient
         .from("comments")
         .insert({
-          post_id: postId,
-          user_id: currentUser.id,
-          content: cleanBody
-        })
+  post_id: postId,
+  user_id: currentUser.id,
+  body: cleanBody,
+  content: cleanBody
+})
         .select()
         .single();
 
