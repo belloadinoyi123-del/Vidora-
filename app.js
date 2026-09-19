@@ -294,7 +294,7 @@ async function logout() {
 
     currentUser = null;
 
-    showAuthScreen();
+    showPublicFeed();
 
   } catch (error) {
     console.error("LOGOUT EXCEPTION:", error);
