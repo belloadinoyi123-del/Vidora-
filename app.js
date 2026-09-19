@@ -1776,24 +1776,14 @@ async function checkSession() {
 /* =========================================================
    26. SUPABASE AUTH STATE LISTENER
    ========================================================= */
-
 supabaseClient.auth.onAuthStateChange(
   async function(event, session) {
 
-    console.log(
-      "AUTH EVENT:",
-      event
-    );
+    console.log("AUTH EVENT:", event);
 
     if (session && session.user) {
 
-      currentUser =
-        session.user;
-
-      /*
-        Avoid unnecessarily rebuilding
-        the entire app repeatedly.
-      */
+      currentUser = session.user;
 
       if (
         event === "SIGNED_IN" ||
@@ -1802,16 +1792,16 @@ supabaseClient.auth.onAuthStateChange(
         await showApp();
       }
 
-    } else if (
-      event === "SIGNED_OUT"
-    ) {
+    } else {
 
       currentUser = null;
 
-      showAuthScreen();
+      // Visitors can watch Vidora without an account
+      await showPublicFeed();
     }
   }
 );
+
 
 
 /* =========================================================
