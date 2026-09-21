@@ -976,23 +976,38 @@ async function createPostElement(post) {
 
       <div class="postActions">
 
+  <button
+    type="button"
+    class="likeButton"
+    data-post-id="${escapeHTML(post.id)}"
+  >
+    ❤️ Like
+  </button>
+
+  <button
+    type="button"
+    class="shareButton"
+    data-post-id="${escapeHTML(post.id)}"
+  >
+    ↗️ Share
+  </button>
+
+  ${
+    currentUser &&
+    currentUser.id === post.user_id
+      ? `
         <button
           type="button"
-          class="likeButton"
+          class="deleteButton"
           data-post-id="${escapeHTML(post.id)}"
         >
-          ❤️ Like
+          🗑️ Delete
         </button>
+      `
+      : ""
+  }
 
-        <button
-          type="button"
-          class="shareButton"
-          data-post-id="${escapeHTML(post.id)}"
-        >
-          ↗️ Share
-        </button>
-
-      </div>
+</div>
 
       <div class="commentArea">
 
@@ -1045,7 +1060,21 @@ async function createPostElement(post) {
       () => sharePost(post)
     );
   }
+/* Delete */
 
+const deleteButton =
+  article.querySelector(".deleteButton");
+
+if (deleteButton) {
+  deleteButton.addEventListener(
+    "click",
+    () => deletePost(
+      post.id,
+      post.media_url,
+      article
+    )
+  );
+}
 
   /* Comment */
 
