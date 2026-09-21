@@ -1242,7 +1242,112 @@ async function toggleLike(
     button.disabled = false;
   }
 }
+/* =========================================================
+   DELETE POST
+   ========================================================= */
 
+async function deletePost(postId, mediaUrl, article) {
+
+  if (!currentUser) {
+    alert("Please log in first.");
+    showAuthScreen();
+    return;
+  }
+
+  const confirmed = confirm(
+    "Are you sure you want to delete this post?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+
+    /* Delete database post */
+
+    const { error: postError } =
+      await supabaseClient
+        .from("posts")
+        .delete()
+        .eq("id", postId)
+        .eq("user_id", currentUser.id);
+
+    if (postError) {
+      console.error(
+        "DELETE POST ERROR:",
+        postError
+      );
+
+      alert(
+        "Post could not be deleted:\n\n" +
+        postError.message
+      );
+
+      return;
+    }
+
+    /* Try to remove the media file */
+
+    if (mediaUrl) {
+
+      try {
+
+        const marker = "/storage/v1/object/public/media/";
+
+        const index = mediaUrl.indexOf(marker);
+
+        if (index !== -1) {
+
+          const filePath =
+            decodeURIComponent(
+              mediaUrl.substring(
+                index + marker.length
+              )
+            );
+
+          const { error: storageError } =
+            await supabaseClient.storage
+              .from("media")
+              .remove([filePath]);
+
+          if (storageError) {
+            console.error(
+              "STORAGE DELETE ERROR:",
+              storageError
+            );
+          }
+        }
+
+      } catch (storageError) {
+
+        console.error(
+          "MEDIA DELETE EXCEPTION:",
+          storageError
+        );
+      }
+    }
+
+    /* Remove post from screen */
+
+    if (article) {
+      article.remove();
+    }
+
+    alert("Post deleted successfully.");
+
+  } catch (error) {
+
+    console.error(
+      "DELETE POST EXCEPTION:",
+      error
+    );
+
+    alert(
+      "Something went wrong while deleting the post."
+    );
+  }
+}
 /* =========================================================
    18. LOAD COMMENTS
    ========================================================= */
