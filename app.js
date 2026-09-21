@@ -1153,9 +1153,11 @@ async function toggleLike(
   button
 ) {
   if (!currentUser) {
-    alert("Please log in first.");
-    return;
-  }
+  alert("Please log in first.");
+  showAuthScreen();
+  return;
+}
+  
 
   if (!button) {
     return;
@@ -1337,8 +1339,10 @@ async function loadComments(postId, article) {
 
 async function addComment(postId, body, article) {
   if (!currentUser) {
-    alert("Please log in first.");
-    return;
+  alert("Please log in first.");
+  showAuthScreen();
+  return;
+
   }
 
   const cleanBody = body.trim();
