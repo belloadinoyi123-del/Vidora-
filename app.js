@@ -2153,6 +2153,139 @@ window.searchPosts = searchPosts;
 window.deletePost = deletePost;
 window.deleteComment = deleteComment;
 /* =========================================================
+   FIND FRIENDS
+   ========================================================= */
+
+async function searchFriends() {
+
+  const input = document.getElementById("friendSearchInput");
+  const results = document.getElementById("friendSearchResults");
+
+  if (!input || !results) return;
+
+  const searchText = input.value.trim();
+
+  if (!searchText) {
+    results.innerHTML = "<p>Enter a username to search.</p>";
+    return;
+  }
+
+  results.innerHTML = "<p>Searching...</p>";
+
+  try {
+
+    const { data, error } = await supabaseClient
+      .from("profiles")
+      .select("id, username")
+      .ilike("username", "%" + searchText + "%")
+      .limit(20);
+
+    if (error) {
+      console.error("FRIEND SEARCH ERROR:", error);
+
+      results.innerHTML =
+        "<p>Could not search users.</p>";
+
+      return;
+    }
+
+    if (!data || data.length === 0) {
+
+      results.innerHTML =
+        "<p>No users found.</p>";
+
+      return;
+    }
+
+    results.innerHTML = "";
+
+    data.forEach(function(user) {
+
+      // Don't show yourself in the results
+      if (currentUser && user.id === currentUser.id) {
+        return;
+      }
+
+      const card = document.createElement("div");
+
+      card.className = "friendCard";
+
+      card.innerHTML = `
+        <div class="friendInfo">
+
+          <strong>
+            ${escapeHTML(user.username || "Vidora User")}
+          </strong>
+
+          <span>
+            @${escapeHTML(user.username || "user")}
+          </span>
+
+        </div>
+
+        <button
+          type="button"
+          class="messageFriendButton"
+          data-user-id="${user.id}"
+          data-username="${escapeHTML(user.username || "Vidora User")}"
+        >
+          💬 Message
+        </button>
+      `;
+
+      results.appendChild(card);
+
+    });
+
+    if (!results.innerHTML.trim()) {
+      results.innerHTML = "<p>No other users found.</p>";
+    }
+
+  } catch (error) {
+
+    console.error("FRIEND SEARCH EXCEPTION:", error);
+
+    results.innerHTML =
+      "<p>Something went wrong.</p>";
+  }
+}
+
+
+/* Search button */
+
+const friendSearchButton =
+  document.getElementById("friendSearchButton");
+
+if (friendSearchButton) {
+
+  friendSearchButton.addEventListener(
+    "click",
+    searchFriends
+  );
+
+}
+
+
+/* Press Enter to search */
+
+const friendSearchInput =
+  document.getElementById("friendSearchInput");
+
+if (friendSearchInput) {
+
+  friendSearchInput.addEventListener(
+    "keydown",
+    function(event) {
+
+      if (event.key === "Enter") {
+        searchFriends();
+      }
+
+    }
+  );
+
+}
+/* =========================================================
    29. VIDORA READY MESSAGE
    ========================================================= */
 
