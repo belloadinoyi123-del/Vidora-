@@ -1776,6 +1776,7 @@ async function checkSession() {
 /* =========================================================
    26. SUPABASE AUTH STATE LISTENER
    ========================================================= */
+
 supabaseClient.auth.onAuthStateChange(
   async function(event, session) {
 
@@ -1801,8 +1802,6 @@ supabaseClient.auth.onAuthStateChange(
     }
   }
 );
-
-
 
 /* =========================================================
    27. INITIALIZE VIDORA
