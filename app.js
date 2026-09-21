@@ -1745,15 +1745,16 @@ async function sharePost(post) {
    ========================================================= */
 
 function showPage(page) {
-  const pages = {
-    home: "homeScreen",
-    discover: "discoverScreen",
-    create: "createScreen",
-    chat: "chatScreen",
-    profile: "profileScreen",
-    notifications: "notificationsScreen"
-  };
-
+  
+const pages = {
+  home: "homeScreen",
+  discover: "discoverScreen",
+  create: "createScreen",
+  chat: "chatScreen",
+  friends: "friendsScreen",
+  profile: "profileScreen",
+  notifications: "notificationsScreen"
+};
   const requestedScreen =
     pages[page];
 
@@ -1837,12 +1838,13 @@ function updateNavigation(page) {
   );
 
   const pageIndex = {
-    home: 0,
-    discover: 1,
-    create: 2,
-    chat: 3,
-    profile: 4
-  };
+  home: 0,
+  discover: 1,
+  create: 2,
+  chat: 3,
+  friends: 4,
+  profile: 5
+};
 
   const index =
     pageIndex[page];
