@@ -1382,6 +1382,7 @@ async function deletePost(postId, mediaUrl, article) {
    ========================================================= */
 
 async function loadComments(postId, article) {
+
   if (!article) {
     return;
   }
@@ -1398,11 +1399,12 @@ async function loadComments(postId, article) {
   `;
 
   try {
+
     const { data, error } =
       await supabaseClient
         .from("comments")
         .select(
-          "id,user_id,content,created_at"
+          "id,user_id,content,body,created_at"
         )
         .eq("post_id", postId)
         .order("created_at", {
@@ -1436,23 +1438,97 @@ async function loadComments(postId, article) {
 
     commentsList.innerHTML = "";
 
-    data.forEach(function(comment) {
+    for (const comment of data) {
+
+      let username = "Vidora User";
+
+      /* Get commenter's username */
+
+      try {
+
+        const { data: profileData } =
+          await supabaseClient
+            .from("profiles")
+            .select("username")
+            .eq("id", comment.user_id)
+            .maybeSingle();
+
+        if (
+          profileData &&
+          profileData.username
+        ) {
+          username = profileData.username;
+        }
+
+      } catch (profileError) {
+        console.log(
+          "Comment username unavailable."
+        );
+      }
+
+      const commentText =
+        comment.content ||
+        comment.body ||
+        "";
+
       const item =
         document.createElement("div");
 
       item.className = "comment";
 
       item.innerHTML = `
-        <strong>Vidora User</strong>
-        <span>
-          ${escapeHTML(comment.content)}
-        </span>
+        <div class="commentHeader">
+
+          <strong>
+            ${escapeHTML(username)}
+          </strong>
+
+          ${
+            currentUser &&
+            currentUser.id === comment.user_id
+              ? `
+                <button
+                  type="button"
+                  class="deleteCommentButton"
+                >
+                  🗑️
+                </button>
+              `
+              : ""
+          }
+
+        </div>
+
+        <div class="commentText">
+          ${escapeHTML(commentText)}
+        </div>
       `;
 
+      /* Delete own comment */
+
+      const deleteButton =
+        item.querySelector(
+          ".deleteCommentButton"
+        );
+
+      if (deleteButton) {
+
+        deleteButton.addEventListener(
+          "click",
+          () => deleteComment(
+            comment.id,
+            item,
+            postId,
+            article
+          )
+        );
+      }
+
       commentsList.appendChild(item);
-    });
+    }
 
   } catch (error) {
+
     console.error(
       "LOAD COMMENTS EXCEPTION:",
       error
@@ -1538,7 +1614,73 @@ async function addComment(postId, body, article) {
     );
   }
 }
+/* =========================================================
+   DELETE COMMENT
+   ========================================================= */
 
+async function deleteComment(
+  commentId,
+  commentElement,
+  postId,
+  article
+) {
+
+  if (!currentUser) {
+    alert("Please log in first.");
+    showAuthScreen();
+    return;
+  }
+
+  const confirmed = confirm(
+    "Are you sure you want to delete this comment?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+
+    const { error } =
+      await supabaseClient
+        .from("comments")
+        .delete()
+        .eq("id", commentId)
+        .eq("user_id", currentUser.id);
+
+    if (error) {
+
+      console.error(
+        "DELETE COMMENT ERROR:",
+        error
+      );
+
+      alert(
+        "Comment could not be deleted:\n\n" +
+        error.message
+      );
+
+      return;
+    }
+
+    if (commentElement) {
+      commentElement.remove();
+    }
+
+    alert("Comment deleted successfully.");
+
+  } catch (error) {
+
+    console.error(
+      "DELETE COMMENT EXCEPTION:",
+      error
+    );
+
+    alert(
+      "Something went wrong while deleting the comment."
+    );
+  }
+}
 /* =========================================================
    20. SHARE POST
    ========================================================= */
@@ -2009,7 +2151,7 @@ window.publishFromCreate = publishFromCreate;
 
 window.searchPosts = searchPosts;
 window.deletePost = deletePost;
-
+window.deleteComment = deleteComment;
 /* =========================================================
    29. VIDORA READY MESSAGE
    ========================================================= */
