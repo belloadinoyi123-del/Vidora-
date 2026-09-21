@@ -2008,7 +2008,7 @@ window.uploadPost = uploadPost;
 window.publishFromCreate = publishFromCreate;
 
 window.searchPosts = searchPosts;
-
+window.deletePost = deletePost;
 
 /* =========================================================
    29. VIDORA READY MESSAGE
