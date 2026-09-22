@@ -584,3 +584,134 @@ video.postMedia {
     border-radius: 20px 20px 0 0;
   }
 }
+/* =========================================================
+   VIDORA PROFILE AVATARS
+   ========================================================= */
+
+.profileSubtitle {
+  opacity: 0.7;
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
+
+.avatarTitle {
+  margin-top: 22px;
+  margin-bottom: 12px;
+}
+
+.avatarUploadButton {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  text-align: center;
+  border: 1px solid #8b5cf6;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    #8b5cf6,
+    #ff2d75
+  );
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.avatarUploadButton:active {
+  transform: scale(0.98);
+}
+
+.avatarOr {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.vidoraAvatarGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.vidoraAvatar {
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: #11111a;
+  padding: 8px;
+  cursor: pointer;
+  color: white;
+  transition: 0.2s ease;
+}
+
+.vidoraAvatar img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.vidoraAvatar span {
+  display: block;
+  margin-top: 7px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vidoraAvatar.selected {
+  border-color: #8b5cf6;
+  box-shadow:
+    0 0 0 2px rgba(139, 92, 246, 0.25),
+    0 0 20px rgba(139, 92, 246, 0.25);
+}
+
+.vidoraAvatar.selected::after {
+  content: "✓";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.saveProfileButton {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    #8b5cf6,
+    #ff2d75
+  );
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.saveProfileButton:active {
+  transform: scale(0.98);
+}
+
+
+/* MOBILE */
+
+@media (max-width: 500px) {
+
+  .vidoraAvatarGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
