@@ -413,6 +413,363 @@ function selectVidoraAvatar(name) {
   );
 }
 /* =========================================================
+   VIDORA INTERACTIVE AVATAR
+   ========================================================= */
+
+let interactiveAvatarEnabled =
+  localStorage.getItem("vidoraInteractiveAvatar") === "true";
+
+
+/* ---------------------------------------------------------
+   GET SELECTED AVATAR
+   --------------------------------------------------------- */
+
+function getSelectedVidoraAvatar() {
+
+  const avatar =
+    localStorage.getItem("vidoraAvatar");
+
+  return avatar || "Nova";
+}
+
+
+/* ---------------------------------------------------------
+   GET AVATAR IMAGE
+   --------------------------------------------------------- */
+
+function getVidoraAvatarImage(name) {
+
+  return (
+    "https://api.dicebear.com/9.x/adventurer/svg?seed=" +
+    encodeURIComponent(name)
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   ENABLE / DISABLE
+   --------------------------------------------------------- */
+
+function toggleInteractiveAvatar(enabled) {
+
+  interactiveAvatarEnabled = enabled;
+
+  localStorage.setItem(
+    "vidoraInteractiveAvatar",
+    enabled ? "true" : "false"
+  );
+
+  if (enabled) {
+
+    showInteractiveAvatar();
+
+  } else {
+
+    closeInteractiveAvatar();
+
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   SHOW AVATAR
+   --------------------------------------------------------- */
+
+function showInteractiveAvatar() {
+
+  if (!interactiveAvatarEnabled) {
+    return;
+  }
+
+  const avatar =
+    getSelectedVidoraAvatar();
+
+  const avatarBox =
+    document.getElementById("interactiveAvatar");
+
+  const avatarImage =
+    document.getElementById("interactiveAvatarImage");
+
+  const avatarName =
+    document.getElementById("avatarGreeting");
+
+  const avatarMessage =
+    document.getElementById("avatarMessage");
+
+  if (!avatarBox) {
+    return;
+  }
+
+  if (avatarImage) {
+    avatarImage.src =
+      getVidoraAvatarImage(avatar);
+  }
+
+  if (avatarName) {
+    avatarName.textContent =
+      "Hi! I'm " + avatar + " 👋";
+  }
+
+  if (avatarMessage) {
+    avatarMessage.textContent =
+      "Welcome back to Vidora!";
+  }
+
+  avatarBox.classList.remove("hidden");
+
+}
+
+
+/* ---------------------------------------------------------
+   CLOSE AVATAR
+   --------------------------------------------------------- */
+
+function closeInteractiveAvatar() {
+
+  const avatarBox =
+    document.getElementById("interactiveAvatar");
+
+  if (avatarBox) {
+    avatarBox.classList.add("hidden");
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   AVATAR REACTION
+   --------------------------------------------------------- */
+
+function avatarReact() {
+
+  const avatar =
+    getSelectedVidoraAvatar();
+
+  const message =
+    document.getElementById("avatarMessage");
+
+  const greeting =
+    document.getElementById("avatarGreeting");
+
+  if (!message) {
+    return;
+  }
+
+  const reactions = [
+    "😊 Nice tap!",
+    "👋 Hey there!",
+    "✨ I'm here!",
+    "😄 That was fun!",
+    "🚀 Ready to explore Vidora?",
+    "💜 Thanks for checking on me!"
+  ];
+
+  const random =
+    reactions[
+      Math.floor(
+        Math.random() * reactions.length
+      )
+    ];
+
+  if (greeting) {
+    greeting.textContent =
+      avatar + " says:";
+  }
+
+  message.textContent = random;
+
+}
+
+
+/* ---------------------------------------------------------
+   OPEN CHAT
+   --------------------------------------------------------- */
+
+function openAvatarChat() {
+
+  const chat =
+    document.getElementById("avatarChatPanel");
+
+  if (!chat) {
+    return;
+  }
+
+  chat.classList.remove("hidden");
+
+}
+
+
+/* ---------------------------------------------------------
+   CLOSE CHAT
+   --------------------------------------------------------- */
+
+function closeAvatarChat() {
+
+  const chat =
+    document.getElementById("avatarChatPanel");
+
+  if (chat) {
+    chat.classList.add("hidden");
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   SEND AVATAR MESSAGE
+   --------------------------------------------------------- */
+
+function sendAvatarMessage() {
+
+  const input =
+    document.getElementById("avatarChatInput");
+
+  const messages =
+    document.getElementById("avatarChatMessages");
+
+  if (!input || !messages) {
+    return;
+  }
+
+  const text =
+    input.value.trim();
+
+  if (!text) {
+    return;
+  }
+
+  const userMessage =
+    document.createElement("div");
+
+  userMessage.className =
+    "avatarChatMessage avatarUser";
+
+  userMessage.textContent =
+    text;
+
+  messages.appendChild(
+    userMessage
+  );
+
+  input.value = "";
+
+  messages.scrollTop =
+    messages.scrollHeight;
+
+
+  setTimeout(function() {
+
+    const avatar =
+      getSelectedVidoraAvatar();
+
+    const botMessage =
+      document.createElement("div");
+
+    botMessage.className =
+      "avatarChatMessage avatarBot";
+
+    botMessage.textContent =
+      getAvatarResponse(text, avatar);
+
+    messages.appendChild(
+      botMessage
+    );
+
+    messages.scrollTop =
+      messages.scrollHeight;
+
+  }, 500);
+
+}
+
+
+/* ---------------------------------------------------------
+   SIMPLE AVATAR RESPONSES
+   --------------------------------------------------------- */
+
+function getAvatarResponse(text, avatar) {
+
+  const message =
+    text.toLowerCase();
+
+  if (
+    message.includes("hello") ||
+    message.includes("hi") ||
+    message.includes("hey")
+  ) {
+
+    return (
+      "👋 Hey! I'm " +
+      avatar +
+      ". Nice to see you!"
+    );
+
+  }
+
+  if (
+    message.includes("how are you")
+  ) {
+
+    return (
+      "😊 I'm doing great! " +
+      "Ready to hang out on Vidora."
+    );
+
+  }
+
+  if (
+    message.includes("video")
+  ) {
+
+    return (
+      "🎬 Check your Vidora feed. " +
+      "You might find something interesting!"
+    );
+
+  }
+
+  if (
+    message.includes("thank")
+  ) {
+
+    return (
+      "💜 You're welcome!"
+    );
+
+  }
+
+  return (
+    "✨ I'm still learning! " +
+    "Soon I'll be able to have much smarter conversations with you."
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   INITIALIZE
+   --------------------------------------------------------- */
+
+function initializeInteractiveAvatar() {
+
+  const toggle =
+    document.getElementById(
+      "interactiveAvatarToggle"
+    );
+
+  if (toggle) {
+    toggle.checked =
+      interactiveAvatarEnabled;
+  }
+
+  if (interactiveAvatarEnabled) {
+    showInteractiveAvatar();
+  }
+
+}
+/* =========================================================
    9. LOAD PROFILE
    ========================================================= */
 
