@@ -375,7 +375,10 @@ async function showApp() {
 
 function selectVidoraAvatar(name) {
 
-  const hiddenInput =
+localStorage.setItem(
+  "vidoraAvatar",
+  name
+);  const hiddenInput =
     document.getElementById("selectedVidoraAvatar");
 
   if (hiddenInput) {
