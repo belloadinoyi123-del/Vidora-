@@ -374,57 +374,98 @@ async function showApp() {
    9. LOAD PROFILE
    ========================================================= */
 
-async function loadProfile() {
-  if (!currentUser) {
-    return;
-  }
 
-  const usernameElement =
-    getElement("profileUsername");
+<section
+  id="profileScreen"
+  class="screen hidden"
+>
 
-  const emailElement =
-    getElement("profileEmail");
+  <div class="profileCard">
 
-  if (emailElement) {
-    emailElement.textContent =
-      currentUser.email || "No email";
-  }
+    <div class="profileAvatar" id="profileAvatar">
+      V
+    </div>
 
-  let username = "Vidora User";
+    <h2 id="profileDisplayName">
+      Your Profile
+    </h2>
 
-  /*
-    Try the profiles table if it exists.
-    If it doesn't exist yet, Vidora still works.
-  */
+    <p id="profileUsername">
+      @username
+    </p>
 
-  try {
-    const { data, error } =
-      await supabaseClient
-        .from("profiles")
-        .select("username")
-        .eq("id", currentUser.id)
-        .maybeSingle();
+    <p id="profileBio">
+      Add a bio about yourself.
+    </p>
 
-    if (!error && data && data.username) {
-      username = data.username;
-    }
-  } catch (error) {
-    console.log("Profiles table not available yet.");
-  }
+    <button
+      type="button"
+      onclick="showProfileSetup()"
+    >
+      ✏️ Edit Profile
+    </button>
 
-  if (usernameElement) {
-    usernameElement.textContent = username;
-  }
+    <p id="profileEmail">
+      Loading account...
+    </p>
 
-  const avatar =
-    document.querySelector(".profileAvatar");
+    <button
+      id="logoutBtn"
+      type="button"
+      onclick="logout()"
+    >
+      Log Out
+    </button>
 
-  if (avatar) {
-    avatar.textContent =
-      username.charAt(0).toUpperCase();
-  }
-}
+  </div>
 
+  <!-- PROFILE SETUP -->
+
+  <div
+    id="profileSetup"
+    class="createCard hidden"
+  >
+
+    <h2>Set up your profile</h2>
+
+    <input
+      id="profileDisplayNameInput"
+      type="text"
+      placeholder="Display name"
+      maxlength="50"
+    >
+
+    <input
+      id="profileUsernameInput"
+      type="text"
+      placeholder="Username"
+      maxlength="30"
+    >
+
+    <textarea
+      id="profileBioInput"
+      placeholder="Tell people about yourself..."
+      maxlength="160"
+    ></textarea>
+
+    <input
+      id="profileAvatarFile"
+      type="file"
+      accept="image/*"
+    >
+
+    <button
+      type="button"
+      onclick="saveProfile()"
+    >
+      💾 Save Profile
+    </button>
+
+    <p id="profileMessage"></p>
+
+  </div>
+
+</section>
 
 /* =========================================================
    10. VALIDATE MEDIA FILE
