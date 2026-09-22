@@ -1231,7 +1231,201 @@ function initializeInteractiveAvatar() {
   }
 
 }
+/* =========================================================
+   SAVE PROFILE
+   ========================================================= */
 
+async function saveProfile() {
+
+  if (!currentUser) {
+    alert("Please log in first.");
+    return;
+  }
+
+  const displayNameInput =
+    document.getElementById("profileDisplayNameInput");
+
+  const usernameInput =
+    document.getElementById("profileUsernameInput");
+
+  const bioInput =
+    document.getElementById("profileBioInput");
+
+  const avatarFileInput =
+    document.getElementById("profileAvatarFile");
+
+  const message =
+    document.getElementById("profileMessage");
+
+  const displayName =
+    displayNameInput?.value.trim() || "";
+
+  const username =
+    usernameInput?.value.trim().toLowerCase() || "";
+
+  const bio =
+    bioInput?.value.trim() || "";
+
+  if (!displayName) {
+    if (message) {
+      message.textContent =
+        "Please enter your display name.";
+      message.style.color = "#ff6b6b";
+    }
+    return;
+  }
+
+  if (!username) {
+    if (message) {
+      message.textContent =
+        "Please enter a username.";
+      message.style.color = "#ff6b6b";
+    }
+    return;
+  }
+
+  try {
+
+    if (message) {
+      message.textContent = "Saving profile...";
+      message.style.color = "#aaa";
+    }
+
+    let avatarUrl = null;
+
+    /* -----------------------------------------
+       UPLOAD PERSONAL PROFILE PHOTO
+       ----------------------------------------- */
+
+    const avatarFile =
+      avatarFileInput?.files?.[0];
+
+    if (avatarFile) {
+
+      if (!avatarFile.type.startsWith("image/")) {
+        throw new Error("Please select an image file.");
+      }
+
+      if (avatarFile.size > 5 * 1024 * 1024) {
+        throw new Error(
+          "Profile picture must be smaller than 5 MB."
+        );
+      }
+
+      const extension =
+        getFileExtension(avatarFile);
+
+      const filePath =
+        currentUser.id +
+        "/profile-" +
+        Date.now() +
+        "." +
+        extension;
+
+      const { error: uploadError } =
+        await supabaseClient.storage
+          .from("media")
+          .upload(
+            filePath,
+            avatarFile,
+            {
+              cacheControl: "3600",
+              upsert: true,
+              contentType: avatarFile.type
+            }
+          );
+
+      if (uploadError) {
+        throw new Error(
+          "Profile picture upload failed: " +
+          uploadError.message
+        );
+      }
+
+      const { data: publicData } =
+        supabaseClient.storage
+          .from("media")
+          .getPublicUrl(filePath);
+
+      avatarUrl =
+        publicData?.publicUrl || null;
+    }
+
+    /* -----------------------------------------
+       SAVE PROFILE
+       ----------------------------------------- */
+
+    const { data, error } =
+      await supabaseClient
+        .from("profiles")
+        .upsert(
+          {
+            id: currentUser.id,
+            username: username,
+            display_name: displayName,
+            bio: bio,
+            avatar_url: avatarUrl
+          },
+          {
+            onConflict: "id"
+          }
+        )
+        .select()
+        .single();
+
+    if (error) {
+
+      console.error(
+        "SAVE PROFILE ERROR:",
+        error
+      );
+
+      throw new Error(
+        "Profile could not be saved: " +
+        error.message
+      );
+    }
+
+    console.log(
+      "PROFILE SAVED:",
+      data
+    );
+
+    if (message) {
+      message.textContent =
+        "Profile saved successfully! ✅";
+      message.style.color = "#4ade80";
+    }
+
+    await loadProfile();
+
+    setTimeout(function() {
+
+      const setup =
+        document.getElementById("profileSetup");
+
+      if (setup) {
+        setup.classList.add("hidden");
+      }
+
+    }, 700);
+
+  } catch (error) {
+
+    console.error(
+      "SAVE PROFILE EXCEPTION:",
+      error
+    );
+
+    if (message) {
+      message.textContent =
+        error.message ||
+        "Could not save your profile.";
+
+      message.style.color = "#ff6b6b";
+    }
+  }
+}
 /* =========================================================
    9. LOAD PROFILE
    ========================================================= */
