@@ -339,14 +339,9 @@ async function logout() {
    ========================================================= */
 
 function showAuthScreen() {
-   function showProfileSetup() {
+   function showAuthScreen() {
 
-  const setup =
-    document.getElementById("profileSetup");
-
-  if (!setup) {
-    return;
-  }
+  const authScreen = getElement("authScreen");
 
   setup.classList.remove("hidden");
 
@@ -366,7 +361,17 @@ function showAuthScreen() {
   clearMessage("createMessage");
 }
 
+function showProfileSetup() {
 
+  const setup =
+    document.getElementById("profileSetup");
+
+  if (!setup) {
+    return;
+  }
+
+  setup.classList.remove("hidden");
+}
 /* =========================================================
    8. SHOW MAIN APP
    ========================================================= */
@@ -524,40 +529,7 @@ async function showInteractiveAvatar() {
     }
   }
 
-  /* -----------------------------------------
-     Otherwise use selected Vidora avatar
-     ----------------------------------------- */
-
-  if (!avatarUrl) {
-
-    const avatarName =
-      getSelectedVidoraAvatar();
-
-    avatarUrl =
-      getVidoraAvatarImage(
-        avatarName
-      );
-  }
-
-  if (avatarImage) {
-
-    avatarImage.src = avatarUrl;
-
-    avatarImage.onerror = function() {
-
-      const avatarName =
-        getSelectedVidoraAvatar();
-
-      avatarImage.src =
-        getVidoraAvatarImage(
-          avatarName
-        );
-    };
-  }
-
-  avatarBox.classList.remove("hidden");
-}
-
+  
   
 
   /* -----------------------------------------
