@@ -585,6 +585,37 @@ async function showInteractiveAvatar() {
 
   avatarBox.classList.remove("hidden");
 }
+async function launchAvatarWelcome() {
+
+  if (!interactiveAvatarEnabled) {
+    return;
+  }
+
+  if (!currentUser) {
+    return;
+  }
+
+  // Only welcome once per login session
+  if (
+    sessionStorage.getItem("vidoraAvatarWelcomed") === "true"
+  ) {
+    return;
+  }
+
+  // Small delay for a smooth entrance
+  await new Promise(function(resolve) {
+    setTimeout(resolve, 700);
+  });
+
+  await showInteractiveAvatar();
+
+  await showSmartAvatarGreeting();
+
+  sessionStorage.setItem(
+    "vidoraAvatarWelcomed",
+    "true"
+  );
+}
 /* =========================================================
    VIDORA AVATAR - SMART GREETING & THEME ASSISTANT
    ========================================================= */
