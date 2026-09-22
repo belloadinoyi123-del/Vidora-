@@ -945,61 +945,61 @@ const VIDORA_AVATARS = {
   nova: {
     id: "nova",
     name: "Nova",
-    image: "avatars/nova.jpg"
+    image: "avatars/nova.png"
   },
 
   zeno: {
     id: "zeno",
     name: "Zeno",
-    image: "avatars/zeno.jpg"
+    image: "avatars/zeno.png"
   },
 
   luna: {
     id: "luna",
     name: "Luna",
-    image: "avatars/luna.jpg"
+    image: "avatars/luna.png"
   },
 
   kai: {
     id: "kai",
     name: "Kai",
-    image: "avatars/kai.jpg"
+    image: "avatars/kai.png"
   },
 
   sage: {
     id: "sage",
     name: "Sage",
-    image: "avatars/sage.jpg"
+    image: "avatars/sage.png"
   },
 
   rex: {
     id: "rex",
     name: "Rex",
-    image: "avatars/rex.jpg"
+    image: "avatars/rex.png"
   },
 
   ivy: {
     id: "ivy",
     name: "Ivy",
-    image: "avatars/ivy.jpg"
+    image: "avatars/ivy.png"
   },
 
   orion: {
     id: "orion",
     name: "Orion",
-    image: "avatars/orion.jpg"
+    image: "avatars/orion.png"
   },
 
   pixel: {
     id: "pixel",
     name: "Pixel",
-    image: "avatars/pixel.jpg"
+    image: "avatars/pixel.png"
   },
 
   vexa: {
     id: "vexa",
     name: "Vexa",
-    image: "avatars/vexa.jpg"
+    image: "avatars/vexa.png"
   }
 };
 
