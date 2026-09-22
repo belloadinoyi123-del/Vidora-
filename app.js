@@ -460,16 +460,11 @@ function getTimePeriod() {
    SMART AVATAR GREETING
    --------------------------------------------------------- */
 
-function showSmartAvatarGreeting() {
+async function showSmartAvatarGreeting() {
 
-  if (!interactiveAvatarEnabled) {
+  if (!interactiveAvatarEnabled || !currentUser) {
     return;
   }
-if (interactiveAvatarEnabled) {
-  showSmartAvatarGreeting();
-}
-  const avatar =
-    getSelectedVidoraAvatar();
 
   const greeting =
     document.getElementById("avatarGreeting");
@@ -481,54 +476,83 @@ if (interactiveAvatarEnabled) {
     return;
   }
 
-  const period =
-    getTimePeriod();
+  let displayName = "Vidora User";
+  let username = "";
+
+  try {
+
+    const { data, error } =
+      await supabaseClient
+        .from("profiles")
+        .select("display_name, username")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+    if (!error && data) {
+
+      displayName =
+        data.display_name || "Vidora User";
+
+      username =
+        data.username || "";
+    }
+
+  } catch (error) {
+
+    console.error(
+      "AVATAR PROFILE ERROR:",
+      error
+    );
+  }
+
+  const period = getTimePeriod();
 
   if (period === "morning") {
 
     greeting.textContent =
-      "Good morning! ☀️";
+      "Good morning, " +
+      displayName +
+      "! ☀️";
 
-    message.textContent =
-      "Hi! I'm " + avatar +
-      ". What would you like to do on Vidora today?";
-
-  }
-
-  else if (period === "afternoon") {
+  } else if (period === "afternoon") {
 
     greeting.textContent =
-      "Good afternoon! 👋";
+      "Good afternoon, " +
+      displayName +
+      "! 👋";
 
-    message.textContent =
-      "Would you like me to enable Dark Mode for you? 🌙";
-
-    showThemeSuggestion("dark");
-
-  }
-
-  else if (period === "evening") {
+  } else if (period === "evening") {
 
     greeting.textContent =
-      "Good evening! 🌆";
+      "Good evening, " +
+      displayName +
+      "! 🌆";
 
-    message.textContent =
-      "What would you like to do on Vidora?";
-
-  }
-
-  else {
+  } else {
 
     greeting.textContent =
-      "Good night! 🌙";
-
-    message.textContent =
-      "Would you like me to switch to Light Mode? ☀️";
-
-    showThemeSuggestion("light");
-
+      "Good night, " +
+      displayName +
+      "! 🌙";
   }
 
+  if (username) {
+
+    message.innerHTML =
+      "<strong>@" +
+      username +
+      "</strong><br>" +
+      "Welcome back to Vidora! " +
+      "Ready to see what's happening? 🚀";
+
+  } else {
+
+    message.textContent =
+      "Welcome back to Vidora! " +
+      "Ready to see what's happening? 🚀";
+  }
+
+  addAvatarQuickActions();
 }
 
 
