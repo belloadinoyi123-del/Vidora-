@@ -3352,7 +3352,6 @@ console.log(
 );
 window.showAuthScreen = showAuthScreen;
 window.showProfileSetup = showProfileSetup;
-window.saveProfile = saveProfile;
 window.loadProfile = loadProfile;
 window.selectVidoraAvatar = selectVidoraAvatar;
 window.toggleInteractiveAvatar = toggleInteractiveAvatar;
