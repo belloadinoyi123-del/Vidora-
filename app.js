@@ -283,6 +283,9 @@ async function logout() {
 
   try {
     const { error } =
+       sessionStorage.removeItem(
+  "vidoraAvatarWelcomed"
+);
       await supabaseClient.auth.signOut();
 
     if (error) {
