@@ -422,7 +422,252 @@ localStorage.setItem(
 let interactiveAvatarEnabled =
   localStorage.getItem("vidoraInteractiveAvatar") === "true";
 
+/* =========================================================
+   VIDORA AVATAR - SMART GREETING & THEME ASSISTANT
+   ========================================================= */
 
+function getTimePeriod() {
+
+  const hour = new Date().getHours();
+
+  if (hour >= 5 && hour < 12) {
+    return "morning";
+  }
+
+  if (hour >= 12 && hour < 18) {
+    return "afternoon";
+  }
+
+  if (hour >= 18 && hour < 22) {
+    return "evening";
+  }
+
+  return "night";
+}
+
+
+/* ---------------------------------------------------------
+   SMART AVATAR GREETING
+   --------------------------------------------------------- */
+
+function showSmartAvatarGreeting() {
+
+  if (!interactiveAvatarEnabled) {
+    return;
+  }
+
+  const avatar =
+    getSelectedVidoraAvatar();
+
+  const greeting =
+    document.getElementById("avatarGreeting");
+
+  const message =
+    document.getElementById("avatarMessage");
+
+  if (!greeting || !message) {
+    return;
+  }
+
+  const period =
+    getTimePeriod();
+
+  if (period === "morning") {
+
+    greeting.textContent =
+      "Good morning! ☀️";
+
+    message.textContent =
+      "Hi! I'm " + avatar +
+      ". What would you like to do on Vidora today?";
+
+  }
+
+  else if (period === "afternoon") {
+
+    greeting.textContent =
+      "Good afternoon! 👋";
+
+    message.textContent =
+      "Would you like me to enable Dark Mode for you? 🌙";
+
+    showThemeSuggestion("dark");
+
+  }
+
+  else if (period === "evening") {
+
+    greeting.textContent =
+      "Good evening! 🌆";
+
+    message.textContent =
+      "What would you like to do on Vidora?";
+
+  }
+
+  else {
+
+    greeting.textContent =
+      "Good night! 🌙";
+
+    message.textContent =
+      "Would you like me to switch to Light Mode? ☀️";
+
+    showThemeSuggestion("light");
+
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   THEME SUGGESTION BUTTONS
+   --------------------------------------------------------- */
+
+function showThemeSuggestion(theme) {
+
+  const oldActions =
+    document.getElementById(
+      "avatarThemeActions"
+    );
+
+  if (oldActions) {
+    oldActions.remove();
+  }
+
+  const avatarBox =
+    document.getElementById(
+      "interactiveAvatar"
+    );
+
+  if (!avatarBox) {
+    return;
+  }
+
+  const actions =
+    document.createElement("div");
+
+  actions.id =
+    "avatarThemeActions";
+
+  actions.className =
+    "avatarThemeActions";
+
+
+  const yesButton =
+    document.createElement("button");
+
+  yesButton.type =
+    "button";
+
+  yesButton.textContent =
+    theme === "dark"
+      ? "🌙 Yes, Dark Mode"
+      : "☀️ Yes, Light Mode";
+
+  yesButton.onclick =
+    function() {
+
+      setVidoraTheme(theme);
+
+      actions.remove();
+
+      const message =
+        document.getElementById(
+          "avatarMessage"
+        );
+
+      if (message) {
+
+        message.textContent =
+          theme === "dark"
+            ? "Done! Dark Mode is enabled. 🌙"
+            : "Done! Light Mode is enabled. ☀️";
+
+      }
+
+    };
+
+
+  const noButton =
+    document.createElement("button");
+
+  noButton.type =
+    "button";
+
+  noButton.textContent =
+    "Not now";
+
+  noButton.onclick =
+    function() {
+
+      actions.remove();
+
+      const message =
+        document.getElementById(
+          "avatarMessage"
+        );
+
+      if (message) {
+
+        message.textContent =
+          "No problem! I'll leave your current theme as it is. 😊";
+
+      }
+
+    };
+
+
+  actions.appendChild(yesButton);
+  actions.appendChild(noButton);
+
+  avatarBox.appendChild(actions);
+
+}
+
+
+/* ---------------------------------------------------------
+   CHANGE VIDORA THEME
+   --------------------------------------------------------- */
+
+function setVidoraTheme(theme) {
+
+  localStorage.setItem(
+    "vidoraTheme",
+    theme
+  );
+
+  document.body.classList.toggle(
+    "lightMode",
+    theme === "light"
+  );
+
+  document.body.classList.toggle(
+    "darkMode",
+    theme === "dark"
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   LOAD SAVED THEME
+   --------------------------------------------------------- */
+
+function loadVidoraTheme() {
+
+  const savedTheme =
+    localStorage.getItem(
+      "vidoraTheme"
+    );
+
+  if (!savedTheme) {
+    return;
+  }
+
+  setVidoraTheme(savedTheme);
+
+}
 /* ---------------------------------------------------------
    GET SELECTED AVATAR
    --------------------------------------------------------- */
@@ -772,6 +1017,7 @@ function initializeInteractiveAvatar() {
   }
 
 }
+
 /* =========================================================
    9. LOAD PROFILE
    ========================================================= */
