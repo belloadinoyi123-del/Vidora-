@@ -937,17 +937,645 @@ function getSelectedVidoraAvatar() {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
+   VIDORA AVATAR SYSTEM
+   ========================================================= */
+
+const VIDORA_AVATARS = {
+  nova: {
+    id: "nova",
+    name: "Nova",
+    image: "avatars/nova.jpg"
+  },
+
+  zeno: {
+    id: "zeno",
+    name: "Zeno",
+    image: "avatars/zeno.jpg"
+  },
+
+  luna: {
+    id: "luna",
+    name: "Luna",
+    image: "avatars/luna.jpg"
+  },
+
+  kai: {
+    id: "kai",
+    name: "Kai",
+    image: "avatars/kai.jpg"
+  },
+
+  sage: {
+    id: "sage",
+    name: "Sage",
+    image: "avatars/sage.jpg"
+  },
+
+  rex: {
+    id: "rex",
+    name: "Rex",
+    image: "avatars/rex.jpg"
+  },
+
+  ivy: {
+    id: "ivy",
+    name: "Ivy",
+    image: "avatars/ivy.jpg"
+  },
+
+  orion: {
+    id: "orion",
+    name: "Orion",
+    image: "avatars/orion.jpg"
+  },
+
+  pixel: {
+    id: "pixel",
+    name: "Pixel",
+    image: "avatars/pixel.jpg"
+  },
+
+  vexa: {
+    id: "vexa",
+    name: "Vexa",
+    image: "avatars/vexa.jpg"
+  }
+};
+
+
+/* =========================================================
+   GET SELECTED AVATAR
+   ========================================================= */
+
+function getSelectedVidoraAvatar() {
+  const saved =
+    localStorage.getItem("vidoraSelectedAvatar");
+
+  if (saved && VIDORA_AVATARS[saved]) {
+    return saved;
+  }
+
+  return "nova";
+}
+
+
+/* =========================================================
    GET AVATAR IMAGE
-   --------------------------------------------------------- */
+   ========================================================= */
 
 function getVidoraAvatarImage(name) {
+  const key = String(name || "")
+    .toLowerCase()
+    .trim();
 
-  return (
-    "https://api.dicebear.com/9.x/adventurer/svg?seed=" +
-    encodeURIComponent(name)
+  if (VIDORA_AVATARS[key]) {
+    return VIDORA_AVATARS[key].image;
+  }
+
+  return VIDORA_AVATARS.nova.image;
+}
+
+
+/* =========================================================
+   GET AVATAR INFORMATION
+   ========================================================= */
+
+function getVidoraAvatarInfo(name) {
+  const key = String(name || "")
+    .toLowerCase()
+    .trim();
+
+  return VIDORA_AVATARS[key] || VIDORA_AVATARS.nova;
+}
+
+
+/* =========================================================
+   SELECT AVATAR
+   ========================================================= */
+
+function selectVidoraAvatar(name) {
+  const key = String(name || "")
+    .toLowerCase()
+    .trim();
+
+  if (!VIDORA_AVATARS[key]) {
+    console.warn("Unknown Vidora avatar:", name);
+    return;
+  }
+
+  localStorage.setItem(
+    "vidoraSelectedAvatar",
+    key
   );
 
+  const avatarInfo =
+    getVidoraAvatarInfo(key);
+
+  /* Update hidden field */
+  const selected =
+    document.getElementById("selectedVidoraAvatar");
+
+  if (selected) {
+    selected.value = key;
+  }
+
+  /* Highlight selected avatar */
+  document
+    .querySelectorAll(".vidoraAvatar")
+    .forEach(function(button) {
+      button.classList.remove("selected");
+    });
+
+  const selectedButton =
+    document.querySelector(
+      '.vidoraAvatar[data-avatar="' + key + '"]'
+    );
+
+  if (selectedButton) {
+    selectedButton.classList.add("selected");
+  }
+
+  /* Update preview */
+  updateAvatarPreview(
+    avatarInfo.image,
+    avatarInfo.name
+  );
+}
+
+
+/* =========================================================
+   UPDATE AVATAR PREVIEW
+   ========================================================= */
+
+function updateAvatarPreview(imageUrl, avatarName) {
+  const preview =
+    document.getElementById("profileAvatarPreview");
+
+  if (!preview) return;
+
+  preview.innerHTML = "";
+
+  const image =
+    document.createElement("img");
+
+  image.src = imageUrl;
+  image.alt =
+    avatarName || "Vidora Avatar";
+
+  image.className =
+    "profileAvatarImage";
+
+  preview.appendChild(image);
+}
+
+
+/* =========================================================
+   HANDLE CUSTOM AVATAR UPLOAD
+   ========================================================= */
+
+function handleAvatarUpload(event) {
+  const file =
+    event.target.files &&
+    event.target.files[0];
+
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    alert("Please choose an image.");
+    event.target.value = "";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Avatar image must be smaller than 5 MB.");
+    event.target.value = "";
+    return;
+  }
+
+  const imageUrl =
+    URL.createObjectURL(file);
+
+  updateAvatarPreview(
+    imageUrl,
+    "Your Avatar"
+  );
+
+  /* Custom upload takes priority */
+  localStorage.setItem(
+    "vidoraAvatarMode",
+    "custom"
+  );
+}
+
+
+/* =========================================================
+   USE VIDORA AVATAR
+   ========================================================= */
+
+function useVidoraAvatar() {
+  localStorage.setItem(
+    "vidoraAvatarMode",
+    "preset"
+  );
+
+  const selected =
+    getSelectedVidoraAvatar();
+
+  const info =
+    getVidoraAvatarInfo(selected);
+
+  updateAvatarPreview(
+    info.image,
+    info.name
+  );
+}
+
+
+/* =========================================================
+   RESET AVATAR
+   ========================================================= */
+
+function resetVidoraAvatar() {
+  localStorage.removeItem(
+    "vidoraSelectedAvatar"
+  );
+
+  localStorage.removeItem(
+    "vidoraAvatarMode"
+  );
+
+  selectVidoraAvatar("nova");
+
+  const fileInput =
+    document.getElementById(
+      "profileAvatarFile"
+    );
+
+  if (fileInput) {
+    fileInput.value = "";
+  }
+}
+
+
+/* =========================================================
+   RENDER AVATAR ON PROFILE
+   ========================================================= */
+
+function renderProfileAvatar(
+  container,
+  avatarUrl,
+  displayName
+) {
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (avatarUrl) {
+    const image =
+      document.createElement("img");
+
+    image.src = avatarUrl;
+
+    image.alt =
+      displayName ||
+      "Vidora profile picture";
+
+    image.className =
+      "profileAvatarImage";
+
+    image.onerror = function() {
+      renderDefaultAvatar(
+        container,
+        displayName
+      );
+    };
+
+    container.appendChild(image);
+
+    return;
+  }
+
+  renderDefaultAvatar(
+    container,
+    displayName
+  );
+}
+
+
+/* =========================================================
+   DEFAULT VIDORA AVATAR
+   ========================================================= */
+
+function renderDefaultAvatar(
+  container,
+  displayName
+) {
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const avatarName =
+    getSelectedVidoraAvatar();
+
+  const imageUrl =
+    getVidoraAvatarImage(
+      avatarName
+    );
+
+  const image =
+    document.createElement("img");
+
+  image.src = imageUrl;
+
+  image.alt =
+    displayName ||
+    "Vidora Avatar";
+
+  image.className =
+    "profileAvatarImage";
+
+  image.onerror = function() {
+    container.innerHTML =
+      "<span>" +
+      (
+        displayName ||
+        "V"
+      ).charAt(0).toUpperCase() +
+      "</span>";
+  };
+
+  container.appendChild(image);
+}
+
+
+/* =========================================================
+   AVATAR NAME + USERNAME
+   ========================================================= */
+
+function updateAvatarIdentity(
+  displayName,
+  username
+) {
+  const nameElement =
+    document.getElementById(
+      "avatarDisplayName"
+    );
+
+  const usernameElement =
+    document.getElementById(
+      "avatarDisplayUsername"
+    );
+
+  if (nameElement) {
+    nameElement.textContent =
+      displayName || "Vidora User";
+  }
+
+  if (usernameElement) {
+    usernameElement.textContent =
+      username
+        ? "@" + username
+        : "@vidora";
+  }
+}
+
+
+/* =========================================================
+   AVATAR PRESET LIST
+   ========================================================= */
+
+function renderVidoraAvatarChoices() {
+  const container =
+    document.getElementById(
+      "vidoraAvatarChoices"
+    );
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const selected =
+    getSelectedVidoraAvatar();
+
+  Object.keys(VIDORA_AVATARS)
+    .forEach(function(key) {
+
+      const avatar =
+        VIDORA_AVATARS[key];
+
+      const button =
+        document.createElement("button");
+
+      button.type = "button";
+
+      button.className =
+        "vidoraAvatar";
+
+      button.dataset.avatar =
+        key;
+
+      if (key === selected) {
+        button.classList.add(
+          "selected"
+        );
+      }
+
+      button.innerHTML =
+        '<img src="' +
+        avatar.image +
+        '" alt="' +
+        avatar.name +
+        '">' +
+        '<span>' +
+        avatar.name +
+        "</span>";
+
+      button.onclick =
+        function() {
+          selectVidoraAvatar(key);
+        };
+
+      container.appendChild(button);
+    });
+}
+
+
+/* =========================================================
+   INTERACTIVE AVATAR
+   ========================================================= */
+
+async function showInteractiveAvatar() {
+  if (!interactiveAvatarEnabled) {
+    return;
+  }
+
+  const avatarBox =
+    document.getElementById(
+      "interactiveAvatar"
+    );
+
+  const avatarImage =
+    document.getElementById(
+      "interactiveAvatarImage"
+    );
+
+  if (!avatarBox) return;
+
+  let avatarUrl = "";
+
+  let displayName =
+    "Vidora User";
+
+  let username =
+    "";
+
+  if (currentUser) {
+    try {
+      const { data, error } =
+        await supabaseClient
+          .from("profiles")
+          .select(
+            "display_name, username, avatar_url"
+          )
+          .eq(
+            "id",
+            currentUser.id
+          )
+          .maybeSingle();
+
+      if (!error && data) {
+        displayName =
+          data.display_name ||
+          displayName;
+
+        username =
+          data.username ||
+          "";
+
+        avatarUrl =
+          data.avatar_url ||
+          "";
+      }
+
+    } catch (error) {
+      console.error(
+        "INTERACTIVE AVATAR ERROR:",
+        error
+      );
+    }
+  }
+
+  if (!avatarUrl) {
+    avatarUrl =
+      getVidoraAvatarImage(
+        getSelectedVidoraAvatar()
+      );
+  }
+
+  if (avatarImage) {
+    avatarImage.src =
+      avatarUrl;
+
+    avatarImage.onerror =
+      function() {
+        avatarImage.src =
+          getVidoraAvatarImage(
+            "nova"
+          );
+      };
+  }
+
+  updateAvatarIdentity(
+    displayName,
+    username
+  );
+
+  avatarBox.classList.remove(
+    "hidden"
+  );
+}
+
+
+/* =========================================================
+   CLOSE INTERACTIVE AVATAR
+   ========================================================= */
+
+function closeInteractiveAvatar() {
+  const avatarBox =
+    document.getElementById(
+      "interactiveAvatar"
+    );
+
+  if (avatarBox) {
+    avatarBox.classList.add(
+      "hidden"
+    );
+  }
+}
+
+
+/* =========================================================
+   AVATAR REACTION
+   ========================================================= */
+
+function avatarReact(message) {
+  const messageBox =
+    document.getElementById(
+      "avatarMessage"
+    );
+
+  if (messageBox) {
+    messageBox.textContent =
+      message;
+  }
+}
+
+
+/* =========================================================
+   AVATAR QUICK ACTION
+   ========================================================= */
+
+function avatarGoHome() {
+  closeInteractiveAvatar();
+  showPage("home");
+}
+
+function avatarGoProfile() {
+  closeInteractiveAvatar();
+  showPage("profile");
+}
+
+function avatarGoCreate() {
+  closeInteractiveAvatar();
+  showPage("create");
+}
+
+function avatarGoTrending() {
+  closeInteractiveAvatar();
+  showPage("trending");
+}
+
+
+/* =========================================================
+   INITIALIZE AVATAR SYSTEM
+   ========================================================= */
+
+function initializeVidoraAvatarSystem() {
+  const selected =
+    getSelectedVidoraAvatar();
+
+  const hiddenInput =
+    document.getElementById(
+      "selectedVidoraAvatar"
+    );
+
+  if (hiddenInput) {
+    hiddenInput.value =
+      selected;
+  }
+
+  renderVidoraAvatarChoices();
 }
 
 
