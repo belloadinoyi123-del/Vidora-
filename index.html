@@ -456,7 +456,54 @@
 
 
     <!-- VIDORA AVATARS -->
+<div class="avatarEditor">
 
+  <h3>Choose Your Vidora Avatar</h3>
+
+  <div id="profileAvatarPreview"
+       class="profileAvatarPreview">
+    <span>V</span>
+  </div>
+
+  <div id="vidoraAvatarChoices"
+       class="vidoraAvatarChoices">
+  </div>
+
+  <p class="avatarOr">OR</p>
+
+  <label
+    for="profileAvatarFile"
+    class="avatarUploadButton">
+    📷 Upload Your Own Avatar
+  </label>
+
+  <input
+    id="profileAvatarFile"
+    type="file"
+    accept="image/*"
+    hidden
+    onchange="handleAvatarUpload(event)"
+  >
+
+  <button
+    type="button"
+    onclick="useVidoraAvatar()">
+    🔄 Use Vidora Avatar
+  </button>
+
+  <button
+    type="button"
+    onclick="resetVidoraAvatar()">
+    ♻️ Reset Avatar
+  </button>
+
+  <input
+    type="hidden"
+    id="selectedVidoraAvatar"
+    value="nova"
+  >
+
+</div>
     <div
       id="vidoraAvatarOptions"
       class="vidoraAvatarGrid"
