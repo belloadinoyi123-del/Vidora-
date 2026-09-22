@@ -357,64 +357,47 @@
      PROFILE
 ========================= -->
 
-<section
-  id="profileScreen"
-  class="screen hidden"
->
+<section id="profileScreen" class="screen hidden">
 
   <div class="profileCard">
 
-    <div
-      class="profileAvatar"
-      id="profileAvatar"
-    >
+    <div class="profileAvatar" id="profileAvatar">
       V
     </div>
 
-    <h2 id="profileDisplayName">
-      Welcome to Vidora
-    </h2>
+    <h2 id="profileDisplayName">Welcome to Vidora</h2>
 
-    <p id="profileUsername">
-      Set up your profile
-    </p>
+    <p id="profileUsername">Set up your profile</p>
 
     <p id="profileBio">
       Add your name, username and bio.
     </p>
 
-    <p id="profileEmail">
-      Loading account...
-    </p>
+    <p id="profileEmail">Loading account...</p>
 
-    <button
-      type="button"
-      onclick="showProfileSetup()"
-    >
+    <button type="button" onclick="showProfileSetup()">
       ✏️ Edit Profile
     </button>
 
-    <button
-      id="logoutBtn"
-      type="button"
-      onclick="logout()"
-    >
+    <button id="logoutBtn" type="button" onclick="logout()">
       Log Out
     </button>
 
   </div>
 
 
-  <!-- PROFILE EDIT FORM -->
+  <!-- PROFILE SETUP -->
 
-  <div
-    id="profileSetup"
-    class="createCard hidden"
-  >
+  <div id="profileSetup" class="createCard hidden">
 
-    <h2>
-      Set up your profile
-    </h2>
+    <h2>Your Vidora Profile</h2>
+
+    <p class="profileSubtitle">
+      Personalize your Vidora profile
+    </p>
+
+
+    <!-- NAME -->
 
     <input
       id="profileDisplayNameInput"
@@ -423,6 +406,9 @@
       maxlength="50"
     >
 
+
+    <!-- USERNAME -->
+
     <input
       id="profileUsernameInput"
       type="text"
@@ -430,32 +416,218 @@
       maxlength="30"
     >
 
+
+    <!-- BIO -->
+
     <textarea
       id="profileBioInput"
       placeholder="Tell people about yourself..."
       maxlength="160"
     ></textarea>
 
+
+    <!-- PROFILE PICTURE -->
+
+    <h3 class="avatarTitle">
+      Profile Picture
+    </h3>
+
+
+    <!-- UPLOAD -->
+
+    <label
+      for="profileAvatarFile"
+      class="avatarUploadButton"
+    >
+      📷 Upload Your Own Photo
+    </label>
+
     <input
       id="profileAvatarFile"
       type="file"
       accept="image/*"
+      hidden
     >
+
+
+    <p class="avatarOr">
+      — OR CHOOSE A VIDORA AVATAR —
+    </p>
+
+
+    <!-- VIDORA AVATARS -->
+
+    <div
+      id="vidoraAvatarOptions"
+      class="vidoraAvatarGrid"
+    >
+
+      <button
+        type="button"
+        class="vidoraAvatar"
+        data-avatar="Nova"
+        onclick="selectVidoraAvatar('Nova')"
+      >
+        <img
+          src="https://api.dicebear.com/9.x/adventurer/svg?seed=Nova"
+          alt="Nova"
+        >
+        <span>Nova</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="vidoraAvatar"
+        data-avatar="Orion"
+        onclick="selectVidoraAvatar('Orion')"
+      >
+        <img
+          src="https://api.dicebear.com/9.x/adventurer/svg?seed=Orion"
+          alt="Orion"
+        >
+        <span>Orion</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="vidoraAvatar"
+        data-avatar="Luna"
+        onclick="selectVidoraAvatar('Luna')"
+      >
+        <img
+          src="https://api.dicebear.com/9.x/adventurer/svg?seed=Luna"
+          alt="Luna"
+        >
+        <span>Luna</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="vidoraAvatar"
+        data-avatar="Pixel"
+        onclick="selectVidoraAvatar('Pixel')"
+      >
+        <img
+          src="https://api.dicebear.com/9.x/adventurer/svg?seed=Pixel"
+          alt="Pixel"
+        >
+        <span>Pixel</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="vidoraAvatar"
+        data-avatar="Kai"
+        onclick="selectVidoraAvatar('Kai')"
+      >
+        <img
+          src="https://api.dicebear.com/9.x/adventurer/svg?seed=Kai"
+          alt="Kai"
+        >
+        <span>Kai</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="vidoraAvatar"
+        data-avatar="Sage"
+        onclick="selectVidoraAvatar('Sage')"
+      >
+        <img
+          src="https://api.dicebear.com/9.x/adventurer/svg?seed=Sage"
+          alt="Sage"
+        >
+        <span>Sage</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="vidoraAvatar"
+        data-avatar="Zephyr"
+        onclick="selectVidoraAvatar('Zephyr')"
+      >
+        <img
+          src="https://api.dicebear.com/9.x/adventurer/svg?seed=Zephyr"
+          alt="Zephyr"
+        >
+        <span>Zephyr</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="vidoraAvatar"
+        data-avatar="Fenn"
+        onclick="selectVidoraAvatar('Fenn')"
+      >
+        <img
+          src="https://api.dicebear.com/9.x/adventurer/svg?seed=Fenn"
+          alt="Fenn"
+        >
+        <span>Fenn</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="vidoraAvatar"
+        data-avatar="Echo"
+        onclick="selectVidoraAvatar('Echo')"
+      >
+        <img
+          src="https://api.dicebear.com/9.x/adventurer/svg?seed=Echo"
+          alt="Echo"
+        >
+        <span>Echo</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="vidoraAvatar"
+        data-avatar="Blaze"
+        onclick="selectVidoraAvatar('Blaze')"
+      >
+        <img
+          src="https://api.dicebear.com/9.x/adventurer/svg?seed=Blaze"
+          alt="Blaze"
+        >
+        <span>Blaze</span>
+      </button>
+
+    </div>
+
+
+    <!-- SELECTED AVATAR -->
+
+    <input
+      type="hidden"
+      id="selectedVidoraAvatar"
+    >
+
+
+    <p id="profileMessage"></p>
+
+
+    <!-- SAVE -->
 
     <button
       type="button"
+      class="saveProfileButton"
       onclick="saveProfile()"
     >
       💾 Save Profile
     </button>
 
-    <p id="profileMessage"></p>
-
   </div>
 
 </section>
-
-
       <!-- =========================
            NOTIFICATIONS
       ========================== -->
