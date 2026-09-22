@@ -1153,3 +1153,273 @@ body.lightMode .avatarThemeActions button:last-child {
   object-fit: cover;
   border-radius: 50%;
 }
+/* =====================================================
+   VIDORA SMART AVATAR
+   ===================================================== */
+
+.interactiveAvatar {
+  position: fixed;
+  right: 18px;
+  bottom: 20px;
+  width: 320px;
+  max-width: calc(100vw - 30px);
+  z-index: 9999;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  animation: avatarWelcome 0.6s ease;
+}
+
+.interactiveAvatar.hidden {
+  display: none;
+}
+
+@keyframes avatarWelcome {
+  from {
+    opacity: 0;
+    transform: translateY(35px) scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Close button */
+
+.avatarCloseButton {
+  position: absolute;
+  top: -8px;
+  right: 0;
+
+  width: 32px;
+  height: 32px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: #191925;
+  color: white;
+
+  font-size: 22px;
+  cursor: pointer;
+
+  z-index: 5;
+}
+
+/* Avatar */
+
+.avatarCharacter {
+  position: relative;
+
+  width: 110px;
+  height: 110px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: -18px;
+
+  z-index: 3;
+}
+
+.avatarCharacter img {
+  width: 94px;
+  height: 94px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+
+  border: 3px solid #8b5cf6;
+
+  background: #11111a;
+
+  position: relative;
+  z-index: 2;
+}
+
+.avatarGlow {
+  position: absolute;
+
+  width: 110px;
+  height: 110px;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #8b5cf6,
+      #ff2d75,
+      #22d3ee
+    );
+
+  filter: blur(10px);
+
+  opacity: 0.75;
+
+  animation: avatarPulse 2s infinite;
+}
+
+@keyframes avatarPulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.55;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(0.92);
+    opacity: 0.55;
+  }
+}
+
+/* Welcome card */
+
+.avatarWelcomeCard {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 24px 18px 18px;
+
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(25, 25, 40, 0.98),
+      rgba(12, 12, 20, 0.98)
+    );
+
+  border: 1px solid rgba(139, 92, 246, 0.35);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    0 0 30px rgba(139, 92, 246, 0.12);
+
+  backdrop-filter: blur(18px);
+
+  text-align: center;
+}
+
+.avatarOnline {
+  font-size: 12px;
+
+  color: #aaaabd;
+
+  margin-bottom: 8px;
+}
+
+.avatarOnlineDot {
+  display: inline-block;
+
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  margin-right: 5px;
+
+  box-shadow: 0 0 8px #22c55e;
+}
+
+.avatarWelcomeCard h3 {
+  margin: 4px 0 8px;
+
+  color: white;
+
+  font-size: 20px;
+}
+
+.avatarWelcomeCard p {
+  margin: 0 0 15px;
+
+  color: #b7b7c8;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+/* Quick buttons */
+
+.avatarQuickActions {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 8px;
+}
+
+.avatarQuickActions button {
+  border: 1px solid rgba(139, 92, 246, 0.3);
+
+  background: rgba(139, 92, 246, 0.12);
+
+  color: white;
+
+  border-radius: 12px;
+
+  padding: 10px 8px;
+
+  font-size: 12px;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.avatarQuickActions button:hover {
+  background: rgba(139, 92, 246, 0.28);
+
+  transform: translateY(-2px);
+}
+
+/* Phone */
+
+@media (max-width: 600px) {
+
+  .interactiveAvatar {
+    right: 12px;
+    left: 12px;
+
+    bottom: 12px;
+
+    width: auto;
+
+    max-width: none;
+  }
+
+  .avatarCharacter {
+    width: 90px;
+    height: 90px;
+  }
+
+  .avatarCharacter img {
+    width: 76px;
+    height: 76px;
+  }
+
+  .avatarGlow {
+    width: 90px;
+    height: 90px;
+  }
+
+  .avatarWelcomeCard {
+    border-radius: 20px;
+  }
+}
