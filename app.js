@@ -32,7 +32,8 @@ let currentUser = null;
 let searchTimer = null;
 let appInitialized = false;
 let feedLoading = false;
-
+let interactiveAvatarEnabled =
+  localStorage.getItem("vidoraInteractiveAvatar") === "true";
 
 /* =========================================================
    3. SMALL HELPERS
@@ -269,9 +270,7 @@ async function login() {
 }
 
 
-/* =========================================================
-   6. LOGOUT
-   ========================================================= */
+
 
 /* =========================================================
    6. LOGOUT
@@ -1029,49 +1028,7 @@ function toggleInteractiveAvatar(enabled) {
    SHOW AVATAR
    --------------------------------------------------------- */
 
-function showInteractiveAvatar() {
 
-  if (!interactiveAvatarEnabled) {
-    return;
-  }
-
-  const avatar =
-    getSelectedVidoraAvatar();
-
-  const avatarBox =
-    document.getElementById("interactiveAvatar");
-
-  const avatarImage =
-    document.getElementById("interactiveAvatarImage");
-
-  const avatarName =
-    document.getElementById("avatarGreeting");
-
-  const avatarMessage =
-    document.getElementById("avatarMessage");
-
-  if (!avatarBox) {
-    return;
-  }
-
-  if (avatarImage) {
-    avatarImage.src =
-      getVidoraAvatarImage(avatar);
-  }
-
-  if (avatarName) {
-    avatarName.textContent =
-      "Hi! I'm " + avatar + " 👋";
-  }
-
-  if (avatarMessage) {
-    avatarMessage.textContent =
-      "Welcome back to Vidora!";
-  }
-
-  avatarBox.classList.remove("hidden");
-
-}
 
 
 /* ---------------------------------------------------------
