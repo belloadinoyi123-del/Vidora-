@@ -1024,8 +1024,6 @@ function initializeInteractiveAvatar() {
    9. LOAD PROFILE
    ========================================================= */
 
-
-
 async function loadProfile() {
 
   if (!currentUser) {
@@ -1038,135 +1036,220 @@ async function loadProfile() {
       await supabaseClient
         .from("profiles")
         .select(
-          "id,username,display_name,avatar_url,bio,created_at"
+          "id, username, display_name, avatar_url, bio, created_at"
         )
         .eq("id", currentUser.id)
         .maybeSingle();
 
     if (error) {
-      console.error("LOAD PROFILE ERROR:", error);
+
+      console.error(
+        "LOAD PROFILE ERROR:",
+        error
+      );
+
       return;
     }
 
-    const displayName =
-      getElement("profileDisplayName");
 
-    const username =
-      getElement("profileUsername");
-
-    const bio =
-      getElement("profileBio");
-
-    const avatar =
-      getElement("profileAvatar");
-
-    const email =
-      getElement("profileEmail");
+    /* -----------------------------------------------------
+       NO PROFILE YET
+       ----------------------------------------------------- */
 
     if (!data) {
-
-      if (displayName) {
-        displayName.textContent = "Welcome to Vidora";
-      }
-
-      if (username) {
-        username.textContent =
-          "Set up your profile";
-      }
-
-      if (bio) {
-        bio.textContent =
-          "Add your name, username and bio.";
-      }
-
-      if (avatar) {
-        avatar.textContent = "V";
-      }
-
-      if (email) {
-        email.textContent =
-          currentUser.email || "";
-      }
 
       showProfileSetup();
 
       return;
     }
 
+
+    /* -----------------------------------------------------
+       DISPLAY NAME
+       ----------------------------------------------------- */
+
+    const displayName =
+      document.getElementById(
+        "profileDisplayName"
+      );
+
     if (displayName) {
+
       displayName.textContent =
         data.display_name ||
-        data.username ||
         "Vidora User";
+
     }
 
+
+    /* -----------------------------------------------------
+       USERNAME
+       ----------------------------------------------------- */
+
+    const username =
+      document.getElementById(
+        "profileUsername"
+      );
+
     if (username) {
+
       username.textContent =
         data.username
           ? "@" + data.username
-          : "@username";
+          : "Set up your username";
+
     }
+
+
+    /* -----------------------------------------------------
+       BIO
+       ----------------------------------------------------- */
+
+    const bio =
+      document.getElementById(
+        "profileBio"
+      );
 
     if (bio) {
+
       bio.textContent =
         data.bio ||
-        "Add a bio about yourself.";
+        "No bio yet.";
+
     }
 
+
+    /* -----------------------------------------------------
+       EMAIL
+       ----------------------------------------------------- */
+
+    const email =
+      document.getElementById(
+        "profileEmail"
+      );
+
     if (email) {
+
       email.textContent =
         currentUser.email || "";
+
     }
+
+
+    /* -----------------------------------------------------
+       PROFILE PICTURE
+       ----------------------------------------------------- */
+
+    const avatar =
+      document.getElementById(
+        "profileAvatar"
+      );
 
     if (avatar) {
 
+      avatar.innerHTML = "";
+
       if (data.avatar_url) {
 
-        avatar.innerHTML = `
-          <img
-            src="${escapeHTML(data.avatar_url)}"
-            alt="Profile photo"
-            class="profileAvatarImage"
-          >
-        `;
+        const image =
+          document.createElement("img");
+
+        image.src =
+          data.avatar_url;
+
+        image.alt =
+          data.display_name ||
+          "Vidora profile picture";
+
+        image.className =
+          "profileAvatarImage";
+
+        image.onerror =
+          function() {
+
+            avatar.innerHTML =
+              "<span>V</span>";
+
+          };
+
+        avatar.appendChild(image);
 
       } else {
 
         const letter =
+          document.createElement("span");
+
+        letter.textContent =
           (
             data.display_name ||
-            data.username ||
             "V"
-          ).charAt(0).toUpperCase();
+          )
+            .charAt(0)
+            .toUpperCase();
 
-        avatar.textContent = letter;
+        avatar.appendChild(letter);
+
       }
+
     }
 
-    /* Fill edit fields */
 
-    const nameInput =
-      getElement("profileDisplayNameInput");
+    /* -----------------------------------------------------
+       FILL EDIT PROFILE FORM
+       ----------------------------------------------------- */
+
+    const displayInput =
+      document.getElementById(
+        "profileDisplayNameInput"
+      );
+
+    if (displayInput) {
+
+      displayInput.value =
+        data.display_name || "";
+
+    }
+
 
     const usernameInput =
-      getElement("profileUsernameInput");
-
-    const bioInput =
-      getElement("profileBioInput");
-
-    if (nameInput) {
-      nameInput.value =
-        data.display_name || "";
-    }
+      document.getElementById(
+        "profileUsernameInput"
+      );
 
     if (usernameInput) {
+
       usernameInput.value =
         data.username || "";
+
     }
 
+
+    const bioInput =
+      document.getElementById(
+        "profileBioInput"
+      );
+
     if (bioInput) {
+
       bioInput.value =
         data.bio || "";
+
+    }
+
+
+    /* -----------------------------------------------------
+       HIDE SETUP AFTER PROFILE EXISTS
+       ----------------------------------------------------- */
+
+    const setup =
+      document.getElementById(
+        "profileSetup"
+      );
+
+    if (setup) {
+
+      setup.classList.add("hidden");
+
     }
 
   } catch (error) {
@@ -1175,230 +1258,12 @@ async function loadProfile() {
       "LOAD PROFILE EXCEPTION:",
       error
     );
+
   }
-}
-
-
-function showProfileSetup() {
-
-  const setup =
-    getElement("profileSetup");
-
-  if (!setup) {
-    return;
-  }
-
-  setup.classList.remove("hidden");
 
 }
 
-async function saveProfile() {
-
-  if (!currentUser) {
-    alert("Please log in first.");
-    return;
-  }
-
-  const displayName =
-    getElement("profileDisplayNameInput")?.value.trim();
-
-  const username =
-    getElement("profileUsernameInput")
-      ?.value.trim()
-      .toLowerCase();
-
-  const bio =
-    getElement("profileBioInput")?.value.trim();
-
-  const avatarFile =
-    getElement("profileAvatarFile")?.files[0];
-
-  const message =
-    getElement("profileMessage");
-
-  if (!displayName || !username) {
-    if (message) {
-      message.textContent =
-        "Display name and username are required.";
-      message.style.color = "#ff6b6b";
-    }
-    return;
-  }
-
-  if (!/^[a-z0-9_]+$/.test(username)) {
-    if (message) {
-      message.textContent =
-        "Username can only contain letters, numbers and _.";
-      message.style.color = "#ff6b6b";
-    }
-    return;
-  }
-
-  try {
-
-    if (message) {
-      message.textContent = "Saving profile...";
-      message.style.color = "";
-    }
-
-    let avatarUrl = null;
-
-    /* =========================
-       UPLOAD PROFILE PICTURE
-    ========================= */
-
-    if (avatarFile) {
-
-      if (!avatarFile.type.startsWith("image/")) {
-        if (message) {
-          message.textContent =
-            "Please choose an image file.";
-        }
-        return;
-      }
-
-      if (avatarFile.size > 5 * 1024 * 1024) {
-        if (message) {
-          message.textContent =
-            "Profile picture must be 5MB or smaller.";
-        }
-        return;
-      }
-
-      const fileName =
-        createSafeFileName(avatarFile);
-
-      const filePath =
-        "profiles/" +
-        currentUser.id +
-        "/" +
-        fileName;
-
-      const { error: uploadError } =
-        await supabaseClient.storage
-          .from("media")
-          .upload(filePath, avatarFile, {
-            cacheControl: "3600",
-            upsert: false,
-            contentType: avatarFile.type
-          });
-
-      if (uploadError) {
-        console.error(
-          "PROFILE PHOTO UPLOAD ERROR:",
-          uploadError
-        );
-
-        if (message) {
-          message.textContent =
-            "Profile picture upload failed: " +
-            uploadError.message;
-        }
-
-        return;
-      }
-
-      const { data: publicData } =
-        supabaseClient.storage
-          .from("media")
-          .getPublicUrl(filePath);
-
-      avatarUrl =
-        publicData?.publicUrl || null;
-
-      if (!avatarUrl) {
-        if (message) {
-          message.textContent =
-            "Could not create profile picture URL.";
-        }
-        return;
-      }
-    }
-
-    /* =========================
-       SAVE PROFILE
-    ========================= */
-
-    const profileData = {
-      id: currentUser.id,
-      username: username,
-      display_name: displayName,
-      bio: bio || ""
-    };
-
-    /* Only replace avatar_url
-       when a new picture was selected. */
-
-    if (avatarUrl) {
-      profileData.avatar_url = avatarUrl;
-    }
-
-    const { error } =
-      await supabaseClient
-        .from("profiles")
-        .upsert(profileData);
-
-    if (error) {
-
-      console.error(
-        "SAVE PROFILE ERROR:",
-        error
-      );
-
-      if (message) {
-        message.textContent =
-          error.message;
-        message.style.color =
-          "#ff6b6b";
-      }
-
-      return;
-    }
-
-    if (message) {
-      message.textContent =
-        "Profile saved successfully!";
-      message.style.color =
-        "#4ade80";
-    }
-
-    /* Reload profile */
-
-    await loadProfile();
-
-    /* Clear selected file */
-
-    const fileInput =
-      getElement("profileAvatarFile");
-
-    if (fileInput) {
-      fileInput.value = "";
-    }
-
-    /* Close edit form */
-
-    const setup =
-      getElement("profileSetup");
-
-    if (setup) {
-      setup.classList.add("hidden");
-    }
-
-  } catch (error) {
-
-    console.error(
-      "SAVE PROFILE EXCEPTION:",
-      error
-    );
-
-    if (message) {
-      message.textContent =
-        "Could not save your profile.";
-      message.style.color =
-        "#ff6b6b";
-    }
-  }
-}
+    
 
 
 
