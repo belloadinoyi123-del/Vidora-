@@ -362,11 +362,15 @@ async function showApp() {
 
   showPage("home");
 
-  await loadProfile();
+await loadProfile();
 
-  await loadFeed();
+/* Launch personalized avatar welcome */
 
-  appInitialized = true;
+await launchAvatarWelcome();
+
+await loadFeed();
+
+appInitialized = true;
 }
 
 /* =========================================================
