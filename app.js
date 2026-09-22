@@ -31,6 +31,7 @@ const supabaseClient = window.supabase.createClient(
 let currentUser = null;
 let searchTimer = null;
 let appInitialized = false;
+let feedLoading = false;
 
 
 /* =========================================================
