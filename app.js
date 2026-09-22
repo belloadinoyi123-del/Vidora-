@@ -273,10 +273,18 @@ async function login() {
    6. LOGOUT
    ========================================================= */
 
+/* =========================================================
+   6. LOGOUT
+   ========================================================= */
+
 async function logout() {
-   
-);
-  const button = getElement("logoutBtn");
+
+  sessionStorage.removeItem(
+    "vidoraAvatarWelcomed"
+  );
+
+  const button =
+    getElement("logoutBtn");
 
   if (button) {
     button.disabled = true;
@@ -284,14 +292,21 @@ async function logout() {
   }
 
   try {
+
     const { error } =
-);
       await supabaseClient.auth.signOut();
 
     if (error) {
-      console.error("LOGOUT ERROR:", error);
 
-      alert(error.message || "Unable to log out.");
+      console.error(
+        "LOGOUT ERROR:",
+        error
+      );
+
+      alert(
+        error.message ||
+        "Unable to log out."
+      );
 
       return;
     }
@@ -301,19 +316,25 @@ async function logout() {
     showPublicFeed();
 
   } catch (error) {
-    console.error("LOGOUT EXCEPTION:", error);
 
-    alert("Unable to log out.");
+    console.error(
+      "LOGOUT EXCEPTION:",
+      error
+    );
+
+    alert(
+      "Unable to log out."
+    );
 
   } finally {
+
     if (button) {
       button.disabled = false;
       button.textContent = "Log Out";
     }
+
   }
 }
-
-
 /* =========================================================
    7. SHOW AUTH SCREEN
    ========================================================= */
