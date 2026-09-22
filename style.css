@@ -1013,3 +1013,115 @@ video.postMedia {
 .avatarThemeActions button:last-child {
   background: #292936;
 }
+/* =========================================================
+   VIDORA LIGHT MODE
+   ========================================================= */
+
+body.lightMode {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface2: #eef1f7;
+  --text: #171722;
+  --text-muted: #6b6b78;
+  --border: #dfe2ea;
+
+  background: var(--bg);
+  color: var(--text);
+}
+
+
+/* Main containers */
+
+body.lightMode .app,
+body.lightMode main,
+body.lightMode .screen {
+  background: var(--bg);
+  color: var(--text);
+}
+
+
+/* Cards */
+
+body.lightMode .profileCard,
+body.lightMode .createCard,
+body.lightMode .postCard,
+body.lightMode .interactiveAvatar,
+body.lightMode .avatarChatPanel {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+
+/* Inputs */
+
+body.lightMode input,
+body.lightMode textarea,
+body.lightMode select {
+  background: #ffffff;
+  color: #171722;
+  border-color: #dfe2ea;
+}
+
+
+/* Navigation */
+
+body.lightMode nav,
+body.lightMode .bottomNav,
+body.lightMode .navbar,
+body.lightMode header {
+  background: #ffffff;
+  color: #171722;
+  border-color: #dfe2ea;
+}
+
+
+/* Text */
+
+body.lightMode p {
+  color: #5f6170;
+}
+
+
+/* Secondary avatar chat messages */
+
+body.lightMode .avatarBot {
+  background: #eef1f7;
+  color: #171722;
+}
+
+
+/* Chat input */
+
+body.lightMode .avatarChatInputArea {
+  border-color: #dfe2ea;
+}
+
+body.lightMode .avatarChatInputArea input {
+  background: #eef1f7;
+  color: #171722;
+}
+
+
+/* Interactive avatar */
+
+body.lightMode .interactiveAvatarSetting {
+  background: #ffffff;
+  border-color: #dfe2ea;
+}
+
+
+/* Avatar grid */
+
+body.lightMode .vidoraAvatar {
+  background: #f1f3f8;
+  color: #171722;
+}
+
+
+/* Theme action buttons */
+
+body.lightMode .avatarThemeActions button:last-child {
+  background: #e5e7ef;
+  color: #171722;
+}
