@@ -719,6 +719,106 @@
 
   <!-- Vidora JavaScript -->
   <script src="app.js"></script>
+<!-- =========================================================
+     VIDORA INTERACTIVE AVATAR
+     ========================================================= -->
 
+<div id="interactiveAvatar" class="interactiveAvatar hidden">
+
+  <button
+    type="button"
+    class="avatarCloseButton"
+    onclick="closeInteractiveAvatar()"
+  >
+    ×
+  </button>
+
+  <div
+    class="interactiveAvatarCharacter"
+    onclick="avatarReact()"
+  >
+    <img
+      id="interactiveAvatarImage"
+      src=""
+      alt="Vidora Avatar"
+    >
+  </div>
+
+  <div class="interactiveAvatarBubble">
+    <strong id="avatarGreeting">
+      Hi! 👋
+    </strong>
+
+    <p id="avatarMessage">
+      Welcome back to Vidora!
+    </p>
+  </div>
+
+  <button
+    type="button"
+    class="avatarChatButton"
+    onclick="openAvatarChat()"
+  >
+    💬 Chat with me
+  </button>
+
+</div>
+
+
+<!-- AVATAR CHAT -->
+
+<div
+  id="avatarChatPanel"
+  class="avatarChatPanel hidden"
+>
+
+  <div class="avatarChatHeader">
+
+    <span id="avatarChatName">
+      Vidora Avatar
+    </span>
+
+    <button
+      type="button"
+      onclick="closeAvatarChat()"
+    >
+      ×
+    </button>
+
+  </div>
+
+
+  <div
+    id="avatarChatMessages"
+    class="avatarChatMessages"
+  >
+
+    <div class="avatarChatMessage avatarBot">
+      👋 Hey! I'm your Vidora avatar.
+    </div>
+
+  </div>
+
+
+  <div class="avatarChatInputArea">
+
+    <input
+      id="avatarChatInput"
+      type="text"
+      placeholder="Talk to your avatar..."
+      maxlength="300"
+      onkeydown="if(event.key === 'Enter') sendAvatarMessage()"
+    >
+
+    <button
+      type="button"
+      onclick="sendAvatarMessage()"
+    >
+      ➤
+    </button>
+
+  </div>
+
+</div>
 </body>
 </html>
