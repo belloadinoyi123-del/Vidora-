@@ -2468,6 +2468,7 @@ if (friendSearchInput) {
   );
 
 }
+
 /* =========================================================
    29. VIDORA READY MESSAGE
    ========================================================= */
@@ -2476,3 +2477,6 @@ console.log(
   "Vidora app.js initialized."
 );
 window.showAuthScreen = showAuthScreen;
+window.showProfileSetup = showProfileSetup;
+window.saveProfile = saveProfile;
+window.loadProfile = loadProfile;
