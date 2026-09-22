@@ -715,3 +715,276 @@ video.postMedia {
   }
 
 }
+/* =========================================================
+   VIDORA INTERACTIVE AVATAR
+   ========================================================= */
+
+.interactiveAvatar {
+  position: fixed;
+  right: 18px;
+  bottom: 85px;
+  width: 260px;
+  padding: 15px;
+  border-radius: 22px;
+  background: rgba(17, 17, 26, 0.97);
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.45);
+  z-index: 9998;
+  animation: avatarAppear 0.35s ease;
+}
+
+.interactiveAvatarCharacter {
+  width: 115px;
+  height: 115px;
+  margin: 5px auto 10px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #8b5cf6;
+  cursor: pointer;
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.35);
+}
+
+.interactiveAvatarCharacter img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.interactiveAvatarCharacter:hover {
+  transform: scale(1.05);
+}
+
+.avatarCloseButton {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #252533;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.interactiveAvatarBubble {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.interactiveAvatarBubble strong {
+  font-size: 16px;
+}
+
+.interactiveAvatarBubble p {
+  margin: 6px 0 12px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.avatarChatButton {
+  width: 100%;
+  padding: 11px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #8b5cf6, #ff2d75);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   AVATAR CHAT
+   ========================================================= */
+
+.avatarChatPanel {
+  position: fixed;
+  right: 18px;
+  bottom: 85px;
+  width: 320px;
+  height: 430px;
+  display: flex;
+  flex-direction: column;
+  background: #11111a;
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  border-radius: 20px;
+  overflow: hidden;
+  z-index: 9999;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+}
+
+.avatarChatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  background: linear-gradient(135deg, #8b5cf6, #ff2d75);
+  color: white;
+  font-weight: 700;
+}
+
+.avatarChatHeader button {
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.avatarChatMessages {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+.avatarChatMessage {
+  max-width: 85%;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.avatarBot {
+  background: #20202c;
+}
+
+.avatarUser {
+  margin-left: auto;
+  background: #8b5cf6;
+}
+
+.avatarChatInputArea {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid #292936;
+}
+
+.avatarChatInputArea input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px;
+  border: none;
+  outline: none;
+  border-radius: 10px;
+  background: #20202c;
+  color: white;
+}
+
+.avatarChatInputArea button {
+  width: 45px;
+  border: none;
+  border-radius: 10px;
+  background: #8b5cf6;
+  color: white;
+  font-size: 18px;
+}
+
+
+/* =========================================================
+   INTERACTIVE AVATAR SETTING
+   ========================================================= */
+
+.interactiveAvatarSetting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 15px;
+  background: #11111a;
+  border: 1px solid #292936;
+}
+
+.interactiveAvatarSetting p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+
+/* TOGGLE */
+
+.avatarSwitch {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.avatarSwitch input {
+  display: none;
+}
+
+.avatarSlider {
+  position: absolute;
+  inset: 0;
+  background: #33333f;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.avatarSlider::before {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 3px;
+  top: 3px;
+  border-radius: 50%;
+  background: white;
+  transition: 0.25s;
+}
+
+.avatarSwitch input:checked + .avatarSlider {
+  background: #8b5cf6;
+}
+
+.avatarSwitch input:checked + .avatarSlider::before {
+  transform: translateX(24px);
+}
+
+
+/* ANIMATION */
+
+@keyframes avatarAppear {
+
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+}
+
+
+/* MOBILE */
+
+@media (max-width: 500px) {
+
+  .interactiveAvatar {
+    right: 10px;
+    left: 10px;
+    bottom: 75px;
+    width: auto;
+  }
+
+  .avatarChatPanel {
+    left: 10px;
+    right: 10px;
+    bottom: 75px;
+    width: auto;
+    height: 420px;
+  }
+
+}
