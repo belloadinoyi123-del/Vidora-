@@ -429,9 +429,95 @@ function selectVidoraAvatar(name) {
    VIDORA INTERACTIVE AVATAR
    ========================================================= */
 
-let interactiveAvatarEnabled =
-  localStorage.getItem("vidoraInteractiveAvatar") === "true";
 
+async function showInteractiveAvatar() {
+
+  if (!interactiveAvatarEnabled) {
+    return;
+  }
+
+  const avatarBox =
+    document.getElementById(
+      "interactiveAvatar"
+    );
+
+  const avatarImage =
+    document.getElementById(
+      "interactiveAvatarImage"
+    );
+
+  if (!avatarBox) {
+    return;
+  }
+
+  let avatarUrl = "";
+
+  /* -----------------------------------------
+     Use user's uploaded profile picture first
+     ----------------------------------------- */
+
+  if (currentUser) {
+
+    try {
+
+      const { data, error } =
+        await supabaseClient
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .maybeSingle();
+
+      if (
+        !error &&
+        data &&
+        data.avatar_url
+      ) {
+
+        avatarUrl = data.avatar_url;
+      }
+
+    } catch (error) {
+
+      console.error(
+        "AVATAR IMAGE ERROR:",
+        error
+      );
+    }
+  }
+
+  /* -----------------------------------------
+     Otherwise use selected Vidora avatar
+     ----------------------------------------- */
+
+  if (!avatarUrl) {
+
+    const avatarName =
+      getSelectedVidoraAvatar();
+
+    avatarUrl =
+      getVidoraAvatarImage(
+        avatarName
+      );
+  }
+
+  if (avatarImage) {
+
+    avatarImage.src = avatarUrl;
+
+    avatarImage.onerror = function() {
+
+      const avatarName =
+        getSelectedVidoraAvatar();
+
+      avatarImage.src =
+        getVidoraAvatarImage(
+          avatarName
+        );
+    };
+  }
+
+  avatarBox.classList.remove("hidden");
+}
 /* =========================================================
    VIDORA AVATAR - SMART GREETING & THEME ASSISTANT
    ========================================================= */
