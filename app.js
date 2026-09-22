@@ -4153,3 +4153,64 @@ document.addEventListener(
 
   }
 );
+document.addEventListener(
+  "DOMContentLoaded",
+  function() {
+    initializeVidoraAvatarSystem();
+  }
+);
+/* =========================================================
+   VIDORA - GLOBAL FUNCTION EXPORTS
+   ========================================================= */
+
+window.showAuthScreen = showAuthScreen;
+window.showProfileSetup = showProfileSetup;
+window.loadProfile = loadProfile;
+window.saveProfile = saveProfile;
+
+/* Avatar selection */
+window.selectVidoraAvatar = selectVidoraAvatar;
+window.getSelectedVidoraAvatar = getSelectedVidoraAvatar;
+window.getVidoraAvatarImage = getVidoraAvatarImage;
+window.getVidoraAvatarInfo = getVidoraAvatarInfo;
+
+/* Avatar editor */
+window.handleAvatarUpload = handleAvatarUpload;
+window.useVidoraAvatar = useVidoraAvatar;
+window.resetVidoraAvatar = resetVidoraAvatar;
+window.updateAvatarPreview = updateAvatarPreview;
+window.renderProfileAvatar = renderProfileAvatar;
+window.renderDefaultAvatar = renderDefaultAvatar;
+window.renderVidoraAvatarChoices =
+  renderVidoraAvatarChoices;
+
+/* Avatar identity */
+window.updateAvatarIdentity =
+  updateAvatarIdentity;
+
+/* Interactive avatar */
+window.showInteractiveAvatar =
+  showInteractiveAvatar;
+
+window.closeInteractiveAvatar =
+  closeInteractiveAvatar;
+
+window.avatarReact =
+  avatarReact;
+
+/* Avatar quick actions */
+window.avatarGoHome =
+  avatarGoHome;
+
+window.avatarGoProfile =
+  avatarGoProfile;
+
+window.avatarGoCreate =
+  avatarGoCreate;
+
+window.avatarGoTrending =
+  avatarGoTrending;
+
+/* Avatar system */
+window.initializeVidoraAvatarSystem =
+  initializeVidoraAvatarSystem;
