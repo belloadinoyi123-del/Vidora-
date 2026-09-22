@@ -3320,7 +3320,7 @@ console.log(
   "Vidora app.js initialized."
 );
 window.showAuthScreen = showAuthScreen;
-window.showProfileSetup = showProfileSetup;
+
 window.loadProfile = loadProfile;
 window.selectVidoraAvatar = selectVidoraAvatar;
 window.toggleInteractiveAvatar = toggleInteractiveAvatar;
