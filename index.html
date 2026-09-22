@@ -351,40 +351,109 @@
 
       </section>
 
-      <!-- =========================
-           PROFILE
-      ========================== -->
+      
 
-      <section
-        id="profileScreen"
-        class="screen hidden"
-      >
+    <!-- =========================
+     PROFILE
+========================= -->
 
-        <div class="profileCard">
+<section
+  id="profileScreen"
+  class="screen hidden"
+>
 
-          <div class="profileAvatar">
-            V
-          </div>
+  <div class="profileCard">
 
-          <h2 id="profileUsername">
-            Vidora User
-          </h2>
+    <div
+      class="profileAvatar"
+      id="profileAvatar"
+    >
+      V
+    </div>
 
-          <p id="profileEmail">
-            Loading account...
-          </p>
+    <h2 id="profileDisplayName">
+      Welcome to Vidora
+    </h2>
 
-          <button
-            id="logoutBtn"
-            type="button"
-            onclick="logout()"
-          >
-            Log Out
-          </button>
+    <p id="profileUsername">
+      Set up your profile
+    </p>
 
-        </div>
+    <p id="profileBio">
+      Add your name, username and bio.
+    </p>
 
-      </section>
+    <p id="profileEmail">
+      Loading account...
+    </p>
+
+    <button
+      type="button"
+      onclick="showProfileSetup()"
+    >
+      ✏️ Edit Profile
+    </button>
+
+    <button
+      id="logoutBtn"
+      type="button"
+      onclick="logout()"
+    >
+      Log Out
+    </button>
+
+  </div>
+
+
+  <!-- PROFILE EDIT FORM -->
+
+  <div
+    id="profileSetup"
+    class="createCard hidden"
+  >
+
+    <h2>
+      Set up your profile
+    </h2>
+
+    <input
+      id="profileDisplayNameInput"
+      type="text"
+      placeholder="Display name"
+      maxlength="50"
+    >
+
+    <input
+      id="profileUsernameInput"
+      type="text"
+      placeholder="Username"
+      maxlength="30"
+    >
+
+    <textarea
+      id="profileBioInput"
+      placeholder="Tell people about yourself..."
+      maxlength="160"
+    ></textarea>
+
+    <input
+      id="profileAvatarFile"
+      type="file"
+      accept="image/*"
+    >
+
+    <button
+      type="button"
+      onclick="saveProfile()"
+    >
+      💾 Save Profile
+    </button>
+
+    <p id="profileMessage"></p>
+
+  </div>
+
+</section>
 
 
       <!-- =========================
