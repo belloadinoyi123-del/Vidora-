@@ -3244,3 +3244,13 @@ document.addEventListener(
     initializeInteractiveAvatar();
   }
 );
+document.addEventListener(
+  "DOMContentLoaded",
+  function() {
+
+    loadVidoraTheme();
+
+    initializeInteractiveAvatar();
+
+  }
+);
