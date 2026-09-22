@@ -375,45 +375,55 @@ async function showApp() {
 
 function selectVidoraAvatar(name) {
 
-localStorage.setItem(
-  "vidoraAvatar",
-  name
-);  const hiddenInput =
-    document.getElementById("selectedVidoraAvatar");
+  const hiddenInput =
+    document.getElementById(
+      "selectedVidoraAvatar"
+    );
 
   if (hiddenInput) {
     hiddenInput.value = name;
   }
 
-  const avatars =
-    document.querySelectorAll(".vidoraAvatar");
 
-  avatars.forEach(function (avatar) {
+  /* Save selection locally */
 
-    avatar.classList.remove("selected");
+  localStorage.setItem(
+    "vidoraAvatar",
+    name
+  );
 
-    if (
-      avatar.dataset.avatar === name
-    ) {
-      avatar.classList.add("selected");
-    }
 
-  });
+  /* Highlight selected avatar */
 
-  // If user chooses a Vidora avatar,
-  // remove an uploaded file selection.
+  document
+    .querySelectorAll(".vidoraAvatar")
+    .forEach(function(button) {
+
+      button.classList.toggle(
+        "selected",
+        button.dataset.avatar === name
+      );
+
+    });
+
+
+  /* Clear uploaded photo */
 
   const fileInput =
-    document.getElementById("profileAvatarFile");
+    document.getElementById(
+      "profileAvatarFile"
+    );
 
   if (fileInput) {
     fileInput.value = "";
   }
 
+
   console.log(
-    "Selected Vidora avatar:",
+    "Vidora avatar selected:",
     name
   );
+
 }
 /* =========================================================
    VIDORA INTERACTIVE AVATAR
