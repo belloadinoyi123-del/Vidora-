@@ -988,3 +988,28 @@ video.postMedia {
   }
 
 }
+/* =========================================================
+   AVATAR THEME ACTIONS
+   ========================================================= */
+
+.avatarThemeActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.avatarThemeActions button {
+  flex: 1;
+  padding: 9px 6px;
+  border: none;
+  border-radius: 10px;
+  background: #8b5cf6;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.avatarThemeActions button:last-child {
+  background: #292936;
+}
