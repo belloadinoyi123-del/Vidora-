@@ -455,7 +455,9 @@ function showSmartAvatarGreeting() {
   if (!interactiveAvatarEnabled) {
     return;
   }
-
+if (interactiveAvatarEnabled) {
+  showSmartAvatarGreeting();
+}
   const avatar =
     getSelectedVidoraAvatar();
 
