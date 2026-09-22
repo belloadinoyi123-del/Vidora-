@@ -555,7 +555,63 @@ async function showSmartAvatarGreeting() {
   addAvatarQuickActions();
 }
 
+function addAvatarQuickActions() {
 
+  const actions =
+    document.getElementById("avatarQuickActions");
+
+  if (!actions) {
+    return;
+  }
+
+  actions.innerHTML = "";
+
+  const buttons = [
+
+    {
+      text: "🔥 Trending",
+      page: "discover"
+    },
+
+    {
+      text: "➕ Create",
+      page: "create"
+    },
+
+    {
+      text: "👤 Profile",
+      page: "profile"
+    },
+
+    {
+      text: "🏠 Home",
+      page: "home"
+    }
+
+  ];
+
+  buttons.forEach(function(item) {
+
+    const button =
+      document.createElement("button");
+
+    button.type = "button";
+
+    button.textContent = item.text;
+
+    button.addEventListener(
+      "click",
+      function() {
+
+        showPage(item.page);
+
+        closeInteractiveAvatar();
+      }
+    );
+
+    actions.appendChild(button);
+  });
+}
 /* ---------------------------------------------------------
    THEME SUGGESTION BUTTONS
    --------------------------------------------------------- */
