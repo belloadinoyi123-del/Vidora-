@@ -2294,3 +2294,4 @@ if (friendSearchInput) {
 console.log(
   "Vidora app.js initialized."
 );
+window.showAuthScreen = showAuthScreen;
