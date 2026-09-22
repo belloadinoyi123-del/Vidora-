@@ -274,6 +274,9 @@ async function login() {
    ========================================================= */
 
 async function logout() {
+   sessionStorage.removeItem(
+  "vidoraAvatarWelcomed"
+);
   const button = getElement("logoutBtn");
 
   if (button) {
@@ -283,8 +286,6 @@ async function logout() {
 
   try {
     const { error } =
-       sessionStorage.removeItem(
-  "vidoraAvatarWelcomed"
 );
       await supabaseClient.auth.signOut();
 
