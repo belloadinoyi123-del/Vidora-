@@ -800,13 +800,15 @@ async function createPost(file, caption) {
 /* =========================================================
    14. LOAD FEED
    ========================================================= */
-
 async function loadFeed() {
-   if (feedLoading) return;
-feedLoading = true;
+  if (feedLoading) return;
+
+  feedLoading = true;
+
   const feed = getElement("feed");
 
   if (!feed) {
+    feedLoading = false;
     return;
   }
 
@@ -828,10 +830,7 @@ feedLoading = true;
         });
 
     if (error) {
-      console.error(
-        "LOAD FEED ERROR:",
-        error
-      );
+      console.error("LOAD FEED ERROR:", error);
 
       feed.innerHTML = `
         <div class="loading">
@@ -859,26 +858,26 @@ feedLoading = true;
     feed.innerHTML = "";
 
     for (const post of data) {
-      const element =
-        await createPostElement(post);
+      const element = await createPostElement(post);
 
-      feed.appendChild(element);
+      if (element) {
+        feed.appendChild(element);
+      }
     }
 
   } catch (error) {
-    console.error(
-      "LOAD FEED EXCEPTION:",
-      error
-    );
+    console.error("LOAD FEED EXCEPTION:", error);
 
     feed.innerHTML = `
       <div class="loading">
         Something went wrong while loading Vidora.
       </div>
     `;
+
+  } finally {
+    feedLoading = false;
   }
 }
-
 
 /* =========================================================
    15. CREATE POST ELEMENT
