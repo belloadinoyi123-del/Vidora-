@@ -2982,3 +2982,17 @@ window.showAuthScreen = showAuthScreen;
 window.showProfileSetup = showProfileSetup;
 window.saveProfile = saveProfile;
 window.loadProfile = loadProfile;
+window.selectVidoraAvatar = selectVidoraAvatar;
+window.toggleInteractiveAvatar = toggleInteractiveAvatar;
+window.closeInteractiveAvatar = closeInteractiveAvatar;
+window.avatarReact = avatarReact;
+window.openAvatarChat = openAvatarChat;
+window.closeAvatarChat = closeAvatarChat;
+window.sendAvatarMessage = sendAvatarMessage;
+window.showInteractiveAvatar = showInteractiveAvatar;
+document.addEventListener(
+  "DOMContentLoaded",
+  function() {
+    initializeInteractiveAvatar();
+  }
+);
