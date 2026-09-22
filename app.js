@@ -542,13 +542,213 @@ function showProfileSetup() {
 
 }
 
-
 async function saveProfile() {
 
   if (!currentUser) {
     alert("Please log in first.");
     return;
   }
+
+  const displayName =
+    getElement("profileDisplayNameInput")?.value.trim();
+
+  const username =
+    getElement("profileUsernameInput")
+      ?.value.trim()
+      .toLowerCase();
+
+  const bio =
+    getElement("profileBioInput")?.value.trim();
+
+  const avatarFile =
+    getElement("profileAvatarFile")?.files[0];
+
+  const message =
+    getElement("profileMessage");
+
+  if (!displayName || !username) {
+    if (message) {
+      message.textContent =
+        "Display name and username are required.";
+      message.style.color = "#ff6b6b";
+    }
+    return;
+  }
+
+  if (!/^[a-z0-9_]+$/.test(username)) {
+    if (message) {
+      message.textContent =
+        "Username can only contain letters, numbers and _.";
+      message.style.color = "#ff6b6b";
+    }
+    return;
+  }
+
+  try {
+
+    if (message) {
+      message.textContent = "Saving profile...";
+      message.style.color = "";
+    }
+
+    let avatarUrl = null;
+
+    /* =========================
+       UPLOAD PROFILE PICTURE
+    ========================= */
+
+    if (avatarFile) {
+
+      if (!avatarFile.type.startsWith("image/")) {
+        if (message) {
+          message.textContent =
+            "Please choose an image file.";
+        }
+        return;
+      }
+
+      if (avatarFile.size > 5 * 1024 * 1024) {
+        if (message) {
+          message.textContent =
+            "Profile picture must be 5MB or smaller.";
+        }
+        return;
+      }
+
+      const fileName =
+        createSafeFileName(avatarFile);
+
+      const filePath =
+        "profiles/" +
+        currentUser.id +
+        "/" +
+        fileName;
+
+      const { error: uploadError } =
+        await supabaseClient.storage
+          .from("media")
+          .upload(filePath, avatarFile, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: avatarFile.type
+          });
+
+      if (uploadError) {
+        console.error(
+          "PROFILE PHOTO UPLOAD ERROR:",
+          uploadError
+        );
+
+        if (message) {
+          message.textContent =
+            "Profile picture upload failed: " +
+            uploadError.message;
+        }
+
+        return;
+      }
+
+      const { data: publicData } =
+        supabaseClient.storage
+          .from("media")
+          .getPublicUrl(filePath);
+
+      avatarUrl =
+        publicData?.publicUrl || null;
+
+      if (!avatarUrl) {
+        if (message) {
+          message.textContent =
+            "Could not create profile picture URL.";
+        }
+        return;
+      }
+    }
+
+    /* =========================
+       SAVE PROFILE
+    ========================= */
+
+    const profileData = {
+      id: currentUser.id,
+      username: username,
+      display_name: displayName,
+      bio: bio || ""
+    };
+
+    /* Only replace avatar_url
+       when a new picture was selected. */
+
+    if (avatarUrl) {
+      profileData.avatar_url = avatarUrl;
+    }
+
+    const { error } =
+      await supabaseClient
+        .from("profiles")
+        .upsert(profileData);
+
+    if (error) {
+
+      console.error(
+        "SAVE PROFILE ERROR:",
+        error
+      );
+
+      if (message) {
+        message.textContent =
+          error.message;
+        message.style.color =
+          "#ff6b6b";
+      }
+
+      return;
+    }
+
+    if (message) {
+      message.textContent =
+        "Profile saved successfully!";
+      message.style.color =
+        "#4ade80";
+    }
+
+    /* Reload profile */
+
+    await loadProfile();
+
+    /* Clear selected file */
+
+    const fileInput =
+      getElement("profileAvatarFile");
+
+    if (fileInput) {
+      fileInput.value = "";
+    }
+
+    /* Close edit form */
+
+    const setup =
+      getElement("profileSetup");
+
+    if (setup) {
+      setup.classList.add("hidden");
+    }
+
+  } catch (error) {
+
+    console.error(
+      "SAVE PROFILE EXCEPTION:",
+      error
+    );
+
+    if (message) {
+      message.textContent =
+        "Could not save your profile.";
+      message.style.color =
+        "#ff6b6b";
+    }
+  }
+}
 
   const displayName =
     getElement("profileDisplayNameInput")
