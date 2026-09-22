@@ -375,138 +375,278 @@ async function showApp() {
    ========================================================= */
 
 
-<section
-  id="profileScreen"
-  class="screen hidden"
->
 
-  <div class="profileCard">
+async function loadProfile() {
 
-    <div class="profileAvatar" id="profileAvatar">
-      V
-    </div>
-
-    <h2 id="profileDisplayName">
-      Your Profile
-    </h2>
-
-    <p id="profileUsername">
-      @username
-    </p>
-
-    <p id="profileBio">
-      Add a bio about yourself.
-    </p>
-
-    <button
-      type="button"
-      onclick="showProfileSetup()"
-    >
-      ✏️ Edit Profile
-    </button>
-
-    <p id="profileEmail">
-      Loading account...
-    </p>
-
-    <button
-      id="logoutBtn"
-      type="button"
-      onclick="logout()"
-    >
-      Log Out
-    </button>
-
-  </div>
-
-  <!-- PROFILE SETUP -->
-
-  <div
-    id="profileSetup"
-    class="createCard hidden"
-  >
-
-    <h2>Set up your profile</h2>
-
-    <input
-      id="profileDisplayNameInput"
-      type="text"
-      placeholder="Display name"
-      maxlength="50"
-    >
-
-    <input
-      id="profileUsernameInput"
-      type="text"
-      placeholder="Username"
-      maxlength="30"
-    >
-
-    <textarea
-      id="profileBioInput"
-      placeholder="Tell people about yourself..."
-      maxlength="160"
-    ></textarea>
-
-    <input
-      id="profileAvatarFile"
-      type="file"
-      accept="image/*"
-    >
-
-    <button
-      type="button"
-      onclick="saveProfile()"
-    >
-      💾 Save Profile
-    </button>
-
-    <p id="profileMessage"></p>
-
-  </div>
-
-</section>
-
-/* =========================================================
-   10. VALIDATE MEDIA FILE
-   ========================================================= */
-
-function validateMediaFile(file) {
-  if (!file) {
-    return {
-      valid: false,
-      message: "Please choose an image or video."
-    };
+  if (!currentUser) {
+    return;
   }
 
-  if (!file.type.startsWith("image/") &&
-      !file.type.startsWith("video/")) {
-    return {
-      valid: false,
-      message: "Only images and videos are supported."
-    };
+  try {
+
+    const { data, error } =
+      await supabaseClient
+        .from("profiles")
+        .select(
+          "id,username,display_name,avatar_url,bio,created_at"
+        )
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+    if (error) {
+      console.error("LOAD PROFILE ERROR:", error);
+      return;
+    }
+
+    const displayName =
+      getElement("profileDisplayName");
+
+    const username =
+      getElement("profileUsername");
+
+    const bio =
+      getElement("profileBio");
+
+    const avatar =
+      getElement("profileAvatar");
+
+    const email =
+      getElement("profileEmail");
+
+    if (!data) {
+
+      if (displayName) {
+        displayName.textContent = "Welcome to Vidora";
+      }
+
+      if (username) {
+        username.textContent =
+          "Set up your profile";
+      }
+
+      if (bio) {
+        bio.textContent =
+          "Add your name, username and bio.";
+      }
+
+      if (avatar) {
+        avatar.textContent = "V";
+      }
+
+      if (email) {
+        email.textContent =
+          currentUser.email || "";
+      }
+
+      showProfileSetup();
+
+      return;
+    }
+
+    if (displayName) {
+      displayName.textContent =
+        data.display_name ||
+        data.username ||
+        "Vidora User";
+    }
+
+    if (username) {
+      username.textContent =
+        data.username
+          ? "@" + data.username
+          : "@username";
+    }
+
+    if (bio) {
+      bio.textContent =
+        data.bio ||
+        "Add a bio about yourself.";
+    }
+
+    if (email) {
+      email.textContent =
+        currentUser.email || "";
+    }
+
+    if (avatar) {
+
+      if (data.avatar_url) {
+
+        avatar.innerHTML = `
+          <img
+            src="${escapeHTML(data.avatar_url)}"
+            alt="Profile photo"
+            class="profileAvatarImage"
+          >
+        `;
+
+      } else {
+
+        const letter =
+          (
+            data.display_name ||
+            data.username ||
+            "V"
+          ).charAt(0).toUpperCase();
+
+        avatar.textContent = letter;
+      }
+    }
+
+    /* Fill edit fields */
+
+    const nameInput =
+      getElement("profileDisplayNameInput");
+
+    const usernameInput =
+      getElement("profileUsernameInput");
+
+    const bioInput =
+      getElement("profileBioInput");
+
+    if (nameInput) {
+      nameInput.value =
+        data.display_name || "";
+    }
+
+    if (usernameInput) {
+      usernameInput.value =
+        data.username || "";
+    }
+
+    if (bioInput) {
+      bioInput.value =
+        data.bio || "";
+    }
+
+  } catch (error) {
+
+    console.error(
+      "LOAD PROFILE EXCEPTION:",
+      error
+    );
   }
-
-  /*
-    50 MB maximum for this application.
-    This is separate from JavaScript size.
-  */
-
-  const MAX_SIZE = 50 * 1024 * 1024;
-
-  if (file.size > MAX_SIZE) {
-    return {
-      valid: false,
-      message: "File is too large. Maximum size is 50 MB."
-    };
-  }
-
-  return {
-    valid: true,
-    message: ""
-  };
 }
 
+
+function showProfileSetup() {
+
+  const setup =
+    getElement("profileSetup");
+
+  if (!setup) {
+    return;
+  }
+
+  setup.classList.remove("hidden");
+
+}
+
+
+async function saveProfile() {
+
+  if (!currentUser) {
+    alert("Please log in first.");
+    return;
+  }
+
+  const displayName =
+    getElement("profileDisplayNameInput")
+      ?.value.trim();
+
+  const username =
+    getElement("profileUsernameInput")
+      ?.value.trim()
+      .toLowerCase();
+
+  const bio =
+    getElement("profileBioInput")
+      ?.value.trim();
+
+  const message =
+    getElement("profileMessage");
+
+  if (!displayName || !username) {
+
+    if (message) {
+      message.textContent =
+        "Display name and username are required.";
+    }
+
+    return;
+  }
+
+  if (!/^[a-z0-9_]+$/.test(username)) {
+
+    if (message) {
+      message.textContent =
+        "Username can only contain letters, numbers and _.";
+    }
+
+    return;
+  }
+
+  try {
+
+    if (message) {
+      message.textContent =
+        "Saving profile...";
+    }
+
+    const { error } =
+      await supabaseClient
+        .from("profiles")
+        .upsert({
+          id: currentUser.id,
+          username: username,
+          display_name: displayName,
+          bio: bio || ""
+        });
+
+    if (error) {
+
+      console.error(
+        "SAVE PROFILE ERROR:",
+        error
+      );
+
+      if (message) {
+        message.textContent =
+          error.message;
+      }
+
+      return;
+    }
+
+    if (message) {
+      message.textContent =
+        "Profile saved successfully!";
+      message.style.color =
+        "#4ade80";
+    }
+
+    await loadProfile();
+
+    const setup =
+      getElement("profileSetup");
+
+    if (setup) {
+      setup.classList.add("hidden");
+    }
+
+  } catch (error) {
+
+    console.error(
+      "SAVE PROFILE EXCEPTION:",
+      error
+    );
+
+    if (message) {
+      message.textContent =
+        "Could not save your profile.";
+    }
+  }
+}
 
 /* =========================================================
    11. UPLOAD POST FROM HOME
