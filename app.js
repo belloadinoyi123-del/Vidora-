@@ -802,6 +802,8 @@ async function createPost(file, caption) {
    ========================================================= */
 
 async function loadFeed() {
+   if (feedLoading) return;
+feedLoading = true;
   const feed = getElement("feed");
 
   if (!feed) {
