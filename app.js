@@ -2344,6 +2344,7 @@ async function checkSession() {
    26. SUPABASE AUTH STATE LISTENER
    ========================================================= */
 
+
 supabaseClient.auth.onAuthStateChange(
   async function(event, session) {
 
@@ -2353,23 +2354,18 @@ supabaseClient.auth.onAuthStateChange(
 
       currentUser = session.user;
 
-      if (
-        event === "SIGNED_IN" ||
-        event === "INITIAL_SESSION"
-      ) {
+      if (event === "SIGNED_IN") {
         await showApp();
       }
 
-    } else {
+    } else if (event === "SIGNED_OUT") {
 
       currentUser = null;
 
-      // Visitors can watch Vidora without an account
       await showPublicFeed();
     }
   }
 );
-
 /* =========================================================
    27. INITIALIZE VIDORA
    ========================================================= */
