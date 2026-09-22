@@ -1806,9 +1806,7 @@ const pages = {
     loadProfile();
   }
 
-  if (page === "home") {
-    loadFeed();
-  }
+  
 }
 
 
