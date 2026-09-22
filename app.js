@@ -274,8 +274,7 @@ async function login() {
    ========================================================= */
 
 async function logout() {
-   sessionStorage.removeItem(
-  "vidoraAvatarWelcomed"
+   
 );
   const button = getElement("logoutBtn");
 
