@@ -369,7 +369,49 @@ async function showApp() {
   appInitialized = true;
 }
 
+/* =========================================================
+   VIDORA AVATAR SELECTION
+   ========================================================= */
 
+function selectVidoraAvatar(name) {
+
+  const hiddenInput =
+    document.getElementById("selectedVidoraAvatar");
+
+  if (hiddenInput) {
+    hiddenInput.value = name;
+  }
+
+  const avatars =
+    document.querySelectorAll(".vidoraAvatar");
+
+  avatars.forEach(function (avatar) {
+
+    avatar.classList.remove("selected");
+
+    if (
+      avatar.dataset.avatar === name
+    ) {
+      avatar.classList.add("selected");
+    }
+
+  });
+
+  // If user chooses a Vidora avatar,
+  // remove an uploaded file selection.
+
+  const fileInput =
+    document.getElementById("profileAvatarFile");
+
+  if (fileInput) {
+    fileInput.value = "";
+  }
+
+  console.log(
+    "Selected Vidora avatar:",
+    name
+  );
+}
 /* =========================================================
    9. LOAD PROFILE
    ========================================================= */
