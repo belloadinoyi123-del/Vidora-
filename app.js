@@ -948,13 +948,18 @@ function loadVidoraTheme() {
    --------------------------------------------------------- */
 
 function getSelectedVidoraAvatar() {
+  const avatar = localStorage.getItem("vidoraAvatar");
 
-  const avatar =
-    localStorage.getItem("vidoraAvatar");
+  const validAvatars = [
+    "Nova",
+    "Kai",
+    "Luna",
+    "Ivy",
+    "Orion"
+  ];
 
-  return avatar || "Nova";
+  return validAvatars.includes(avatar) ? avatar : "Nova";
 }
-
 
 /* =========================================================
    VIDORA AVATAR SYSTEM
