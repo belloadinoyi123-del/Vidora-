@@ -473,29 +473,48 @@ function selectVidoraAvatar(name) {
    VIDORA INTERACTIVE AVATAR
    ========================================================= */
 
-
 async function showInteractiveAvatar() {
+  if (!interactiveAvatarEnabled) return;
 
-  if (!interactiveAvatarEnabled) {
-    return;
+  const avatarBox = document.getElementById("interactiveAvatar");
+  const avatarImage = document.getElementById("interactiveAvatarImage");
+
+  if (!avatarBox || !avatarImage) return;
+
+  // Use the selected Vidora avatar first
+  const avatarName = getSelectedVidoraAvatar();
+  let avatarUrl = getVidoraAvatarImage(avatarName);
+
+  // Only use a profile photo if it is actually a custom uploaded photo
+  if (currentUser) {
+    try {
+      const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+      if (!error && data && data.avatar_url) {
+        // Ignore old DiceBear avatars
+        if (!data.avatar_url.includes("dicebear.com")) {
+          avatarUrl = data.avatar_url;
+        }
+      }
+    } catch (error) {
+      console.error("Avatar loading error:", error);
+    }
   }
 
-  const avatarBox =
-    document.getElementById(
-      "interactiveAvatar"
-    );
+  avatarImage.src = avatarUrl;
 
-  const avatarImage =
-    document.getElementById(
-      "interactiveAvatarImage"
-    );
+  // If the image path fails, fall back to Nova
+  avatarImage.onerror = function () {
+    avatarImage.onerror = null;
+    avatarImage.src = getVidoraAvatarImage("Nova");
+  };
 
-  if (!avatarBox) {
-    return;
-  }
-
-  let avatarUrl = "";
-
+  avatarBox.classList.remove("hidden");
+}
   /* -----------------------------------------
      Use user's uploaded profile picture first
      ----------------------------------------- */
