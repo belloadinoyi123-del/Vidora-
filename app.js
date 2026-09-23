@@ -1024,20 +1024,17 @@ function getSelectedVidoraAvatar() {
    GET AVATAR IMAGE
    ========================================================= function getVidoraAvatarImage(name) {
 
+function getVidoraAvatarImage(name) {
   const avatarImages = {
-    Nova: "./avatars/nova.png",
-    Kairo: "./avatars/kairo.png",
-    Amara: "./avatars/amara.png",
-    Eli: "./avatars/eli.png",
-    Razor: "./avatars/razor.png",
-    Zina: "./avatars/zina.png",
-    Titan: "./avatars/titan.png",
-    Kitana: "./avatars/kitana.png"
+    Nova: "./nova.png",
+    Kai: "./kai.png",
+    Luna: "./luna.png",
+    Ivy: "./ivy.png",
+    Orion: "./orion.png"
   };
 
-  return avatarImages[name] || "./avatars/nova.png";
+  return avatarImages[name] || "./nova.png";
 }
-
 
 /* =========================================================
    GET AVATAR INFORMATION
