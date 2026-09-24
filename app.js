@@ -339,7 +339,7 @@ async function logout() {
    ========================================================= */
 
 function showAuthScreen() {
-   function showAuthScreen() {
+   
 
   const authScreen = getElement("authScreen");
 
