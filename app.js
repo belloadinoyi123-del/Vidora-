@@ -1041,6 +1041,11 @@ function getSelectedVidoraAvatar() {
    GET AVATAR IMAGE
    ========================================================= function getVidoraAvatarImage(name) {
 
+
+/* =========================================================
+   GET AVATAR IMAGE
+   ========================================================= */
+
 function getVidoraAvatarImage(name) {
   const avatarImages = {
     Nova: "./nova.png",
@@ -1052,7 +1057,6 @@ function getVidoraAvatarImage(name) {
 
   return avatarImages[name] || "./nova.png";
 }
-
 /* =========================================================
    GET AVATAR INFORMATION
    ========================================================= */
