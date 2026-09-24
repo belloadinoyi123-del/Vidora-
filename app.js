@@ -4234,3 +4234,7 @@ window.avatarGoTrending =
 /* Avatar system */
 window.initializeVidoraAvatarSystem =
   initializeVidoraAvatarSystem;
+window.login = login;
+window.signUp = signUp;
+
+console.log("VIDORA AUTH FUNCTIONS READY");
