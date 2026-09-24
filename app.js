@@ -339,13 +339,6 @@ async function logout() {
    ========================================================= */
 
 function showAuthScreen() {
-   
-
-  const authScreen = getElement("authScreen");
-
-  setup.classList.remove("hidden");
-
-}
   const authScreen = getElement("authScreen");
   const app = getElement("app");
 
