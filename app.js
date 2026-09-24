@@ -508,7 +508,7 @@ async function showInteractiveAvatar() {
 
   avatarBox.classList.remove("hidden");
 }
-  /
+  
 async function launchAvatarWelcome() {
 
   if (!interactiveAvatarEnabled) {
