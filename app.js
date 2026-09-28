@@ -1017,26 +1017,23 @@ function selectVidoraAvatar(name) {
    ========================================================= */
 
 function updateAvatarPreview(imageUrl, avatarName) {
-  const preview =
-    document.getElementById("profileAvatarPreview");
-
+  const preview = document.getElementById("profileAvatarPreview");
   if (!preview) return;
 
   preview.innerHTML = "";
 
-  const image =
-    document.createElement("img");
+  const img = document.createElement("img");
+  img.src = imageUrl;
+  img.alt = avatarName || "Vidora Avatar";
+  img.className = "profileAvatarImage";
 
-  image.src = imageUrl;
-  image.alt =
-    avatarName || "Vidora Avatar";
+  img.onerror = function () {
+    this.onerror = null;
+    this.src = getVidoraAvatarImage("nova");
+  };
 
-  image.className =
-    "profileAvatarImage";
-
-  preview.appendChild(image);
+  preview.appendChild(img);
 }
-
 
 /* =========================================================
    HANDLE CUSTOM AVATAR UPLOAD
