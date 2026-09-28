@@ -1935,37 +1935,28 @@ async function saveProfile() {
        SAVE PROFILE
        ----------------------------------------- */
 
-    const { data, error } =
-      await supabaseClient
-        .from("profiles")
-        .upsert(
-          {
-            id: currentUser.id,
-            username: username,
-            display_name: displayName,
-            bio: bio,
-            avatar_url: avatarUrl
-          },
-          {
-            onConflict: "id"
-          }
-        )
-        .select()
-        .single();
+   
+const { data, error } = await supabaseClient
+      .from("profiles")
+      .upsert(
+        {
+          id: currentUser.id,
+          username: username,
+          display_name: displayName,
+          bio: bio,
+          avatar_url: avatarUrl
+        },
+        {
+          onConflict: "id"
+        }
+      )
+      .select()
+      .single();
 
     if (error) {
-
-      console.error(
-        "SAVE PROFILE ERROR:",
-        error
-      );
-
-      throw new Error(
-        "Profile could not be saved: " +
-        error.message
-      );
+      console.error("SAVE PROFILE ERROR:", error);
+      throw new Error("Profile could not be saved: " + error.message);
     }
-
     console.log(
       "PROFILE SAVED:",
       data
