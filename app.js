@@ -969,27 +969,13 @@ function getSelectedVidoraAvatar() {
    GET AVATAR IMAGE
    ========================================================= function getVidoraAvatarImage(name)
 
-function getVidoraAvatarImage(name) {
-  const avatarImages = {
-    Nova: "./nova.png",
-    Kai: "./kai.png",
-    Luna: "./luna.png",
-    Ivy: "./ivy.png",
-    Orion: "./orion.png"
-  };
-
-  return avatarImages[name] || "./nova.png";
-}
-/* =========================================================
-   GET AVATAR INFORMATION
-   ========================================================= */
-
 function getVidoraAvatarInfo(name) {
-  const key = String(name || "")
-    .toLowerCase()
-    .trim();
-
+  const key = String(name || "").toLowerCase().trim();
   return VIDORA_AVATARS[key] || VIDORA_AVATARS.nova;
+}
+
+function getVidoraAvatarImage(name) {
+  return getVidoraAvatarInfo(name).image;
 }
 
 
@@ -997,55 +983,34 @@ function getVidoraAvatarInfo(name) {
    SELECT AVATAR
    ========================================================= */
 
+
 function selectVidoraAvatar(name) {
-  const key = String(name || "")
-    .toLowerCase()
-    .trim();
+  const key = String(name || "").toLowerCase().trim();
 
   if (!VIDORA_AVATARS[key]) {
     console.warn("Unknown Vidora avatar:", name);
     return;
   }
 
-  localStorage.setItem(
-    "vidoraSelectedAvatar",
-    key
-  );
+  localStorage.setItem("vidoraSelectedAvatar", key);
 
-  const avatarInfo =
-    getVidoraAvatarInfo(key);
-
-  /* Update hidden field */
-  const selected =
-    document.getElementById("selectedVidoraAvatar");
-
-  if (selected) {
-    selected.value = key;
+  // Update hidden input
+  const hiddenInput = document.getElementById("selectedVidoraAvatar");
+  if (hiddenInput) {
+    hiddenInput.value = key;
   }
 
-  /* Highlight selected avatar */
-  document
-    .querySelectorAll(".vidoraAvatar")
-    .forEach(function(button) {
-      button.classList.remove("selected");
-    });
+  // Highlight selected avatar
+  document.querySelectorAll(".vidoraAvatar").forEach(function(btn) {
+    btn.classList.toggle("selected", btn.dataset.avatar === key);
+  });
 
-  const selectedButton =
-    document.querySelector(
-      '.vidoraAvatar[data-avatar="' + key + '"]'
-    );
+  // Update preview
+  const info = getVidoraAvatarInfo(key);
+  updateAvatarPreview(info.image, info.name);
 
-  if (selectedButton) {
-    selectedButton.classList.add("selected");
-  }
-
-  /* Update preview */
-  updateAvatarPreview(
-    avatarInfo.image,
-    avatarInfo.name
-  );
+  console.log("Vidora avatar selected:", key);
 }
-
 
 /* =========================================================
    UPDATE AVATAR PREVIEW
