@@ -956,27 +956,18 @@ const VIDORA_AVATARS = {
 /* =========================================================
    GET SELECTED AVATAR
    ========================================================= */
-
 function getSelectedVidoraAvatar() {
-  const saved =
-    localStorage.getItem("vidoraSelectedAvatar");
-
+  const saved = localStorage.getItem("vidoraSelectedAvatar");
   if (saved && VIDORA_AVATARS[saved]) {
     return saved;
   }
-
   return "nova";
 }
 
 
 /* =========================================================
    GET AVATAR IMAGE
-   ========================================================= function getVidoraAvatarImage(name) {
-
-
-/* =========================================================
-   GET AVATAR IMAGE
-   ========================================================= */
+   ========================================================= function getVidoraAvatarImage(name)
 
 function getVidoraAvatarImage(name) {
   const avatarImages = {
