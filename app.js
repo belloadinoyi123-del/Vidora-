@@ -1182,61 +1182,38 @@ function updateAvatarIdentity(
 /* =========================================================
    AVATAR PRESET LIST
    ========================================================= */
-
 function renderVidoraAvatarChoices() {
-  const container =
-    document.getElementById(
-      "vidoraAvatarChoices"
-    );
-
+  const container = document.getElementById("vidoraAvatarChoices");
   if (!container) return;
 
   container.innerHTML = "";
 
-  const selected =
-    getSelectedVidoraAvatar();
+  const selected = getSelectedVidoraAvatar();
 
-  Object.keys(VIDORA_AVATARS)
-    .forEach(function(key) {
+  Object.keys(VIDORA_AVATARS).forEach(function(key) {
+    const avatar = VIDORA_AVATARS[key];
 
-      const avatar =
-        VIDORA_AVATARS[key];
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "vidoraAvatar";
+    button.dataset.avatar = key;
 
-      const button =
-        document.createElement("button");
+    if (key === selected) {
+      button.classList.add("selected");
+    }
 
-      button.type = "button";
+    button.innerHTML =
+      '<img src="' + avatar.image + '" alt="' + avatar.name + '">' +
+      "<span>" + avatar.name + "</span>";
 
-      button.className =
-        "vidoraAvatar";
+    button.onclick = function() {
+      selectVidoraAvatar(key);
+    };
 
-      button.dataset.avatar =
-        key;
-
-      if (key === selected) {
-        button.classList.add(
-          "selected"
-        );
-      }
-
-      button.innerHTML =
-        '<img src="' +
-        avatar.image +
-        '" alt="' +
-        avatar.name +
-        '">' +
-        '<span>' +
-        avatar.name +
-        "</span>";
-
-      button.onclick =
-        function() {
-          selectVidoraAvatar(key);
-        };
-
-      container.appendChild(button);
-    });
+    container.appendChild(button);
+  });
 }
+
 
 
 /* =========================================================
