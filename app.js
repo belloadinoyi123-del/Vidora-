@@ -4157,4 +4157,93 @@ function showCreateAccount() {
 }
 
 window.showCreateAccount = showCreateAccount;
-   
+
+ /* =========================================================
+   VIDORA SIGNUP — STEP 1 VALIDATION
+   ========================================================= */
+
+function nextSignupStep() {
+
+  const email =
+    document.getElementById("signupEmail")?.value.trim();
+
+  const password =
+    document.getElementById("signupPassword")?.value;
+
+  const confirmPassword =
+    document.getElementById("signupPasswordConfirm")?.value;
+
+  const message =
+    document.getElementById("authMessage");
+
+
+  if (!email) {
+    if (message) {
+      message.textContent = "Please enter your email address.";
+    }
+    return;
+  }
+
+
+  if (!email.includes("@")) {
+    if (message) {
+      message.textContent = "Please enter a valid email address.";
+    }
+    return;
+  }
+
+
+  if (!password || password.length < 6) {
+    if (message) {
+      message.textContent =
+        "Your password must be at least 6 characters.";
+    }
+    return;
+  }
+
+
+  if (password !== confirmPassword) {
+    if (message) {
+      message.textContent =
+        "Your passwords do not match.";
+    }
+    return;
+  }
+
+
+  if (message) {
+    message.textContent = "";
+  }
+
+
+  const stepOne =
+    document.getElementById("signupStepOne");
+
+  const stepTwo =
+    document.getElementById("signupStepTwo");
+
+  const indicator1 =
+    document.getElementById("signupStep1");
+
+  const indicator2 =
+    document.getElementById("signupStep2");
+
+
+  if (stepOne) {
+    stepOne.classList.add("hidden");
+  }
+
+  if (stepTwo) {
+    stepTwo.classList.remove("hidden");
+  }
+
+  if (indicator1) {
+    indicator1.classList.remove("active");
+  }
+
+  if (indicator2) {
+    indicator2.classList.add("active");
+  }
+}
+
+window.nextSignupStep = nextSignupStep;  
