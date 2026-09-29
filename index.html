@@ -15,21 +15,51 @@
 
 <body>
 
-  <!-- =========================
-       AUTHENTICATION
-  ========================== -->
+ <!-- =========================
+     AUTHENTICATION
+========================== -->
 
-  <section id="authScreen">
+<section id="authScreen">
 
-    <div class="authBox">
+  <div class="authBox">
 
-      <div class="brand">
-        Vi<span>dora</span>
-      </div>
+    <div class="brand">
+      Vi<span>dora</span>
+    </div>
 
-      <p class="tagline">
-        Watch. Share. Connect.
-      </p>
+    <p class="tagline">
+      Watch. Share. Connect.
+    </p>
+
+    <!-- LOGIN / SIGNUP CHOICE -->
+
+    <div id="authChoice">
+
+      <button
+        id="showCreateAccountBtn"
+        type="button"
+        onclick="showCreateAccount()"
+      >
+        🚀 Create Account
+      </button>
+
+      <button
+        id="showLoginBtn"
+        type="button"
+        class="secondary"
+        onclick="showLoginForm()"
+      >
+        Log In
+      </button>
+
+    </div>
+
+
+    <!-- LOGIN FORM -->
+
+    <div id="loginForm" class="hidden">
+
+      <h2>Welcome back 👋</h2>
 
       <input
         id="email"
@@ -46,27 +76,211 @@
       >
 
       <button
-        id="signUpBtn"
-        type="button"
-        onclick="signUp()"
-      >
-        Create Account
-      </button>
-
-      <button
         id="loginBtn"
         type="button"
-        class="secondary"
         onclick="login()"
       >
         Log In
       </button>
 
+      <button
+        type="button"
+        class="secondary"
+        onclick="showAuthChoice()"
+      >
+        ← Back
+      </button>
+
+    </div>
+
+
+    <!-- CREATE ACCOUNT -->
+
+    <div id="signupForm" class="hidden">
+
+      <h2>Create your Vidora account</h2>
+
+      <p class="authSubtitle">
+        Join Vidora and make your profile yours.
+      </p>
+
+
+      <!-- STEP INDICATOR -->
+
+      <div class="signupProgress">
+
+        <span id="signupStep1" class="active">1</span>
+        <span></span>
+        <span id="signupStep2">2</span>
+        <span></span>
+        <span id="signupStep3">3</span>
+
+      </div>
+
+
+      <!-- STEP 1 -->
+
+      <div
+        id="signupStepOne"
+        class="signupStep"
+      >
+
+        <h3>Let's create your account</h3>
+
+        <input
+          id="signupEmail"
+          type="email"
+          placeholder="Email address"
+          autocomplete="email"
+        >
+
+        <input
+          id="signupPassword"
+          type="password"
+          placeholder="Create a password"
+          autocomplete="new-password"
+        >
+
+        <input
+          id="signupPasswordConfirm"
+          type="password"
+          placeholder="Confirm password"
+          autocomplete="new-password"
+        >
+
+        <button
+          type="button"
+          onclick="nextSignupStep()"
+        >
+          Continue →
+        </button>
+
+      </div>
+
+
+      <!-- STEP 2 -->
+
+      <div
+        id="signupStepTwo"
+        class="signupStep hidden"
+      >
+
+        <h3>Tell us about you</h3>
+
+        <input
+          id="signupDisplayName"
+          type="text"
+          placeholder="Your name"
+          maxlength="50"
+          autocomplete="name"
+        >
+
+        <input
+          id="signupUsername"
+          type="text"
+          placeholder="@username"
+          maxlength="30"
+          autocomplete="username"
+        >
+
+        <label for="signupDateOfBirth">
+          Date of birth
+        </label>
+
+        <input
+          id="signupDateOfBirth"
+          type="date"
+        >
+
+        <div class="signupButtons">
+
+          <button
+            type="button"
+            class="secondary"
+            onclick="previousSignupStep()"
+          >
+            ← Back
+          </button>
+
+          <button
+            type="button"
+            onclick="nextSignupStep()"
+          >
+            Continue →
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- STEP 3 -->
+
+      <div
+        id="signupStepThree"
+        class="signupStep hidden"
+      >
+
+        <h3>Choose your Vidora identity ✨</h3>
+
+        <p>
+          You can personalize your profile after creating your account.
+        </p>
+
+        <div class="signupAvatarPreview">
+          <img
+            src="./nova.png"
+            alt="Vidora Avatar"
+          >
+        </div>
+
+        <p>
+          Your default Vidora avatar will be <strong>Nova</strong>.
+        </p>
+
+        <label class="signupAgreement">
+
+          <input
+            type="checkbox"
+            id="signupTerms"
+          >
+
+          <span>
+            I agree to the Vidora Community Guidelines and Terms.
+          </span>
+
+        </label>
+
+        <div class="signupButtons">
+
+          <button
+            type="button"
+            class="secondary"
+            onclick="previousSignupStep()"
+          >
+            ← Back
+          </button>
+
+          <button
+            id="createAccountFinalBtn"
+            type="button"
+            onclick="completeSignup()"
+          >
+            🚀 Create My Account
+          </button>
+
+        </div>
+
+      </div>
+
+
       <p id="authMessage"></p>
 
     </div>
 
-  </section>
+  </div>
+
+</section> 
 
 
   <!-- =========================
