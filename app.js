@@ -1403,7 +1403,52 @@ function toggleInteractiveAvatar(enabled) {
    SHOW AVATAR
    --------------------------------------------------------- */
 
+async function showInteractiveAvatar() {
+  if (!interactiveAvatarEnabled) return;
 
+  const avatarBox = document.getElementById("interactiveAvatar");
+  const avatarImage = document.getElementById("interactiveAvatarImage");
+
+  if (!avatarBox || !avatarImage) return;
+
+  let avatarUrl = getVidoraAvatarImage(getSelectedVidoraAvatar());
+  let displayName = "Vidora User";
+  let username = "";
+
+  if (currentUser) {
+    try {
+      const { data } = await supabaseClient
+        .from("profiles")
+        .select("display_name, username, avatar_url")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+      if (data) {
+        displayName = data.display_name || displayName;
+        username = data.username || "";
+        if (data.avatar_url && !data.avatar_url.includes("dicebear.com")) {
+          avatarUrl = data.avatar_url;
+        }
+      }
+    } catch (err) {
+      console.error("Interactive avatar error:", err);
+    }
+  }
+
+  avatarImage.src = avatarUrl;
+  avatarImage.onerror = function () {
+    this.onerror = null;
+    this.src = getVidoraAvatarImage("nova");
+  };
+
+  // Update name/username if those elements exist
+  const nameEl = document.getElementById("avatarDisplayName");
+  const userEl = document.getElementById("avatarDisplayUsername");
+  if (nameEl) nameEl.textContent = displayName;
+  if (userEl) userEl.textContent = username ? "@" + username : "@vidora";
+
+  avatarBox.classList.remove("hidden");
+}
 
 
 /* ---------------------------------------------------------
