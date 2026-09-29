@@ -1339,19 +1339,13 @@ async function showInteractiveAvatar() {
    CLOSE INTERACTIVE AVATAR
    ========================================================= */
 
-function closeInteractiveAvatar() {
-  const avatarBox =
-    document.getElementById(
-      "interactiveAvatar"
-    );
 
+function closeInteractiveAvatar() {
+  const avatarBox = document.getElementById("interactiveAvatar");
   if (avatarBox) {
-    avatarBox.classList.add(
-      "hidden"
-    );
+    avatarBox.classList.add("hidden");
   }
 }
-
 
 /* =========================================================
    AVATAR REACTION
