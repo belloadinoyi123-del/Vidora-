@@ -4132,4 +4132,29 @@ function togglePassword(inputId, button) {
 }
 
 window.togglePassword = togglePassword;
+function showCreateAccount() {
+  const authChoice = document.getElementById("authChoice");
+  const loginForm = document.getElementById("loginForm");
+  const signupForm = document.getElementById("signupForm");
+
+  if (authChoice) {
+    authChoice.classList.add("hidden");
+  }
+
+  if (loginForm) {
+    loginForm.classList.add("hidden");
+  }
+
+  if (signupForm) {
+    signupForm.classList.remove("hidden");
+  }
+
+  const message = document.getElementById("authMessage");
+
+  if (message) {
+    message.textContent = "";
+  }
+}
+
+window.showCreateAccount = showCreateAccount;
    
