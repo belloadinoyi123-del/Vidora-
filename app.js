@@ -1410,8 +1410,8 @@ function initializeVidoraAvatarSystem() {
    ENABLE / DISABLE
    --------------------------------------------------------- */
 
-function toggleInteractiveAvatar(enabled) {
 
+function toggleInteractiveAvatar(enabled) {
   interactiveAvatarEnabled = enabled;
 
   localStorage.setItem(
@@ -1420,17 +1420,11 @@ function toggleInteractiveAvatar(enabled) {
   );
 
   if (enabled) {
-
     showInteractiveAvatar();
-
   } else {
-
     closeInteractiveAvatar();
-
   }
-
 }
-
 
 /* ---------------------------------------------------------
    SHOW AVATAR
