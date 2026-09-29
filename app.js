@@ -467,7 +467,7 @@ function selectVidoraAvatar(name) {
    ========================================================= */
 
 async function showInteractiveAvatar() {
- if (!interactiveAvatarEnabled && localStorage.getItem("vidoraOnboarding") !== "true") return; 
+ if (!interactiveAvatarEnabled) return;
 
   const avatarBox = document.getElementById("interactiveAvatar");
   const avatarImage = document.getElementById("interactiveAvatarImage");
