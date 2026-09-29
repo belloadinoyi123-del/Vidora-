@@ -1388,21 +1388,16 @@ function avatarGoTrending() {
    INITIALIZE AVATAR SYSTEM
    ========================================================= */
 
-function initializeVidoraAvatarSystem() {
-  const selected =
-    getSelectedVidoraAvatar();
+function initializeInteractiveAvatar() {
+  const toggle = document.getElementById("interactiveAvatarToggle");
 
-  const hiddenInput =
-    document.getElementById(
-      "selectedVidoraAvatar"
-    );
-
-  if (hiddenInput) {
-    hiddenInput.value =
-      selected;
+  if (toggle) {
+    toggle.checked = interactiveAvatarEnabled;
   }
 
-  renderVidoraAvatarChoices();
+  if (interactiveAvatarEnabled) {
+    showInteractiveAvatar();
+  }
 }
 
 
