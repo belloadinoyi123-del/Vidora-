@@ -1715,4 +1715,40 @@ body.lightMode .avatarThemeActions button:last-child {
   }
 
 }
+/* =========================================================
+   PASSWORD SHOW / HIDE
+   ========================================================= */
+
+.passwordField {
+  position: relative;
+  width: 100%;
+}
+
+.passwordField input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 48px;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  margin: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  font-size: 18px;
+  color: #aaa;
+}
+
+.passwordToggle:hover {
+  background: transparent !important;
+  transform: translateY(-50%);
+}
 
