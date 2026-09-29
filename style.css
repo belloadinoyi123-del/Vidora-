@@ -1518,3 +1518,201 @@ body.lightMode .avatarThemeActions button:last-child {
   z-index: 10001;
   pointer-events: auto;
 }
+/* =========================================================
+   VIDORA ADVANCED CREATE ACCOUNT
+   ========================================================= */
+
+.authSubtitle {
+  color: #aaa;
+  font-size: 14px;
+  margin: -5px 0 20px;
+  line-height: 1.5;
+}
+
+
+/* SIGNUP PROGRESS */
+
+.signupProgress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 20px 0 25px;
+}
+
+.signupProgress span {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #252532;
+  color: #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.signupProgress span.active {
+  background: linear-gradient(135deg, #8b5cf6, #ff2d75);
+  color: white;
+}
+
+.signupProgress span:not([id]) {
+  width: 35px;
+  height: 2px;
+  border-radius: 0;
+  background: #292936;
+}
+
+
+/* SIGNUP STEPS */
+
+.signupStep {
+  animation: signupFadeIn 0.25s ease;
+}
+
+@keyframes signupFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.signupStep h3 {
+  margin-bottom: 8px;
+  font-size: 19px;
+}
+
+.signupStep p {
+  color: #999;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+
+/* INPUTS */
+
+.signupStep input[type="email"],
+.signupStep input[type="password"],
+.signupStep input[type="text"],
+.signupStep input[type="date"] {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  padding: 14px;
+  border: 1px solid #292936;
+  border-radius: 12px;
+  background: #11111a;
+  color: white;
+  outline: none;
+  font-size: 14px;
+}
+
+.signupStep input:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.12);
+}
+
+.signupStep label {
+  display: block;
+  color: #aaa;
+  font-size: 12px;
+  margin: 8px 0 7px;
+}
+
+
+/* STEP BUTTONS */
+
+.signupButtons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.signupButtons button {
+  flex: 1;
+}
+
+.signupButtons .secondary {
+  background: #1b1b26;
+  border: 1px solid #30303d;
+}
+
+
+/* AVATAR PREVIEW */
+
+.signupAvatarPreview {
+  width: 105px;
+  height: 105px;
+  margin: 20px auto 15px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #8b5cf6;
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.25);
+}
+
+.signupAvatarPreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+/* TERMS */
+
+.signupAgreement {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  margin: 20px 0 !important;
+  color: #aaa !important;
+  line-height: 1.4;
+}
+
+.signupAgreement input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: #8b5cf6;
+  flex-shrink: 0;
+}
+
+
+/* MESSAGE */
+
+#authMessage {
+  min-height: 20px;
+  margin-top: 15px;
+  color: #ff6b8a;
+  font-size: 13px;
+  text-align: center;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+
+  .authBox {
+    width: calc(100% - 30px);
+    padding: 22px 18px;
+  }
+
+  .signupStep h3 {
+    font-size: 18px;
+  }
+
+  .signupProgress {
+    margin-top: 15px;
+    margin-bottom: 20px;
+  }
+
+}
+
