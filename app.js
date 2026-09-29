@@ -1127,46 +1127,28 @@ function resetVidoraAvatar() {
    RENDER AVATAR ON PROFILE
    ========================================================= */
 
-function renderProfileAvatar(
-  container,
-  avatarUrl,
-  displayName
-) {
+
+function renderProfileAvatar(container, avatarUrl, displayName) {
   if (!container) return;
 
   container.innerHTML = "";
 
-  if (avatarUrl) {
-    const image =
-      document.createElement("img");
+  if (avatarUrl && !avatarUrl.includes("dicebear.com")) {
+    const img = document.createElement("img");
+    img.src = avatarUrl;
+    img.alt = displayName || "Profile picture";
+    img.className = "profileAvatarImage";
 
-    image.src = avatarUrl;
-
-    image.alt =
-      displayName ||
-      "Vidora profile picture";
-
-    image.className =
-      "profileAvatarImage";
-
-    image.onerror = function() {
-      renderDefaultAvatar(
-        container,
-        displayName
-      );
+    img.onerror = function () {
+      renderDefaultAvatar(container, displayName);
     };
 
-    container.appendChild(image);
-
+    container.appendChild(img);
     return;
   }
 
-  renderDefaultAvatar(
-    container,
-    displayName
-  );
+  renderDefaultAvatar(container, displayName);
 }
-
 
 /* =========================================================
    DEFAULT VIDORA AVATAR
