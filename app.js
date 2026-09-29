@@ -4093,4 +4093,15 @@ window.login = login;
 window.signUp = signUp;
 
 console.log("VIDORA AUTH FUNCTIONS READY");
+function showLoginForm() {
+  document.getElementById("authChoice")?.classList.add("hidden");
+  document.getElementById("signupForm")?.classList.add("hidden");
+  document.getElementById("loginForm")?.classList.remove("hidden");
+
+  const message = document.getElementById("authMessage");
+
+  if (message) {
+    message.textContent = "";
+  }
+}
    
