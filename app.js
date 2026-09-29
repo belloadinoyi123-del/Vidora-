@@ -4320,3 +4320,175 @@ function nextSignupStep() {
 }
 
 window.nextSignupStep = nextSignupStep;
+/* =========================================================
+   VIDORA — FINAL ACCOUNT CREATION
+   ========================================================= */
+
+async function completeSignup() {
+
+  const message =
+    document.getElementById("authMessage");
+
+  const button =
+    document.getElementById("createAccountFinalBtn");
+
+  const email =
+    document.getElementById("signupEmail")?.value.trim();
+
+  const password =
+    document.getElementById("signupPassword")?.value;
+
+  const name =
+    document.getElementById("signupDisplayName")?.value.trim();
+
+  const username =
+    document.getElementById("signupUsername")?.value
+      .trim()
+      .replace(/^@/, "");
+
+  const dob =
+    document.getElementById("signupDateOfBirth")?.value;
+
+  const terms =
+    document.getElementById("signupTerms")?.checked;
+
+
+  /* Check Step 3 */
+
+  if (!terms) {
+    if (message) {
+      message.textContent =
+        "Please agree to the Vidora Terms and Community Guidelines.";
+    }
+    return;
+  }
+
+
+  if (!email || !password || !name || !username || !dob) {
+    if (message) {
+      message.textContent =
+        "Please complete all required information.";
+    }
+    return;
+  }
+
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Creating account...";
+  }
+
+
+  try {
+
+    /* Create the Supabase account */
+
+    const { data, error } =
+      await supabaseClient.auth.signUp({
+        email: email,
+        password: password
+      });
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    if (!data?.user) {
+      throw new Error("Account creation failed.");
+    }
+
+
+    /* Save profile information */
+
+    const { error: profileError } =
+      await supabaseClient
+        .from("profiles")
+        .upsert({
+          id: data.user.id,
+          display_name: name,
+          username: username,
+          date_of_birth: dob,
+          avatar_type: "preset",
+          avatar_name: "Nova",
+          onboarding_completed: false,
+          updated_at: new Date().toISOString()
+        });
+
+
+    if (profileError) {
+      console.error(
+        "Profile error:",
+        profileError
+      );
+    }
+
+
+    /* Tell Vidora this is a new account */
+
+    localStorage.setItem(
+      "vidoraOnboarding",
+      "true"
+    );
+
+    localStorage.setItem(
+      "vidoraAvatarName",
+      "Nova"
+    );
+
+
+    /*
+      If email confirmation is enabled in Supabase,
+      the user needs to confirm their email first.
+    */
+
+    if (!data.session) {
+
+      if (message) {
+        message.textContent =
+          "Account created! Please check your email to confirm your account.";
+      }
+
+      if (button) {
+        button.disabled = false;
+        button.textContent =
+          "🚀 Create My Account";
+      }
+
+      return;
+    }
+
+
+    /* Account is immediately signed in */
+
+    currentUser = data.user;
+
+
+    if (typeof showApp === "function") {
+      showApp();
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      "CREATE ACCOUNT ERROR:",
+      error
+    );
+
+    if (message) {
+      message.textContent =
+        error.message ||
+        "Unable to create your account.";
+    }
+
+    if (button) {
+      button.disabled = false;
+      button.textContent =
+        "🚀 Create My Account";
+    }
+  }
+}
+
+window.completeSignup = completeSignup;
