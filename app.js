@@ -399,7 +399,7 @@ await loadProfile();
 
 /* Launch personalized avatar welcome */
 
-// await launchAvatarWelcome();
+await launchAvatarWelcome();
 
 await loadFeed();
 
