@@ -68,12 +68,25 @@
         autocomplete="email"
       >
 
-      <input
-        id="password"
-        type="password"
-        placeholder="Password"
-        autocomplete="current-password"
-      >
+<div class="passwordField">
+
+  <input
+    id="password"
+    type="password"
+    placeholder="Password"
+    autocomplete="current-password"
+  >
+
+  <button
+    type="button"
+    class="passwordToggle"
+    onclick="togglePassword('password', this)"
+    aria-label="Show password"
+  >
+    👁
+  </button>
+
+</div>
 
       <button
         id="loginBtn"
