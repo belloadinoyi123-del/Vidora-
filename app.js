@@ -1352,14 +1352,9 @@ function closeInteractiveAvatar() {
    ========================================================= */
 
 function avatarReact(message) {
-  const messageBox =
-    document.getElementById(
-      "avatarMessage"
-    );
-
+  const messageBox = document.getElementById("avatarMessage");
   if (messageBox) {
-    messageBox.textContent =
-      message;
+    messageBox.textContent = message || "😊 Nice tap!";
   }
 }
 
