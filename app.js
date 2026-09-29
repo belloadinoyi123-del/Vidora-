@@ -1172,45 +1172,23 @@ function renderProfileAvatar(
    DEFAULT VIDORA AVATAR
    ========================================================= */
 
-function renderDefaultAvatar(
-  container,
-  displayName
-) {
+function renderDefaultAvatar(container, displayName) {
   if (!container) return;
 
   container.innerHTML = "";
 
-  const avatarName =
-    getSelectedVidoraAvatar();
+  const info = getVidoraAvatarInfo(getSelectedVidoraAvatar());
 
-  const imageUrl =
-    getVidoraAvatarImage(
-      avatarName
-    );
+  const img = document.createElement("img");
+  img.src = info.image;
+  img.alt = displayName || info.name;
+  img.className = "profileAvatarImage";
 
-  const image =
-    document.createElement("img");
-
-  image.src = imageUrl;
-
-  image.alt =
-    displayName ||
-    "Vidora Avatar";
-
-  image.className =
-    "profileAvatarImage";
-
-  image.onerror = function() {
-    container.innerHTML =
-      "<span>" +
-      (
-        displayName ||
-        "V"
-      ).charAt(0).toUpperCase() +
-      "</span>";
+  img.onerror = function () {
+    container.innerHTML = "<span>" + (displayName || "V").charAt(0).toUpperCase() + "</span>";
   };
 
-  container.appendChild(image);
+  container.appendChild(img);
 }
 
 
