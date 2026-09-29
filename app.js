@@ -466,79 +466,52 @@ function selectVidoraAvatar(name) {
    VIDORA INTERACTIVE AVATAR
    ========================================================= */
 
-async function showInteractiveAvatar() {
-if (!interactiveAvatarEnabled && localStorage.getItem("vidoraOnboarding") !== "true") return; 
+
+  async function showInteractiveAvatar() {
+  if (!interactiveAvatarEnabled) return;
 
   const avatarBox = document.getElementById("interactiveAvatar");
   const avatarImage = document.getElementById("interactiveAvatarImage");
 
   if (!avatarBox || !avatarImage) return;
 
-  // Use the selected Vidora avatar first
-  const avatarName = getSelectedVidoraAvatar();
-  let avatarUrl = getVidoraAvatarImage(avatarName);
+  let avatarUrl = getVidoraAvatarImage(getSelectedVidoraAvatar());
+  let displayName = "Vidora User";
+  let username = "";
 
-  // Only use a profile photo if it is actually a custom uploaded photo
   if (currentUser) {
     try {
-      const { data, error } = await supabaseClient
+      const { data } = await supabaseClient
         .from("profiles")
-        .select("avatar_url")
+        .select("display_name, username, avatar_url")
         .eq("id", currentUser.id)
         .maybeSingle();
 
-      if (!error && data && data.avatar_url) {
-        // Ignore old DiceBear avatars
-        if (!data.avatar_url.includes("dicebear.com")) {
+      if (data) {
+        displayName = data.display_name || displayName;
+        username = data.username || "";
+        if (data.avatar_url && !data.avatar_url.includes("dicebear.com")) {
           avatarUrl = data.avatar_url;
         }
       }
-    } catch (error) {
-      console.error("Avatar loading error:", error);
+    } catch (err) {
+      console.error("Interactive avatar error:", err);
     }
   }
 
   avatarImage.src = avatarUrl;
-
-  // If the image path fails, fall back to Nova
   avatarImage.onerror = function () {
-    avatarImage.onerror = null;
-    avatarImage.src = getVidoraAvatarImage("Nova");
+    this.onerror = null;
+    this.src = getVidoraAvatarImage("nova");
   };
 
+  // Update name/username if those elements exist
+  const nameEl = document.getElementById("avatarDisplayName");
+  const userEl = document.getElementById("avatarDisplayUsername");
+  if (nameEl) nameEl.textContent = displayName;
+  if (userEl) userEl.textContent = username ? "@" + username : "@vidora";
+
   avatarBox.classList.remove("hidden");
-}
-  
-async function launchAvatarWelcome() {
-
-  if (!interactiveAvatarEnabled) {
-    return;
-  }
-
-  if (!currentUser) {
-    return;
-  }
-
-  // Only welcome once per login session
-  if (
-    sessionStorage.getItem("vidoraAvatarWelcomed") === "true"
-  ) {
-    return;
-  }
-
-  // Small delay for a smooth entrance
-  await new Promise(function(resolve) {
-    setTimeout(resolve, 700);
-  });
-
-  await showInteractiveAvatar();
-
-  await showSmartAvatarGreeting();
-
-  sessionStorage.setItem(
-    "vidoraAvatarWelcomed",
-    "true"
-  );
 }
 /* =========================================================
    VIDORA AVATAR - SMART GREETING & THEME ASSISTANT
