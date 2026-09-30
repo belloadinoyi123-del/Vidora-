@@ -1069,24 +1069,42 @@ function renderProfileAvatar(container, avatarUrl, displayName) {
 /* =========================================================
    DEFAULT VIDORA AVATAR
    ========================================================= */
-
 function renderDefaultAvatar(container, displayName) {
   if (!container) return;
 
+  const selectedAvatar = getSelectedVidoraAvatar();
+  const avatarInfo = getVidoraAvatarInfo(selectedAvatar);
+
   container.innerHTML = "";
 
-  const info = getVidoraAvatarInfo(getSelectedVidoraAvatar());
-
   const img = document.createElement("img");
-  img.src = info.image;
-  img.alt = displayName || info.name;
+
+  img.src = avatarInfo.image;
+  img.alt = displayName || avatarInfo.name || "Vidora Avatar";
   img.className = "profileAvatarImage";
 
+  img.style.width = "100%";
+  img.style.height = "100%";
+  img.style.objectFit = "cover";
+  img.style.display = "block";
+  img.style.borderRadius = "50%";
+
   img.onerror = function () {
-    container.innerHTML = "<span>" + (displayName || "V").charAt(0).toUpperCase() + "</span>";
+    console.error("Avatar image failed to load:", avatarInfo.image);
+
+    container.innerHTML =
+      "<span>" +
+      (displayName || "V").charAt(0).toUpperCase() +
+      "</span>";
   };
 
   container.appendChild(img);
+
+  console.log(
+    "PROFILE AVATAR DISPLAYED:",
+    selectedAvatar,
+    avatarInfo.image
+  );
 }
 
 
