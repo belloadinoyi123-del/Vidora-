@@ -1847,33 +1847,109 @@ const { data, error } = await supabaseClient
    9. LOAD PROFILE
    ========================================================= */
 
-async function loadProfile() {
 
+/* =========================================================
+   LOAD PROFILE
+   ========================================================= */
+
+async function loadProfile() {
   if (!currentUser) {
     return;
   }
 
   try {
-
-    const { data, error } =
-      await supabaseClient
-        .from("profiles")
-        .select(
-          "id, username, display_name, avatar_url, bio, created_at"
-        )
-        .eq("id", currentUser.id)
-        .maybeSingle();
+    const { data, error } = await supabaseClient
+      .from("profiles")
+      .select("id, username, display_name, avatar_url, bio, created_at")
+      .eq("id", currentUser.id)
+      .maybeSingle();
 
     if (error) {
-
-      console.error(
-        "LOAD PROFILE ERROR:",
-        error
-      );
-
+      console.error("LOAD PROFILE ERROR:", error);
       return;
     }
 
+    // No profile yet → show setup
+    if (!data) {
+      showProfileSetup();
+      return;
+    }
+
+    // ---------- Display Name ----------
+    const displayNameEl = document.getElementById("profileDisplayName");
+    if (displayNameEl) {
+      displayNameEl.textContent = data.display_name || "Vidora User";
+    }
+
+    // ---------- Username ----------
+    const usernameEl = document.getElementById("profileUsername");
+    if (usernameEl) {
+      usernameEl.textContent = data.username
+        ? "@" + data.username
+        : "Set up your username";
+    }
+
+    // ---------- Bio ----------
+    const bioEl = document.getElementById("profileBio");
+    if (bioEl) {
+      bioEl.textContent = data.bio || "No bio yet.";
+    }
+
+    // ---------- Email ----------
+    const emailEl = document.getElementById("profileEmail");
+    if (emailEl) {
+      emailEl.textContent = currentUser.email || "";
+    }
+
+    // ---------- Profile Picture (Correct Version) ----------
+    const avatarEl = document.getElementById("profileAvatar");
+    if (avatarEl) {
+      if (data.avatar_url && !data.avatar_url.includes("dicebear.com")) {
+        // Show uploaded photo
+        const img = document.createElement("img");
+        img.src = data.avatar_url;
+        img.alt = data.display_name || "Profile picture";
+        img.className = "profileAvatarImage";
+
+        img.onerror = function () {
+          // Fallback to selected Vidora avatar if image fails
+          renderDefaultAvatar(avatarEl, data.display_name);
+        };
+
+        avatarEl.innerHTML = "";
+        avatarEl.appendChild(img);
+      } else {
+        // No uploaded photo → show selected Vidora avatar
+        renderDefaultAvatar(avatarEl, data.display_name);
+      }
+    }
+
+    // ---------- Fill Edit Form ----------
+    const displayInput = document.getElementById("profileDisplayNameInput");
+    if (displayInput) {
+      displayInput.value = data.display_name || "";
+    }
+
+    const usernameInput = document.getElementById("profileUsernameInput");
+    if (usernameInput) {
+      usernameInput.value = data.username || "";
+    }
+
+    const bioInput = document.getElementById("profileBioInput");
+    if (bioInput) {
+      bioInput.value = data.bio || "";
+    }
+
+    // Hide profile setup if profile already exists
+    const setup = document.getElementById("profileSetup");
+    if (setup) {
+      setup.classList.add("hidden");
+    }
+
+  } catch (error) {
+    console.error("LOAD PROFILE EXCEPTION:", error);
+  }
+}
 
     /* -----------------------------------------------------
        NO PROFILE YET
