@@ -1721,6 +1721,11 @@ async function saveProfile() {
 
     let avatarUrl = null;
 
+if (localStorage.getItem("vidoraAvatarMode") === "preset") {
+  const selectedAvatar = getSelectedVidoraAvatar();
+  avatarUrl = getVidoraAvatarImage(selectedAvatar);
+}
+
     /* -----------------------------------------
        UPLOAD PERSONAL PROFILE PHOTO
        ----------------------------------------- */
