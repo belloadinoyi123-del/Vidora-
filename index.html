@@ -506,40 +506,237 @@
            CREATE
       ========================== -->
 
-      <section
-        id="createScreen"
-        class="screen hidden"
+      <div class="createCard advancedCreateCard">
+
+  <!-- HEADER -->
+  <div class="createHeader">
+    <div>
+      <h2>✨ Create Post</h2>
+      <p>Share something with the Vidora community.</p>
+    </div>
+  </div>
+
+  <!-- MEDIA -->
+  <div class="createMediaBox">
+
+    <input
+      id="createFile"
+      type="file"
+      accept="image/*,video/*"
+      hidden
+      onchange="previewCreateMedia(event)"
+    >
+
+    <label
+      for="createFile"
+      class="mediaUploadArea"
+    >
+      <span class="mediaUploadIcon">＋</span>
+
+      <strong>Add photo or video</strong>
+
+      <small>
+        Photos and videos up to 50 MB
+      </small>
+    </label>
+
+    <div
+      id="createMediaPreview"
+      class="createMediaPreview hidden"
+    ></div>
+
+  </div>
+
+  <!-- CAPTION -->
+  <div class="captionSection">
+
+    <textarea
+      id="createCaption"
+      maxlength="2200"
+      placeholder="What's happening on Vidora?"
+      oninput="updateCaptionCount()"
+    ></textarea>
+
+    <div class="captionTools">
+
+      <span id="createCaptionCount">
+        0 / 2200
+      </span>
+
+      <button
+        type="button"
+        onclick="insertCreateHashtag()"
       >
+        # Hashtag
+      </button>
 
-        <div class="createCard">
+      <button
+        type="button"
+        onclick="insertCreateMention()"
+      >
+        @ Mention
+      </button>
 
-          <h2>
-            Create a post
-          </h2>
+    </div>
 
-          <textarea
-            id="createCaption"
-            placeholder="Write a caption..."
-          ></textarea>
+  </div>
 
-          <input
-            id="createFile"
-            type="file"
-            accept="image/*,video/*"
-          >
+  <!-- ADVANCED OPTIONS -->
+  <div class="createOptions">
 
-          <button
-            type="button"
-            onclick="publishFromCreate()"
-          >
-            🚀 Publish to Vidora
-          </button>
+    <button
+      type="button"
+      class="createOption"
+      onclick="openVidoraSounds()"
+    >
+      <span>🎵</span>
 
-          <p id="createMessage"></p>
+      <div>
+        <strong>Add Sound</strong>
+        <small>Choose music for your post</small>
+      </div>
 
-        </div>
+      <span>›</span>
+    </button>
 
-      </section>
+
+    <button
+      type="button"
+      class="createOption"
+      onclick="openVidoraTrendingSounds()"
+    >
+      <span>🔥</span>
+
+      <div>
+        <strong>Trending Sounds</strong>
+        <small>Discover what's trending</small>
+      </div>
+
+      <span>›</span>
+    </button>
+
+
+    <button
+      type="button"
+      class="createOption"
+      onclick="openVidoraMentions()"
+    >
+      <span>👤</span>
+
+      <div>
+        <strong>Mention People</strong>
+        <small>@mention Vidora users</small>
+      </div>
+
+      <span>›</span>
+    </button>
+
+
+    <button
+      type="button"
+      class="createOption"
+      onclick="openVidoraTags()"
+    >
+      <span>👥</span>
+
+      <div>
+        <strong>Tag People</strong>
+        <small>Tag followers and friends</small>
+      </div>
+
+      <span>›</span>
+    </button>
+
+  </div>
+
+  <!-- SELECTED SOUND -->
+  <div
+    id="selectedVidoraSound"
+    class="selectedSound hidden"
+  >
+
+    <span>🎵</span>
+
+    <div>
+      <strong id="selectedSoundName">
+        No sound selected
+      </strong>
+
+      <small id="selectedSoundArtist">
+        Vidora Sound
+      </small>
+    </div>
+
+    <button
+      type="button"
+      onclick="removeVidoraSound()"
+    >
+      ×
+    </button>
+
+  </div>
+
+  <!-- TAGGED USERS -->
+  <div
+    id="createTaggedUsers"
+    class="taggedUsers hidden"
+  ></div>
+
+  <!-- VISIBILITY -->
+  <div class="postVisibility">
+
+    <span>🌐</span>
+
+    <div>
+      <strong>Post visibility</strong>
+
+      <small>
+        Choose who can see this post
+      </small>
+    </div>
+
+    <select id="createVisibility">
+
+      <option value="public">
+        Everyone
+      </option>
+
+      <option value="followers">
+        Followers
+      </option>
+
+      <option value="private">
+        Only me
+      </option>
+
+    </select>
+
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="createActions">
+
+    <button
+      type="button"
+      class="secondary"
+      onclick="saveVidoraDraft()"
+    >
+      💾 Save Draft
+    </button>
+
+    <button
+      type="button"
+      class="publishButton"
+      onclick="createPostAdvanced()"
+    >
+      🚀 Publish to Vidora
+    </button>
+
+  </div>
+
+  <p id="createMessage"></p>
+
+</div>
 
 
       <!-- =========================
