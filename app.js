@@ -4289,3 +4289,150 @@ document.addEventListener("DOMContentLoaded", function() {
   interactiveAvatarEnabled = true;
   showInteractiveAvatar();
 });
+/* =========================================
+   VIDORA ADVANCED DISCOVER SYSTEM
+========================================= */
+
+let vidoraDiscoverFilter = "for-you";
+
+async function loadVidoraDiscover(filter = "for-you") {
+  const results = document.getElementById("discoverResults");
+
+  if (!results) {
+    console.error("Vidora Discover: discoverResults not found");
+    return;
+  }
+
+  vidoraDiscoverFilter = filter;
+
+  results.innerHTML = `
+    <div class="loading">
+      Loading ${filter.replace("-", " ")}...
+    </div>
+  `;
+
+  try {
+    let query = supabaseClient
+      .from("posts")
+      .select(`
+        id,
+        user_id,
+        media_url,
+        media_type,
+        caption,
+        created_at
+      `);
+
+    /*
+      Discover sorting.
+
+      These are safe starting points because your
+      current posts table already contains created_at.
+    */
+
+    if (filter === "fresh") {
+      query = query.order("created_at", { ascending: false });
+    } else {
+      // For now, Discover starts with recent posts.
+      // Engagement-based ranking will be added next.
+      query = query.order("created_at", { ascending: false });
+    }
+
+    const { data, error } = await query.limit(30);
+
+    if (error) {
+      console.error("DISCOVER ERROR:", error);
+
+      results.innerHTML = `
+        <div class="loading">
+          Couldn't load Discover right now.
+        </div>
+      `;
+
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      results.innerHTML = `
+        <div class="loading">
+          No posts found yet.
+        </div>
+      `;
+
+      return;
+    }
+
+    results.innerHTML = "";
+
+    data.forEach(post => {
+      const card = document.createElement("div");
+
+      card.className = "postCard discoverPostCard";
+
+      const media =
+        post.media_type === "video"
+          ? `
+            <video
+              src="${post.media_url}"
+              controls
+              playsinline
+              preload="metadata"
+            ></video>
+          `
+          : `
+            <img
+              src="${post.media_url}"
+              alt="Vidora post"
+              loading="lazy"
+            >
+          `;
+
+      card.innerHTML = `
+        <div class="postMedia">
+          ${media}
+        </div>
+
+        <div class="postContent">
+          <div class="postCaption">
+            ${escapeHtml(post.caption || "")}
+          </div>
+
+          <div class="discoverMeta">
+            <span>🔥 Vidora</span>
+            <span>${new Date(post.created_at).toLocaleDateString()}</span>
+          </div>
+        </div>
+      `;
+
+      results.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("DISCOVER EXCEPTION:", error);
+
+    results.innerHTML = `
+      <div class="loading">
+        Something went wrong while loading Discover.
+      </div>
+    `;
+  }
+}
+document.addEventListener("click", function (event) {
+
+  const button = event.target.closest(".trend-filter");
+
+  if (!button) return;
+
+  const filter = button.dataset.filter;
+
+  if (!filter) return;
+
+  document.querySelectorAll(".trend-filter").forEach(btn => {
+    btn.classList.remove("active");
+  });
+
+  button.classList.add("active");
+
+  loadVidoraDiscover(filter);
+
+});
