@@ -1969,52 +1969,18 @@ async function loadProfile() {
       );
 
     if (avatar) {
+  renderProfileAvatar(avatar, data.avatar_url, data.display_name);
+}
+  avatar.innerHTML = "";
 
-      avatar.innerHTML = "";
-
-      if (data.avatar_url) {
-
-        const image =
-          document.createElement("img");
-
-        image.src =
-          data.avatar_url;
-
-        image.alt =
-          data.display_name ||
-          "Vidora profile picture";
-
-        image.className =
-          "profileAvatarImage";
-
-        image.onerror =
-          function() {
-
-            avatar.innerHTML =
-              "<span>V</span>";
-
-          };
-
-        avatar.appendChild(image);
-
-      } else {
-
-        const letter =
-          document.createElement("span");
-
-        letter.textContent =
-          (
-            data.display_name ||
-            "V"
-          )
-            .charAt(0)
-            .toUpperCase();
-
-        avatar.appendChild(letter);
-
-      }
-
-    }
+  if (data.avatar_url) {
+    // ... existing image code
+  } else {
+    const letter = document.createElement("span");
+    letter.textContent = (data.display_name || "V").charAt(0).toUpperCase();
+    avatar.appendChild(letter);
+  }
+}
 
 
     /* -----------------------------------------------------
