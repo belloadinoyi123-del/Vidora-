@@ -4440,42 +4440,130 @@ document.addEventListener("click", function (event) {
    VIDORA CREATE MEDIA PREVIEW
 ========================================================= */
 
-function previewCreateMedia(event) {
-  const file = event.target.files?.[0];
-  const preview = document.getElementById("createMediaPreview");
+async function createPostAdvanced() {
+  const fileInput = document.getElementById("createFile");
+  const captionInput = document.getElementById("createCaption");
+  const message = document.getElementById("createMessage");
+  const button = document.querySelector(
+    '.publishButton[onclick="createPostAdvanced()"]'
+  );
 
-  if (!preview || !file) return;
+  if (!currentUser) {
+    setMessage(
+      "createMessage",
+      "Please log in before publishing."
+    );
+    return;
+  }
+
+  const file = fileInput?.files?.[0];
+
+  if (!file) {
+    setMessage(
+      "createMessage",
+      "Please select a photo or video."
+    );
+    return;
+  }
 
   if (
     !file.type.startsWith("image/") &&
     !file.type.startsWith("video/")
   ) {
-    preview.innerHTML = "";
-    preview.classList.add("hidden");
+    setMessage(
+      "createMessage",
+      "Please select an image or video."
+    );
     return;
   }
 
-  const mediaUrl = URL.createObjectURL(file);
-
-  preview.innerHTML = "";
-
-  if (file.type.startsWith("video/")) {
-    const video = document.createElement("video");
-
-    video.src = mediaUrl;
-    video.controls = true;
-    video.playsInline = true;
-    video.preload = "metadata";
-
-    preview.appendChild(video);
-  } else {
-    const image = document.createElement("img");
-
-    image.src = mediaUrl;
-    image.alt = "Post preview";
-
-    preview.appendChild(image);
+  if (file.size > 50 * 1024 * 1024) {
+    setMessage(
+      "createMessage",
+      "Media must be 50 MB or smaller."
+    );
+    return;
   }
 
-  preview.classList.remove("hidden");
+  const caption =
+    captionInput?.value.trim() || "";
+
+  try {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Publishing...";
+    }
+
+    setMessage(
+      "createMessage",
+      "Uploading your post..."
+    );
+
+    /*
+      Use Vidora's existing tested createPost()
+      upload/database system.
+    */
+    const result = await createPost(
+      file,
+      caption
+    );
+
+    if (!result || !result.success) {
+      setMessage(
+        "createMessage",
+        result?.message ||
+          "Could not publish your post."
+      );
+      return;
+    }
+
+    setMessage(
+      "createMessage",
+      "Post published successfully! 🚀",
+      true
+    );
+
+    fileInput.value = "";
+
+    if (captionInput) {
+      captionInput.value = "";
+    }
+
+    const preview =
+      document.getElementById(
+        "createMediaPreview"
+      );
+
+    if (preview) {
+      preview.innerHTML = "";
+      preview.classList.add("hidden");
+    }
+
+    await loadFeed();
+
+    setTimeout(function () {
+      showPage("home");
+    }, 800);
+
+  } catch (error) {
+
+    console.error(
+      "ADVANCED CREATE POST ERROR:",
+      error
+    );
+
+    setMessage(
+      "createMessage",
+      error.message ||
+        "Could not publish your post."
+    );
+
+  } finally {
+
+    if (button) {
+      button.disabled = false;
+      button.textContent =
+        "🚀 Publish to Vidora";
+    }
+  }
 }
