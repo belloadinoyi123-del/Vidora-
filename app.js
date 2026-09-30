@@ -863,68 +863,19 @@ function getSelectedVidoraAvatar() {
    VIDORA AVATAR SYSTEM
    ========================================================= */
 
-const VIDORA_AVATARS = {
-  nova: {
-    id: "nova",
-    name: "Nova",
-    image: "avatars/nova.png"
-  },
 
-  zeno: {
-    id: "zeno",
-    name: "Zeno",
-    image: "avatars/zeno.png"
-  },
-
-  luna: {
-    id: "luna",
-    name: "Luna",
-    image: "avatars/luna.png"
-  },
-
-  kai: {
-    id: "kai",
-    name: "Kai",
-    image: "avatars/kai.png"
-  },
-
-  sage: {
-    id: "sage",
-    name: "Sage",
-    image: "avatars/sage.png"
-  },
-
-  rex: {
-    id: "rex",
-    name: "Rex",
-    image: "avatars/rex.png"
-  },
-
-  ivy: {
-    id: "ivy",
-    name: "Ivy",
-    image: "avatars/ivy.png"
-  },
-
-  orion: {
-    id: "orion",
-    name: "Orion",
-    image: "avatars/orion.png"
-  },
-
-  pixel: {
-    id: "pixel",
-    name: "Pixel",
-    image: "avatars/pixel.png"
-  },
-
-  vexa: {
-    id: "vexa",
-    name: "Vexa",
-    image: "avatars/vexa.png"
-  }
+    const VIDORA_AVATARS = {
+  nova:  { id: "nova",  name: "Nova",  image: "./nova.png" },
+  kai:   { id: "kai",   name: "Kai",   image: "./kai.png" },
+  luna:  { id: "luna",  name: "Luna",  image: "./luna.png" },
+  ivy:   { id: "ivy",   name: "Ivy",   image: "./ivy.png" },
+  orion: { id: "orion", name: "Orion", image: "./orion.png" },
+  zeno:  { id: "zeno",  name: "Zeno",  image: "./zeno.png" },
+  sage:  { id: "sage",  name: "Sage",  image: "./sage.png" },
+  rex:   { id: "rex",   name: "Rex",   image: "./rex.png" },
+  pixel: { id: "pixel", name: "Pixel", image: "./pixel.png" },
+  vexa:  { id: "vexa",  name: "Vexa",  image: "./vexa.png" }
 };
-
 
 /* =========================================================
    GET SELECTED AVATAR
