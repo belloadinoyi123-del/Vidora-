@@ -907,6 +907,7 @@ function getVidoraAvatarImage(name) {
    SELECT AVATAR
    ========================================================= */
 
+
 function selectVidoraAvatar(name) {
   const key = String(name || "").toLowerCase().trim();
 
@@ -915,17 +916,15 @@ function selectVidoraAvatar(name) {
     return;
   }
 
-  // Save selection
   localStorage.setItem("vidoraSelectedAvatar", key);
   localStorage.setItem("vidoraAvatarMode", "preset");
 
-  // Update hidden input
   const hiddenInput = document.getElementById("selectedVidoraAvatar");
   if (hiddenInput) {
     hiddenInput.value = key;
   }
 
-  // Highlight selected avatar buttons
+  // Highlight buttons
   document.querySelectorAll(".vidoraAvatar").forEach(function(btn) {
     const btnKey = String(btn.dataset.avatar || "").toLowerCase();
     btn.classList.toggle("selected", btnKey === key);
@@ -933,10 +932,10 @@ function selectVidoraAvatar(name) {
 
   const info = getVidoraAvatarInfo(key);
 
-  // Update the small preview
+  // Update small preview
   updateAvatarPreview(info.image, info.name);
 
-  // ✅ ALSO update the main profile avatar immediately
+  // Update the main profile avatar immediately
   const profileAvatar = document.getElementById("profileAvatar");
   if (profileAvatar) {
     renderDefaultAvatar(profileAvatar, info.name);
@@ -944,7 +943,6 @@ function selectVidoraAvatar(name) {
 
   console.log("Vidora avatar selected:", key);
 }
-
 
 /* =========================================================
    UPDATE AVATAR PREVIEW
