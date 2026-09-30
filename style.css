@@ -1751,4 +1751,49 @@ body.lightMode .avatarThemeActions button:last-child {
   background: transparent !important;
   transform: translateY(-50%);
 }
+/* =========================================
+   VIDORA ADVANCED TRENDING FILTERS
+========================================= */
 
+.vidora-trending-filters {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 12px 2px 14px;
+  margin: 8px 0 12px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.vidora-trending-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.trend-filter {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: #11111a;
+  color: #aaa;
+  padding: 9px 15px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.trend-filter:hover {
+  transform: translateY(-1px);
+}
+
+.trend-filter.active {
+  background: linear-gradient(135deg, #8b5cf6, #ff2d75);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 5px 18px rgba(139, 92, 246, 0.25);
+}
+
+.trend-filter:active {
+  transform: scale(0.96);
+}
