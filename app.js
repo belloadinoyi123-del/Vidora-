@@ -4436,3 +4436,46 @@ document.addEventListener("click", function (event) {
   loadVidoraDiscover(filter);
 
 });
+/* =========================================================
+   VIDORA CREATE MEDIA PREVIEW
+========================================================= */
+
+function previewCreateMedia(event) {
+  const file = event.target.files?.[0];
+  const preview = document.getElementById("createMediaPreview");
+
+  if (!preview || !file) return;
+
+  if (
+    !file.type.startsWith("image/") &&
+    !file.type.startsWith("video/")
+  ) {
+    preview.innerHTML = "";
+    preview.classList.add("hidden");
+    return;
+  }
+
+  const mediaUrl = URL.createObjectURL(file);
+
+  preview.innerHTML = "";
+
+  if (file.type.startsWith("video/")) {
+    const video = document.createElement("video");
+
+    video.src = mediaUrl;
+    video.controls = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+
+    preview.appendChild(video);
+  } else {
+    const image = document.createElement("img");
+
+    image.src = mediaUrl;
+    image.alt = "Post preview";
+
+    preview.appendChild(image);
+  }
+
+  preview.classList.remove("hidden");
+}
