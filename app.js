@@ -1843,10 +1843,12 @@ const { data, error } = await supabaseClient
     }
   }
 }
-/* =========================================================
-   9. LOAD PROFILE
-   ========================================================= */
 
+
+
+/* =========================================================
+  9. LOAD PROFILE
+   ========================================================= */
 
 async function loadProfile() {
   if (!currentUser) {
@@ -1865,7 +1867,7 @@ async function loadProfile() {
       return;
     }
 
-    // No profile yet → show setup
+    // No profile yet → show setup form
     if (!data) {
       showProfileSetup();
       return;
@@ -1897,7 +1899,7 @@ async function loadProfile() {
       emailEl.textContent = currentUser.email || "";
     }
 
-    // ---------- Profile Picture (Correct Version) ----------
+    // ---------- Profile Picture ----------
     const avatarEl = document.getElementById("profileAvatar");
     if (avatarEl) {
       if (data.avatar_url && !data.avatar_url.includes("dicebear.com")) {
@@ -1908,7 +1910,6 @@ async function loadProfile() {
         img.className = "profileAvatarImage";
 
         img.onerror = function () {
-          // Fallback to selected Vidora avatar if image fails
           renderDefaultAvatar(avatarEl, data.display_name);
         };
 
@@ -1936,7 +1937,7 @@ async function loadProfile() {
       bioInput.value = data.bio || "";
     }
 
-    // Hide profile setup if profile already exists
+    // Hide setup form
     const setup = document.getElementById("profileSetup");
     if (setup) {
       setup.classList.add("hidden");
@@ -1947,182 +1948,9 @@ async function loadProfile() {
   }
 }
 
-    /* -----------------------------------------------------
-       NO PROFILE YET
-       ----------------------------------------------------- */
 
-    if (!data) {
+    
 
-      showProfileSetup();
-
-      return;
-    }
-
-
-    /* -----------------------------------------------------
-       DISPLAY NAME
-       ----------------------------------------------------- */
-
-    const displayName =
-      document.getElementById(
-        "profileDisplayName"
-      );
-
-    if (displayName) {
-
-      displayName.textContent =
-        data.display_name ||
-        "Vidora User";
-
-    }
-
-
-    /* -----------------------------------------------------
-       USERNAME
-       ----------------------------------------------------- */
-
-    const username =
-      document.getElementById(
-        "profileUsername"
-      );
-
-    if (username) {
-
-      username.textContent =
-        data.username
-          ? "@" + data.username
-          : "Set up your username";
-
-    }
-
-
-    /* -----------------------------------------------------
-       BIO
-       ----------------------------------------------------- */
-
-    const bio =
-      document.getElementById(
-        "profileBio"
-      );
-
-    if (bio) {
-
-      bio.textContent =
-        data.bio ||
-        "No bio yet.";
-
-    }
-
-
-    /* -----------------------------------------------------
-       EMAIL
-       ----------------------------------------------------- */
-
-    const email =
-      document.getElementById(
-        "profileEmail"
-      );
-
-    if (email) {
-
-      email.textContent =
-        currentUser.email || "";
-
-    }
-
-
-    /* -----------------------------------------------------
-       PROFILE PICTURE
-       ----------------------------------------------------- */
-
-    const avatar =
-      document.getElementById(
-        "profileAvatar"
-      );
-
-    if (avatar) {
-  renderProfileAvatar(avatar, data.avatar_url, data.display_name);
-}
-  avatar.innerHTML = "";
-
-  if (data.avatar_url) {
-    // ... existing image code
-  } else {
-    const letter = document.createElement("span");
-    letter.textContent = (data.display_name || "V").charAt(0).toUpperCase();
-    avatar.appendChild(letter);
-  }
-}
-
-
-    /* -----------------------------------------------------
-       FILL EDIT PROFILE FORM
-       ----------------------------------------------------- */
-
-    const displayInput =
-      document.getElementById(
-        "profileDisplayNameInput"
-      );
-
-    if (displayInput) {
-
-      displayInput.value =
-        data.display_name || "";
-
-    }
-
-
-    const usernameInput =
-      document.getElementById(
-        "profileUsernameInput"
-      );
-
-    if (usernameInput) {
-
-      usernameInput.value =
-        data.username || "";
-
-    }
-
-
-    const bioInput =
-      document.getElementById(
-        "profileBioInput"
-      );
-
-    if (bioInput) {
-
-      bioInput.value =
-        data.bio || "";
-
-    }
-
-
-    /* -----------------------------------------------------
-       HIDE SETUP AFTER PROFILE EXISTS
-       ----------------------------------------------------- */
-
-    const setup =
-      document.getElementById(
-        "profileSetup"
-      );
-
-    if (setup) {
-
-      setup.classList.add("hidden");
-
-    }
-
-  } catch (error) {
-
-    console.error(
-      "LOAD PROFILE EXCEPTION:",
-      error
-    );
-
-  }
-
-}
 
     
 
