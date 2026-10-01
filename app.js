@@ -128,7 +128,372 @@ function formatDate(dateString) {
   });
 }
 
+/* =========================================================
+   VIDORA AVATAR SYSTEM (CLEAN VERSION)
+   ========================================================= */
 
+const VIDORA_AVATARS = {
+  nova:  { id: "nova",  name: "Nova",  image: "./nova.png" },
+  kai:   { id: "kai",   name: "Kai",   image: "./kai.png" },
+  luna:  { id: "luna",  name: "Luna",  image: "./luna.png" },
+  ivy:   { id: "ivy",   name: "Ivy",   image: "./ivy.png" },
+  orion: { id: "orion", name: "Orion", image: "./orion.png" },
+  zeno:  { id: "zeno",  name: "Zeno",  image: "./zeno.png" },
+  sage:  { id: "sage",  name: "Sage",  image: "./sage.png" },
+  rex:   { id: "rex",   name: "Rex",   image: "./rex.png" },
+  pixel: { id: "pixel", name: "Pixel", image: "./pixel.png" },
+  vexa:  { id: "vexa",  name: "Vexa",  image: "./vexa.png" }
+};
+
+let interactiveAvatarEnabled = localStorage.getItem("vidoraInteractiveAvatar") === "true";
+
+/* ---------- Helper Functions ---------- */
+
+function getSelectedVidoraAvatar() {
+  const saved = localStorage.getItem("vidoraSelectedAvatar");
+  if (saved && VIDORA_AVATARS[saved]) {
+    return saved;
+  }
+  return "nova";
+}
+
+function getVidoraAvatarInfo(name) {
+  const key = String(name || "").toLowerCase().trim();
+  return VIDORA_AVATARS[key] || VIDORA_AVATARS.nova;
+}
+
+function getVidoraAvatarImage(name) {
+  return getVidoraAvatarInfo(name).image;
+}
+
+/* ---------- Select Avatar ---------- */
+
+function selectVidoraAvatar(name) {
+  const key = String(name || "").toLowerCase().trim();
+
+  if (!VIDORA_AVATARS[key]) {
+    console.warn("Unknown avatar:", name);
+    return;
+  }
+
+  localStorage.setItem("vidoraSelectedAvatar", key);
+  localStorage.setItem("vidoraAvatarMode", "preset");
+
+  // Update hidden input
+  const hidden = document.getElementById("selectedVidoraAvatar");
+  if (hidden) hidden.value = key;
+
+  // Highlight buttons
+  document.querySelectorAll(".vidoraAvatar").forEach(btn => {
+    const btnKey = String(btn.dataset.avatar || "").toLowerCase();
+    btn.classList.toggle("selected", btnKey === key);
+  });
+
+  const info = getVidoraAvatarInfo(key);
+
+  // Update preview
+  updateAvatarPreview(info.image, info.name);
+
+  // Update main profile picture immediately
+  const profileAvatar = document.getElementById("profileAvatar");
+  if (profileAvatar) {
+    renderDefaultAvatar(profileAvatar, info.name);
+  }
+
+  console.log("Avatar selected:", key);
+}
+
+/* ---------- Preview & Render ---------- */
+
+function updateAvatarPreview(imageUrl, name) {
+  const preview = document.getElementById("profileAvatarPreview");
+  if (!preview) return;
+
+  preview.innerHTML = "";
+  const img = document.createElement("img");
+  img.src = imageUrl;
+  img.alt = name || "Avatar";
+  img.className = "profileAvatarImage";
+  img.onerror = () => {
+    img.src = "./nova.png";
+  };
+  preview.appendChild(img);
+}
+
+function renderDefaultAvatar(container, displayName) {
+  if (!container) return;
+
+  container.innerHTML = "";
+  const info = getVidoraAvatarInfo(getSelectedVidoraAvatar());
+
+  const img = document.createElement("img");
+  img.src = info.image;
+  img.alt = displayName || info.name;
+  img.className = "profileAvatarImage";
+
+  img.onerror = function () {
+    container.innerHTML = `<span>${(displayName || "V").charAt(0).toUpperCase()}</span>`;
+  };
+
+  container.appendChild(img);
+}
+
+function renderProfileAvatar(container, avatarUrl, displayName) {
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (avatarUrl && !avatarUrl.includes("dicebear.com")) {
+    const img = document.createElement("img");
+    img.src = avatarUrl;
+    img.alt = displayName || "Profile";
+    img.className = "profileAvatarImage";
+    img.onerror = () => renderDefaultAvatar(container, displayName);
+    container.appendChild(img);
+  } else {
+    renderDefaultAvatar(container, displayName);
+  }
+}
+
+/* ---------- Interactive Avatar ---------- */
+
+async function showInteractiveAvatar() {
+  if (!interactiveAvatarEnabled) return;
+
+  const box = document.getElementById("interactiveAvatar");
+  const img = document.getElementById("interactiveAvatarImage");
+  if (!box || !img) return;
+
+  let avatarUrl = getVidoraAvatarImage(getSelectedVidoraAvatar());
+  let displayName = "Vidora User";
+
+  if (currentUser) {
+    try {
+      const { data } = await supabaseClient
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+      if (data) {
+        displayName = data.display_name || displayName;
+        if (data.avatar_url && !data.avatar_url.includes("dicebear.com")) {
+          avatarUrl = data.avatar_url;
+        }
+      }
+    } catch (err) {
+      console.error("Avatar load error:", err);
+    }
+  }
+
+  img.src = avatarUrl;
+  img.onerror = () => {
+    img.src = "./nova.png";
+  };
+
+  // Greeting
+  const greetingEl = document.getElementById("avatarGreeting");
+  const messageEl = document.getElementById("avatarMessage");
+
+  if (greetingEl) {
+    const hour = new Date().getHours();
+    let greeting = "Hello";
+    if (hour < 12) greeting = "Good morning";
+    else if (hour < 18) greeting = "Good afternoon";
+    else greeting = "Good evening";
+
+    greetingEl.textContent = `${greeting}, ${displayName}!`;
+  }
+
+  if (messageEl) {
+    messageEl.textContent = "I'm your Vidora assistant. How can I help you?";
+  }
+
+  box.classList.remove("hidden");
+}
+
+function closeInteractiveAvatar() {
+  const box = document.getElementById("interactiveAvatar");
+  if (box) box.classList.add("hidden");
+}
+
+function toggleInteractiveAvatar(enabled) {
+  interactiveAvatarEnabled = enabled;
+  localStorage.setItem("vidoraInteractiveAvatar", enabled ? "true" : "false");
+
+  if (enabled) {
+    showInteractiveAvatar();
+  } else {
+    closeInteractiveAvatar();
+  }
+}
+
+/* ---------- Avatar Assistant (Chat & Actions) ---------- */
+
+function avatarReact() {
+  const messages = [
+    "Hey! Need help?",
+    "I'm here for you 🚀",
+    "Want me to guide you?",
+    "Tap Chat to talk to me!",
+    "I can change the theme for you too!"
+  ];
+  const msg = messages[Math.floor(Math.random() * messages.length)];
+
+  const messageEl = document.getElementById("avatarMessage");
+  if (messageEl) messageEl.textContent = msg;
+}
+
+function openAvatarChat() {
+  const panel = document.getElementById("avatarChatPanel");
+  if (panel) panel.classList.remove("hidden");
+}
+
+function closeAvatarChat() {
+  const panel = document.getElementById("avatarChatPanel");
+  if (panel) panel.classList.add("hidden");
+}
+
+function sendAvatarMessage() {
+  const input = document.getElementById("avatarChatInput");
+  const messages = document.getElementById("avatarChatMessages");
+  if (!input || !messages) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  // User message
+  const userMsg = document.createElement("div");
+  userMsg.className = "avatarChatMessage avatarUser";
+  userMsg.textContent = text;
+  messages.appendChild(userMsg);
+
+  input.value = "";
+  messages.scrollTop = messages.scrollHeight;
+
+  // Bot reply
+  setTimeout(() => {
+    const reply = getAvatarReply(text);
+    const botMsg = document.createElement("div");
+    botMsg.className = "avatarChatMessage avatarBot";
+    botMsg.textContent = reply;
+    messages.appendChild(botMsg);
+    messages.scrollTop = messages.scrollHeight;
+  }, 600);
+}
+
+function getAvatarReply(text) {
+  const msg = text.toLowerCase();
+
+  // Navigation
+  if (msg.includes("home") || msg.includes("feed")) {
+    showPage("home");
+    closeInteractiveAvatar();
+    return "Taking you to Home 🏠";
+  }
+  if (msg.includes("profile")) {
+    showPage("profile");
+    closeInteractiveAvatar();
+    return "Opening your Profile 👤";
+  }
+  if (msg.includes("create") || msg.includes("post")) {
+    showPage("create");
+    closeInteractiveAvatar();
+    return "Let's create something! ✨";
+  }
+  if (msg.includes("discover") || msg.includes("search")) {
+    showPage("discover");
+    closeInteractiveAvatar();
+    return "Exploring Discover 🔍";
+  }
+
+  // Theme control
+  if (msg.includes("dark") || msg.includes("night mode")) {
+    setVidoraTheme("dark");
+    return "Dark mode enabled 🌙";
+  }
+  if (msg.includes("light") || msg.includes("day mode")) {
+    setVidoraTheme("light");
+    return "Light mode enabled ☀️";
+  }
+  if (msg.includes("theme") || msg.includes("mode")) {
+    const hour = new Date().getHours();
+    if (hour >= 18 || hour < 6) {
+      setVidoraTheme("dark");
+      return "It's getting late — I switched to Dark Mode for you 🌙";
+    } else {
+      setVidoraTheme("light");
+      return "Nice day! Switched to Light Mode ☀️";
+    }
+  }
+
+  // General
+  if (msg.includes("hello") || msg.includes("hi") || msg.includes("hey")) {
+    return "Hey there! 👋 How can I help you on Vidora?";
+  }
+  if (msg.includes("help")) {
+    return "I can take you to Home, Profile, Create, Discover, or change the theme. Just tell me!";
+  }
+  if (msg.includes("thank")) {
+    return "You're welcome! 💜";
+  }
+
+  return "I'm still learning! Try asking me to go somewhere or change the theme.";
+}
+
+/* ---------- Theme Helper ---------- */
+
+function setVidoraTheme(theme) {
+  localStorage.setItem("vidoraTheme", theme);
+  document.body.classList.toggle("lightMode", theme === "light");
+  document.body.classList.toggle("darkMode", theme === "dark");
+}
+
+function loadVidoraTheme() {
+  const saved = localStorage.getItem("vidoraTheme");
+  if (saved) {
+    setVidoraTheme(saved);
+  }
+}
+
+/* ---------- Initialize ---------- */
+
+function initializeVidoraAvatarSystem() {
+  const selected = getSelectedVidoraAvatar();
+  const hidden = document.getElementById("selectedVidoraAvatar");
+  if (hidden) hidden.value = selected;
+
+  // Render avatar choices if container exists
+  const container = document.getElementById("vidoraAvatarChoices");
+  if (container) {
+    container.innerHTML = "";
+    Object.keys(VIDORA_AVATARS).forEach(key => {
+      const avatar = VIDORA_AVATARS[key];
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "vidoraAvatar";
+      btn.dataset.avatar = key;
+      if (key === selected) btn.classList.add("selected");
+
+      btn.innerHTML = `<img src="\( {avatar.image}" alt=" \){avatar.name}"><span>${avatar.name}</span>`;
+      btn.onclick = () => selectVidoraAvatar(key);
+      container.appendChild(btn);
+    });
+  }
+
+  // Load theme
+  loadVidoraTheme();
+
+  // Show interactive avatar if enabled
+  if (interactiveAvatarEnabled) {
+    setTimeout(() => showInteractiveAvatar(), 800);
+  }
+}
+
+// Auto initialize when page loads
+document.addEventListener("DOMContentLoaded", function () {
+  initializeVidoraAvatarSystem();
+});
 /* =========================================================
    4. AUTHENTICATION - SIGN UP
    ========================================================= */
@@ -403,82 +768,6 @@ await loadFeed();
 
 appInitialized = true;
 }
-
-
-        
-
-
-
-  
-
-  
-    
-
-      
-
-    
-
-    
-  
-  
-
-
-
-
-
-
-
-
-
-
-
-
-      
-
-  
-  
-  
-
-
-  
-
-    
-  
-   
-
-
-
-
-
-
-
-
-
-
-
-  
-   
-
-  
-    
-  
-
-  
-
-  
-  
-
-
-   
-
-
-  
-   
-
-
-          
-      
-
 
 /* =========================================================
   9. LOAD PROFILE
