@@ -2641,6 +2641,7 @@ if (deleteButton) {
 
 
 /* Load post counters */
+   
 await updateLikeButton(
   post.id,
   likeButton
