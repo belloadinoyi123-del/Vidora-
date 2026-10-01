@@ -2580,7 +2580,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   28. EXPOSE FUNCTIONS TO HTML
+   VIDORA - HTML FUNCTION EXPORTS
    ========================================================= */
 
 window.signUp = signUp;
@@ -2592,10 +2592,11 @@ window.showpage = showpage;
 
 window.uploadPost = uploadPost;
 window.publishFromCreate = publishFromCreate;
-
 window.searchPosts = searchPosts;
 window.deletePost = deletePost;
 window.deleteComment = deleteComment;
+
+console.log("VIDORA CORE FUNCTIONS READY");
 /* =========================================================
    FIND FRIENDS
    ========================================================= */
