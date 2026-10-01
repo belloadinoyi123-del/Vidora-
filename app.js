@@ -2801,18 +2801,7 @@ window.closeInteractiveAvatar =
 window.avatarReact =
   avatarReact;
 
-/* Avatar quick actions */
-window.avatarGoHome =
-  avatarGoHome;
 
-window.avatarGoProfile =
-  avatarGoProfile;
-
-window.avatarGoCreate =
-  avatarGoCreate;
-
-window.avatarGoTrending =
-  avatarGoTrending;
 
 /* Avatar system */
 window.initializeVidoraAvatarSystem =
