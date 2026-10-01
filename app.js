@@ -397,9 +397,7 @@ async function showApp() {
 
 await loadProfile();
 
-/* Launch personalized avatar welcome */
 
-await launchAvatarWelcome();
 
 await loadFeed();
 
