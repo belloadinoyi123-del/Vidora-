@@ -2635,13 +2635,19 @@ if (deleteButton) {
   /* Load like state */
 
   await updateLikeButton(
-    post.id,
-    likeButton
-  );
+  post.id,
+  likeButton
+);
 
 
-  return article;
-}
+/* Load post counters */
+await loadPostCounters(
+  post.id,
+  post.user_id
+);
+
+
+return article;
 
 
 /* =========================================================
