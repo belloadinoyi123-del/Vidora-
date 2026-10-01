@@ -475,7 +475,7 @@ function initializeVidoraAvatarSystem() {
       btn.dataset.avatar = key;
       if (key === selected) btn.classList.add("selected");
 
-      btn.innerHTML = `<img src="\( {avatar.image}" alt=" \){avatar.name}"><span>${avatar.name}</span>`;
+     btn.innerHTML = `<img src="\( {avatar.image}" alt=" \){avatar.name}"><span>${avatar.name}</span>`; 
       btn.onclick = () => selectVidoraAvatar(key);
       container.appendChild(btn);
     });
