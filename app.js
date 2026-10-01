@@ -2753,16 +2753,11 @@ window.sendAvatarMessage = sendAvatarMessage;
 window.showInteractiveAvatar = showInteractiveAvatar;
 document.addEventListener(
   "DOMContentLoaded",
-  function() {
-    initializeInteractiveAvatar();
+  
   }
 );
-document.addEventListener(
-  "DOMContentLoaded",
-  function() {
 
-  }
-);
+
 
 /* =========================================================
    VIDORA - GLOBAL FUNCTION EXPORTS
