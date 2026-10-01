@@ -2641,11 +2641,10 @@ if (deleteButton) {
 
 
 /* Load post counters */
-await loadPostCounters(
+await updateLikeButton(
   post.id,
-  post.user_id
+  likeButton
 );
-
 
 return article;
 
