@@ -495,22 +495,7 @@ function initializeVidoraAvatarSystem() {
 }
   
 
-  // Load theme
-  loadVidoraTheme();
-
-  // Show interactive avatar if enabled
-  if (interactiveAvatarEnabled) {
-    setTimeout(() => showInteractiveAvatar(), 800);
-  }
-}
-  // Load theme
-  loadVidoraTheme();
-
-  // Show interactive avatar if enabled
-  if (interactiveAvatarEnabled) {
-    setTimeout(() => showInteractiveAvatar(), 800);
-  }
-}
+  
 
 // Auto initialize when page loads
 document.addEventListener("DOMContentLoaded", function () {
