@@ -464,23 +464,36 @@ function initializeVidoraAvatarSystem() {
   const hidden = document.getElementById("selectedVidoraAvatar");
   if (hidden) hidden.value = selected;
 
-  // Render avatar choices if container exists
   const container = document.getElementById("vidoraAvatarChoices");
   if (container) {
     container.innerHTML = "";
-    Object.keys(VIDORA_AVATARS).forEach(key => {
+    Object.keys(VIDORA_AVATARS).forEach(function(key) {
       const avatar = VIDORA_AVATARS[key];
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "vidoraAvatar";
       btn.dataset.avatar = key;
-      if (key === selected) btn.classList.add("selected");
+      if (key === selected) {
+        btn.classList.add("selected");
+      }
 
-      btn.innerHTML = `<img src="\( {avatar.image}" alt=" \){avatar.name}"><span>${avatar.name}</span>`;
-      btn.onclick = () => selectVidoraAvatar(key);
+      btn.innerHTML = '<img src="' + avatar.image + '" alt="' + avatar.name + '"><span>' + avatar.name + '</span>';
+      btn.onclick = function() {
+        selectVidoraAvatar(key);
+      };
       container.appendChild(btn);
     });
   }
+
+  loadVidoraTheme();
+
+  if (interactiveAvatarEnabled) {
+    setTimeout(function() {
+      showInteractiveAvatar();
+    }, 800);
+  }
+}
+  
 
   // Load theme
   loadVidoraTheme();
