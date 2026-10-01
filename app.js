@@ -2785,6 +2785,8 @@ window.initializeVidoraAvatarSystem =
 
 window.login = login;
 window.signUp = signUp;
+window.showLoginForm = showLoginForm;
+window.showCreateAccount = showCreateAccount;
 
 console.log("VIDORA AUTH FUNCTIONS READY");
 function showLoginForm() {
