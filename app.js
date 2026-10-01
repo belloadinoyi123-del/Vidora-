@@ -4583,3 +4583,103 @@ async function createPostAdvanced() {
     }
   }
 }
+/* =========================================================
+   VIDORA POST COUNTERS
+========================================================= */
+
+async function loadPostCounters(postId, postOwnerId) {
+  try {
+    // LIKE COUNT
+    const { count: likeCount, error: likeError } =
+      await supabaseClient
+        .from("likes")
+        .select("*", {
+          count: "exact",
+          head: true
+        })
+        .eq("post_id", postId);
+
+    if (likeError) {
+      console.error("LIKE COUNT ERROR:", likeError);
+    }
+
+    // COMMENT COUNT
+    const { count: commentCount, error: commentError } =
+      await supabaseClient
+        .from("comments")
+        .select("*", {
+          count: "exact",
+          head: true
+        })
+        .eq("post_id", postId);
+
+    if (commentError) {
+      console.error("COMMENT COUNT ERROR:", commentError);
+    }
+
+    // Find this post's card
+    const postCard = document.querySelector(
+      `[data-post-id="${postId}"]`
+    );
+
+    if (!postCard) return;
+
+    // Update likes
+    const likeNumber =
+      postCard.querySelector(".likeCount span");
+
+    if (likeNumber) {
+      likeNumber.textContent = likeCount || 0;
+    }
+
+    // Update comments
+    const commentNumber =
+      postCard.querySelector(".commentCount span");
+
+    if (commentNumber) {
+      commentNumber.textContent = commentCount || 0;
+    }
+
+    /*
+      VIEW COUNT
+
+      Only the owner is allowed to request
+      the view records because of the RLS policy.
+    */
+
+    if (
+      currentUser &&
+      currentUser.id === postOwnerId
+    ) {
+      const { count: viewCount, error: viewError } =
+        await supabaseClient
+          .from("post_views")
+          .select("*", {
+            count: "exact",
+            head: true
+          })
+          .eq("post_id", postId);
+
+      if (viewError) {
+        console.error(
+          "VIEW COUNT ERROR:",
+          viewError
+        );
+        return;
+      }
+
+      const viewNumber =
+        postCard.querySelector(".viewCount span");
+
+      if (viewNumber) {
+        viewNumber.textContent = viewCount || 0;
+      }
+    }
+
+  } catch (error) {
+    console.error(
+      "POST COUNTER ERROR:",
+      error
+    );
+  }
+}
