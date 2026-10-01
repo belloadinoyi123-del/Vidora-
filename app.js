@@ -2465,14 +2465,37 @@ async function createPostElement(post) {
         ${escapeHTML(formatDate(post.created_at))}
       </small>
 
-      <div class="postActions">
+      <div class="postStats">
+
+  <span class="likeCount">
+    ❤️ <span>0</span> Likes
+  </span>
+
+  <span class="commentCount">
+    💬 <span>0</span> Comments
+  </span>
+
+  ${
+    currentUser &&
+    currentUser.id === post.user_id
+      ? `
+        <span class="viewCount">
+          👁️ <span>0</span> Views
+        </span>
+      `
+      : ""
+  }
+
+</div>
+
+<div class="postActions">
 
   <button
     type="button"
     class="likeButton"
     data-post-id="${escapeHTML(post.id)}"
   >
-    ❤️ Like
+    🤍 Like
   </button>
 
   <button
