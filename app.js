@@ -2750,9 +2750,6 @@ window.avatarReact = avatarReact;
 window.openAvatarChat = openAvatarChat;
 window.closeAvatarChat = closeAvatarChat;
 window.sendAvatarMessage = sendAvatarMessage;
-window.showInteractiveAvatar = showInteractiveAvatar;
-document.addEventListener(
-  "DOMContentLoaded",
   
   }
 );
