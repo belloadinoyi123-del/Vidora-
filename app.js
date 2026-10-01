@@ -2767,12 +2767,7 @@ document.addEventListener(
 
   }
 );
-document.addEventListener(
-  "DOMContentLoaded",
-  function() {
-    initializeVidoraAvatarSystem();
-  }
-);
+
 /* =========================================================
    VIDORA - GLOBAL FUNCTION EXPORTS
    ========================================================= */
