@@ -2797,9 +2797,7 @@ window.renderVidoraAvatarChoices =
 window.updateAvatarIdentity =
   updateAvatarIdentity;
 
-/* Interactive avatar */
-window.showInteractiveAvatar =
-  showInteractiveAvatar;
+
 
 window.closeInteractiveAvatar =
   closeInteractiveAvatar;
