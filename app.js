@@ -145,8 +145,6 @@ const VIDORA_AVATARS = {
   vexa:  { id: "vexa",  name: "Vexa",  image: "./vexa.png" }
 };
 
-let interactiveAvatarEnabled = localStorage.getItem("vidoraInteractiveAvatar") === "true";
-
 /* ---------- Helper Functions ---------- */
 
 function getSelectedVidoraAvatar() {
