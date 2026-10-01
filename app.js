@@ -412,14 +412,7 @@ appInitialized = true;
 
 function selectVidoraAvatar(name) {
 
-  const hiddenInput =
-    document.getElementById(
-      "selectedVidoraAvatar"
-    );
-
-  if (hiddenInput) {
-    hiddenInput.value = name;
-  }
+  
 
 
   /* Save selection locally */
