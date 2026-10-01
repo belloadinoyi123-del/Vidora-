@@ -2751,8 +2751,8 @@ window.openAvatarChat = openAvatarChat;
 window.closeAvatarChat = closeAvatarChat;
 window.sendAvatarMessage = sendAvatarMessage;
   
-  }
-);
+  
+
 
 
 
@@ -2770,20 +2770,6 @@ window.selectVidoraAvatar = selectVidoraAvatar;
 window.getSelectedVidoraAvatar = getSelectedVidoraAvatar;
 window.getVidoraAvatarImage = getVidoraAvatarImage;
 window.getVidoraAvatarInfo = getVidoraAvatarInfo;
-
-/* Avatar editor */
-window.handleAvatarUpload = handleAvatarUpload;
-window.useVidoraAvatar = useVidoraAvatar;
-window.resetVidoraAvatar = resetVidoraAvatar;
-window.updateAvatarPreview = updateAvatarPreview;
-window.renderProfileAvatar = renderProfileAvatar;
-window.renderDefaultAvatar = renderDefaultAvatar;
-window.renderVidoraAvatarChoices =
-  renderVidoraAvatarChoices;
-
-/* Avatar identity */
-window.updateAvatarIdentity =
-  updateAvatarIdentity;
 
 
 
