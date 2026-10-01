@@ -2761,10 +2761,6 @@ document.addEventListener(
   "DOMContentLoaded",
   function() {
 
-    loadVidoraTheme();
-
-    initializeInteractiveAvatar();
-
   }
 );
 
@@ -3225,15 +3221,6 @@ async function completeSignup() {
 }
 
 window.completeSignup = completeSignup;
-// TEMPORARY TEST - Remove later
-document.addEventListener("DOMContentLoaded", function() {
-  console.log("Selected avatar:", getSelectedVidoraAvatar());
-  console.log("Avatar image path:", getVidoraAvatarImage(getSelectedVidoraAvatar()));
-  
-  // Force show the interactive avatar
-  interactiveAvatarEnabled = true;
-  showInteractiveAvatar();
-});
 /* =========================================
    VIDORA ADVANCED DISCOVER SYSTEM
 ========================================= */
