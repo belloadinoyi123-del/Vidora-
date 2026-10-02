@@ -483,8 +483,8 @@ function togglePassword(inputId, button) {
    ========================================================= */
 
 async function signUp() {
-  const email = document.getElementById("email")?.value.trim();
-  const password = document.getElementById("password")?.value.trim();
+  const email = document.getElementById("signupEmail")?.value.trim();
+const password = document.getElementById("signupPassword")?.value.trim();
   const message = document.getElementById("authMessage");
   const button = document.getElementById("signUpBtn");
 
