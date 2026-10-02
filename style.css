@@ -813,3 +813,133 @@ body.lightMode .bottomNav {
     height: 380px;
   }
 }
+/* =========================================================
+   CREATE POST: SOUNDS / BEATS / FILTERS
+   ========================================================= */
+
+.createHeader {
+  margin-bottom: 12px;
+}
+
+.createHeader p {
+  color: var(--vidora-muted);
+  margin-top: 4px;
+}
+
+.createTools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.filterChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.filterChip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--vidora-border);
+  color: var(--vidora-muted);
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.filterChip.active {
+  color: white;
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.9), rgba(0, 212, 255, 0.7));
+  border-color: transparent;
+}
+
+.selectedSound {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(124, 92, 255, 0.12);
+  border: 1px solid rgba(124, 92, 255, 0.25);
+  margin-bottom: 12px;
+}
+
+.selectedSound div {
+  flex: 1;
+}
+
+.selectedSound small {
+  display: block;
+  color: var(--vidora-muted);
+}
+
+.createMediaPreview {
+  margin: 10px 0 12px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.createMediaPreview img,
+.createMediaPreview video {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.vidoraSoundPanel {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(720px, 100%);
+  max-height: 55vh;
+  background: var(--vidora-card);
+  border: 1px solid var(--vidora-border);
+  border-radius: 20px 20px 0 0;
+  z-index: 50;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.soundPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--vidora-border);
+}
+
+.soundPanelHeader button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.soundList {
+  overflow-y: auto;
+  max-height: calc(55vh - 58px);
+  padding: 10px;
+}
+
+.soundItem {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--vidora-border);
+  color: white;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.soundItem small {
+  display: block;
+  color: var(--vidora-muted);
+}
