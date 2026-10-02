@@ -2850,7 +2850,39 @@ function showCreateAccount() {
 }
 
 window.showCreateAccount = showCreateAccount;
+   
+/* =========================================================
+   AUTH FORM HELPERS
+   ========================================================= */
 
+function showLoginForm() {
+  const authChoice = document.getElementById("authChoice");
+  const signupForm = document.getElementById("signupForm");
+  const loginForm = document.getElementById("loginForm");
+
+  if (authChoice) authChoice.classList.add("hidden");
+  if (signupForm) signupForm.classList.add("hidden");
+  if (loginForm) loginForm.classList.remove("hidden");
+
+  const message = document.getElementById("authMessage");
+  if (message) message.textContent = "";
+}
+
+function showAuthChoice() {
+  const authChoice = document.getElementById("authChoice");
+  const signupForm = document.getElementById("signupForm");
+  const loginForm = document.getElementById("loginForm");
+
+  if (authChoice) authChoice.classList.remove("hidden");
+  if (signupForm) signupForm.classList.add("hidden");
+  if (loginForm) loginForm.classList.add("hidden");
+
+  const message = document.getElementById("authMessage");
+  if (message) message.textContent = "";
+}
+
+window.showLoginForm = showLoginForm;
+window.showAuthChoice = showAuthChoice;
  /* =========================================================
    VIDORA SIGNUP — STEP 1 VALIDATION
    ========================================================= */
