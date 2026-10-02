@@ -117,20 +117,75 @@
       </section>
 
       <!-- CREATE -->
-      <section id="createScreen" class="screen hidden">
-        <div class="createCard advancedCreateCard">
-          <div class="createHeader">
-            <h2>✨ Create Post</h2>
-            <p>Share something with the Vidora community.</p>
-          </div>
+     <section id="createScreen" class="screen hidden">
+  <div class="createCard advancedCreateCard">
+    <div class="createHeader">
+      <h2>✨ Create Post</h2>
+      <p>Write a caption, add sound, beats, and filters, then publish.</p>
+    </div>
 
-          <input id="createFile" type="file" accept="image/*,video/*">
-          <textarea id="createCaption" maxlength="2200" placeholder="What's happening on Vidora?"></textarea>
+    <!-- Write-up / Caption -->
+    <textarea
+      id="createCaption"
+      maxlength="2200"
+      placeholder="Write something for your post..."
+    ></textarea>
 
-          <button type="button" onclick="publishFromCreate()">🚀 Publish to Vidora</button>
-          <p id="createMessage"></p>
-        </div>
-      </section>
+    <!-- Media upload -->
+    <input
+      id="createFile"
+      type="file"
+      accept="image/*,video/*"
+    >
+
+    <div id="createMediaPreview" class="createMediaPreview"></div>
+
+    <!-- Sounds / Beats -->
+    <div class="createTools">
+      <button type="button" class="secondary" onclick="openVidoraSounds('all')">
+        🎵 Sounds
+      </button>
+      <button type="button" class="secondary" onclick="openVidoraSounds('trending')">
+        🔥 Trending
+      </button>
+      <button type="button" class="secondary" onclick="openVidoraSounds('beats')">
+        🥁 Beats
+      </button>
+      <button type="button" class="secondary" onclick="openVidoraSounds('chill')">
+        🌙 Chill
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div id="vidoraFilterChips" class="filterChips"></div>
+
+    <!-- Selected sound -->
+    <div id="selectedVidoraSound" class="selectedSound hidden">
+      <span>🎵</span>
+      <div>
+        <strong id="selectedSoundName">No sound selected</strong>
+        <small id="selectedSoundArtist">Vidora Sound</small>
+      </div>
+      <button type="button" onclick="removeVidoraSound()">×</button>
+    </div>
+
+    <!-- Publish -->
+    <button type="button" onclick="publishFromCreate()">
+      🚀 Publish to Vidora
+    </button>
+
+    <p id="createMessage"></p>
+  </div>
+</section>
+
+<!-- Sound picker panel -->
+<div id="vidoraSoundPanel" class="vidoraSoundPanel hidden">
+  <div class="soundPanelHeader">
+    <strong>Vidora Sounds</strong>
+    <button type="button" onclick="closeVidoraSounds()">×</button>
+  </div>
+  <div id="vidoraSoundList" class="soundList"></div>
+</div> 
 
       <!-- FRIENDS -->
       <section id="friendsScreen" class="screen hidden">
