@@ -2740,7 +2740,6 @@ console.log(
 );
 window.showAuthScreen = showAuthScreen;
 window.showProfileSetup = showProfileSetup;
-window.saveProfile = saveProfile;
 window.loadProfile = loadProfile;
 window.selectVidoraAvatar = selectVidoraAvatar;
 window.toggleInteractiveAvatar = toggleInteractiveAvatar;
@@ -2762,8 +2761,6 @@ window.sendAvatarMessage = sendAvatarMessage;
 window.showAuthScreen = showAuthScreen;
 window.showProfileSetup = showProfileSetup;
 window.loadProfile = loadProfile;
-window.saveProfile = saveProfile;
-
 window.selectVidoraAvatar = selectVidoraAvatar;
 window.getSelectedVidoraAvatar = getSelectedVidoraAvatar;
 window.getVidoraAvatarImage = getVidoraAvatarImage;
