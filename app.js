@@ -1,28 +1,22 @@
 /* =========================================================
-   VIDORA - COMPLETE APP.JS
+   VIDORA - COMPLETE APP.JS (CLEAN VERSION)
    ========================================================= */
 console.log("VIDORA APP.JS LOADED");
+
 /* =========================================================
    1. SUPABASE CONFIGURATION
    ========================================================= */
 
 const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
 
-const SUPABASE_KEY =
-  "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
-
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    }
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
   }
-);
-
+});
 
 /* =========================================================
    2. GLOBAL STATE
@@ -43,93 +37,51 @@ function getElement(id) {
   return document.getElementById(id);
 }
 
-
 function setMessage(id, message, success = false) {
   const element = getElement(id);
-
   if (!element) return;
-
   element.textContent = message;
-
-  element.style.color = success
-    ? "#4ade80"
-    : "#ff6b6b";
+  element.style.color = success ? "#4ade80" : "#ff6b6b";
 }
-
 
 function clearMessage(id) {
   const element = getElement(id);
-
-  if (element) {
-    element.textContent = "";
-  }
+  if (element) element.textContent = "";
 }
-
 
 function escapeHTML(value) {
   const div = document.createElement("div");
-
   div.textContent = value == null ? "" : String(value);
-
   return div.innerHTML;
 }
 
-
 function getFileExtension(file) {
-  if (!file || !file.name) {
-    return "bin";
-  }
-
+  if (!file || !file.name) return "bin";
   const parts = file.name.split(".");
-
-  if (parts.length < 2) {
-    return "bin";
-  }
-
+  if (parts.length < 2) return "bin";
   return parts.pop().toLowerCase();
 }
 
-
 function createSafeFileName(file) {
   const extension = getFileExtension(file);
-
   let id;
-
-  if (
-    window.crypto &&
-    typeof window.crypto.randomUUID === "function"
-  ) {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
     id = window.crypto.randomUUID();
   } else {
-    id =
-      Date.now().toString() +
-      "-" +
-      Math.random().toString(36).substring(2);
+    id = Date.now().toString() + "-" + Math.random().toString(36).substring(2);
   }
-
   return id + "." + extension;
 }
 
-
 function formatDate(dateString) {
-  if (!dateString) {
-    return "";
-  }
-
+  if (!dateString) return "";
   const date = new Date(dateString);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toLocaleString([], {
-    dateStyle: "medium",
-    timeStyle: "short"
-  });
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
 }
 
 /* =========================================================
-   VIDORA AVATAR SYSTEM (CLEAN VERSION)
+   4. VIDORA AVATAR SYSTEM
    ========================================================= */
 
 const VIDORA_AVATARS = {
@@ -145,13 +97,9 @@ const VIDORA_AVATARS = {
   vexa:  { id: "vexa",  name: "Vexa",  image: "./vexa.png" }
 };
 
-/* ---------- Helper Functions ---------- */
-
 function getSelectedVidoraAvatar() {
   const saved = localStorage.getItem("vidoraSelectedAvatar");
-  if (saved && VIDORA_AVATARS[saved]) {
-    return saved;
-  }
+  if (saved && VIDORA_AVATARS[saved]) return saved;
   return "nova";
 }
 
@@ -164,11 +112,8 @@ function getVidoraAvatarImage(name) {
   return getVidoraAvatarInfo(name).image;
 }
 
-/* ---------- Select Avatar ---------- */
-
 function selectVidoraAvatar(name) {
   const key = String(name || "").toLowerCase().trim();
-
   if (!VIDORA_AVATARS[key]) {
     console.warn("Unknown avatar:", name);
     return;
@@ -177,31 +122,22 @@ function selectVidoraAvatar(name) {
   localStorage.setItem("vidoraSelectedAvatar", key);
   localStorage.setItem("vidoraAvatarMode", "preset");
 
-  // Update hidden input
   const hidden = document.getElementById("selectedVidoraAvatar");
   if (hidden) hidden.value = key;
 
-  // Highlight buttons
-  document.querySelectorAll(".vidoraAvatar").forEach(btn => {
+  document.querySelectorAll(".vidoraAvatar").forEach(function (btn) {
     const btnKey = String(btn.dataset.avatar || "").toLowerCase();
     btn.classList.toggle("selected", btnKey === key);
   });
 
   const info = getVidoraAvatarInfo(key);
-
-  // Update preview
   updateAvatarPreview(info.image, info.name);
 
-  // Update main profile picture immediately
   const profileAvatar = document.getElementById("profileAvatar");
-  if (profileAvatar) {
-    renderDefaultAvatar(profileAvatar, info.name);
-  }
+  if (profileAvatar) renderDefaultAvatar(profileAvatar, info.name);
 
   console.log("Avatar selected:", key);
 }
-
-/* ---------- Preview & Render ---------- */
 
 function updateAvatarPreview(imageUrl, name) {
   const preview = document.getElementById("profileAvatarPreview");
@@ -212,7 +148,7 @@ function updateAvatarPreview(imageUrl, name) {
   img.src = imageUrl;
   img.alt = name || "Avatar";
   img.className = "profileAvatarImage";
-  img.onerror = () => {
+  img.onerror = function () {
     img.src = "./nova.png";
   };
   preview.appendChild(img);
@@ -228,32 +164,34 @@ function renderDefaultAvatar(container, displayName) {
   img.src = info.image;
   img.alt = displayName || info.name;
   img.className = "profileAvatarImage";
-
   img.onerror = function () {
-    container.innerHTML = `<span>${(displayName || "V").charAt(0).toUpperCase()}</span>`;
+    container.innerHTML =
+      "<span>" + (displayName || "V").charAt(0).toUpperCase() + "</span>";
   };
-
   container.appendChild(img);
 }
 
 function renderProfileAvatar(container, avatarUrl, displayName) {
   if (!container) return;
-
   container.innerHTML = "";
 
-  if (avatarUrl && !avatarUrl.includes("dicebear.com")) {
+  if (avatarUrl && !String(avatarUrl).includes("dicebear.com")) {
     const img = document.createElement("img");
     img.src = avatarUrl;
     img.alt = displayName || "Profile";
     img.className = "profileAvatarImage";
-    img.onerror = () => renderDefaultAvatar(container, displayName);
+    img.onerror = function () {
+      renderDefaultAvatar(container, displayName);
+    };
     container.appendChild(img);
   } else {
     renderDefaultAvatar(container, displayName);
   }
 }
 
-/* ---------- Interactive Avatar ---------- */
+/* =========================================================
+   5. INTERACTIVE AVATAR
+   ========================================================= */
 
 async function showInteractiveAvatar() {
   if (!interactiveAvatarEnabled) return;
@@ -285,24 +223,19 @@ async function showInteractiveAvatar() {
   }
 
   img.src = avatarUrl;
-  img.onerror = () => {
+  img.onerror = function () {
     img.src = "./nova.png";
   };
 
-  // Greeting
   const greetingEl = document.getElementById("avatarGreeting");
   const messageEl = document.getElementById("avatarMessage");
+  const hour = new Date().getHours();
+  let greeting = "Hello";
+  if (hour < 12) greeting = "Good morning";
+  else if (hour < 18) greeting = "Good afternoon";
+  else greeting = "Good evening";
 
-  if (greetingEl) {
-    const hour = new Date().getHours();
-    let greeting = "Hello";
-    if (hour < 12) greeting = "Good morning";
-    else if (hour < 18) greeting = "Good afternoon";
-    else greeting = "Good evening";
-
-    greetingEl.textContent = `${greeting}, ${displayName}!`;
-  }
-
+  if (greetingEl) greetingEl.textContent = greeting + ", " + displayName + "!";
   if (messageEl) {
     messageEl.textContent = "I'm your Vidora assistant. How can I help you?";
   }
@@ -316,17 +249,15 @@ function closeInteractiveAvatar() {
 }
 
 function toggleInteractiveAvatar(enabled) {
-  interactiveAvatarEnabled = enabled;
-  localStorage.setItem("vidoraInteractiveAvatar", enabled ? "true" : "false");
+  interactiveAvatarEnabled = !!enabled;
+  localStorage.setItem(
+    "vidoraInteractiveAvatar",
+    interactiveAvatarEnabled ? "true" : "false"
+  );
 
-  if (enabled) {
-    showInteractiveAvatar();
-  } else {
-    closeInteractiveAvatar();
-  }
+  if (interactiveAvatarEnabled) showInteractiveAvatar();
+  else closeInteractiveAvatar();
 }
-
-/* ---------- Avatar Assistant (Chat & Actions) ---------- */
 
 function avatarReact() {
   const messages = [
@@ -337,7 +268,6 @@ function avatarReact() {
     "I can change the theme for you too!"
   ];
   const msg = messages[Math.floor(Math.random() * messages.length)];
-
   const messageEl = document.getElementById("avatarMessage");
   if (messageEl) messageEl.textContent = msg;
 }
@@ -360,7 +290,6 @@ function sendAvatarMessage() {
   const text = input.value.trim();
   if (!text) return;
 
-  // User message
   const userMsg = document.createElement("div");
   userMsg.className = "avatarChatMessage avatarUser";
   userMsg.textContent = text;
@@ -369,21 +298,19 @@ function sendAvatarMessage() {
   input.value = "";
   messages.scrollTop = messages.scrollHeight;
 
-  // Bot reply
-  setTimeout(() => {
+  setTimeout(function () {
     const reply = getAvatarReply(text);
     const botMsg = document.createElement("div");
     botMsg.className = "avatarChatMessage avatarBot";
     botMsg.textContent = reply;
     messages.appendChild(botMsg);
     messages.scrollTop = messages.scrollHeight;
-  }, 600);
+  }, 500);
 }
 
 function getAvatarReply(text) {
-  const msg = text.toLowerCase();
+  const msg = String(text || "").toLowerCase();
 
-  // Navigation
   if (msg.includes("home") || msg.includes("feed")) {
     showPage("home");
     closeInteractiveAvatar();
@@ -404,8 +331,6 @@ function getAvatarReply(text) {
     closeInteractiveAvatar();
     return "Exploring Discover 🔍";
   }
-
-  // Theme control
   if (msg.includes("dark") || msg.includes("night mode")) {
     setVidoraTheme("dark");
     return "Dark mode enabled 🌙";
@@ -418,28 +343,25 @@ function getAvatarReply(text) {
     const hour = new Date().getHours();
     if (hour >= 18 || hour < 6) {
       setVidoraTheme("dark");
-      return "It's getting late — I switched to Dark Mode for you 🌙";
-    } else {
-      setVidoraTheme("light");
-      return "Nice day! Switched to Light Mode ☀️";
+      return "It's getting late — Dark Mode enabled 🌙";
     }
+    setVidoraTheme("light");
+    return "Nice day! Light Mode enabled ☀️";
   }
-
-  // General
   if (msg.includes("hello") || msg.includes("hi") || msg.includes("hey")) {
     return "Hey there! 👋 How can I help you on Vidora?";
   }
   if (msg.includes("help")) {
-    return "I can take you to Home, Profile, Create, Discover, or change the theme. Just tell me!";
+    return "I can take you to Home, Profile, Create, Discover, or change the theme.";
   }
-  if (msg.includes("thank")) {
-    return "You're welcome! 💜";
-  }
+  if (msg.includes("thank")) return "You're welcome! 💜";
 
   return "I'm still learning! Try asking me to go somewhere or change the theme.";
 }
 
-/* ---------- Theme Helper ---------- */
+/* =========================================================
+   6. THEME
+   ========================================================= */
 
 function setVidoraTheme(theme) {
   localStorage.setItem("vidoraTheme", theme);
@@ -449,13 +371,12 @@ function setVidoraTheme(theme) {
 
 function loadVidoraTheme() {
   const saved = localStorage.getItem("vidoraTheme");
-  if (saved) {
-    setVidoraTheme(saved);
-  }
+  if (saved) setVidoraTheme(saved);
 }
 
-/* ---------- Initialize ---------- */
-
+/* =========================================================
+   7. AVATAR INIT
+   ========================================================= */
 
 function initializeVidoraAvatarSystem() {
   const selected = getSelectedVidoraAvatar();
@@ -465,18 +386,24 @@ function initializeVidoraAvatarSystem() {
   const container = document.getElementById("vidoraAvatarChoices");
   if (container) {
     container.innerHTML = "";
-    Object.keys(VIDORA_AVATARS).forEach(function(key) {
+    Object.keys(VIDORA_AVATARS).forEach(function (key) {
       const avatar = VIDORA_AVATARS[key];
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "vidoraAvatar";
       btn.dataset.avatar = key;
-      if (key === selected) {
-        btn.classList.add("selected");
-      }
+      if (key === selected) btn.classList.add("selected");
 
-      btn.innerHTML = '<img src="' + avatar.image + '" alt="' + avatar.name + '"><span>' + avatar.name + '</span>';
-      btn.onclick = function() {
+      btn.innerHTML =
+        '<img src="' +
+        avatar.image +
+        '" alt="' +
+        avatar.name +
+        '"><span>' +
+        avatar.name +
+        "</span>";
+
+      btn.onclick = function () {
         selectVidoraAvatar(key);
       };
       container.appendChild(btn);
@@ -486,21 +413,73 @@ function initializeVidoraAvatarSystem() {
   loadVidoraTheme();
 
   if (interactiveAvatarEnabled) {
-    setTimeout(function() {
+    setTimeout(function () {
       showInteractiveAvatar();
     }, 800);
   }
 }
-  
 
-  
-
-// Auto initialize when page loads
-document.addEventListener("DOMContentLoaded", function () {
-  initializeVidoraAvatarSystem();
-});
 /* =========================================================
-   4. AUTHENTICATION - SIGN UP
+   8. AUTH HELPERS
+   ========================================================= */
+
+function showLoginForm() {
+  const authChoice = document.getElementById("authChoice");
+  const signupForm = document.getElementById("signupForm");
+  const loginForm = document.getElementById("loginForm");
+
+  if (authChoice) authChoice.classList.add("hidden");
+  if (signupForm) signupForm.classList.add("hidden");
+  if (loginForm) loginForm.classList.remove("hidden");
+
+  clearMessage("authMessage");
+}
+
+function showCreateAccount() {
+  const authChoice = document.getElementById("authChoice");
+  const loginForm = document.getElementById("loginForm");
+  const signupForm = document.getElementById("signupForm");
+
+  if (authChoice) authChoice.classList.add("hidden");
+  if (loginForm) loginForm.classList.add("hidden");
+  if (signupForm) signupForm.classList.remove("hidden");
+
+  clearMessage("authMessage");
+}
+
+function showAuthChoice() {
+  const authChoice = document.getElementById("authChoice");
+  const signupForm = document.getElementById("signupForm");
+  const loginForm = document.getElementById("loginForm");
+
+  if (authChoice) authChoice.classList.remove("hidden");
+  if (signupForm) signupForm.classList.add("hidden");
+  if (loginForm) loginForm.classList.add("hidden");
+
+  clearMessage("authMessage");
+}
+
+function togglePassword(inputId, button) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  if (input.type === "password") {
+    input.type = "text";
+    if (button) {
+      button.textContent = "🙈";
+      button.setAttribute("aria-label", "Hide password");
+    }
+  } else {
+    input.type = "password";
+    if (button) {
+      button.textContent = "👁";
+      button.setAttribute("aria-label", "Show password");
+    }
+  }
+}
+
+/* =========================================================
+   9. AUTHENTICATION
    ========================================================= */
 
 async function signUp() {
@@ -513,7 +492,6 @@ async function signUp() {
     if (message) message.textContent = "Enter your email and password.";
     return;
   }
-
   if (password.length < 6) {
     if (message) message.textContent = "Password must be at least 6 characters.";
     return;
@@ -530,9 +508,6 @@ async function signUp() {
       password: password
     });
 
-    console.log("SIGNUP RESULT:", data);
-    console.log("SIGNUP ERROR:", error);
-
     if (error) {
       if (message) {
         message.textContent = error.message;
@@ -543,30 +518,22 @@ async function signUp() {
 
     if (data.session) {
       currentUser = data.user;
-
       if (message) {
         message.textContent = "Account created successfully!";
         message.style.color = "#4ade80";
       }
-
       await showApp();
-
-    } else {
-      if (message) {
-        message.textContent =
-          "Account created. Check your email to confirm your account.";
-        message.style.color = "#4ade80";
-      }
+    } else if (message) {
+      message.textContent =
+        "Account created. Check your email to confirm your account.";
+      message.style.color = "#4ade80";
     }
-
   } catch (error) {
     console.error("SIGNUP EXCEPTION:", error);
-
     if (message) {
       message.textContent = error.message || "Sign up failed.";
       message.style.color = "#ff6b6b";
     }
-
   } finally {
     if (button) {
       button.disabled = false;
@@ -574,11 +541,6 @@ async function signUp() {
     }
   }
 }
-
-
-/* =========================================================
-   5. AUTHENTICATION - LOGIN
-   ========================================================= */
 
 async function login() {
   const email = document.getElementById("email")?.value.trim();
@@ -597,11 +559,10 @@ async function login() {
   }
 
   try {
-    const { data, error } =
-      await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
 
     console.log("LOGIN RESULT:", data);
     console.log("LOGIN ERROR:", error);
@@ -622,15 +583,12 @@ async function login() {
     }
 
     await showApp();
-
   } catch (error) {
     console.error("LOGIN EXCEPTION:", error);
-
     if (message) {
       message.textContent = error.message || "Login failed.";
       message.style.color = "#ff6b6b";
     }
-
   } finally {
     if (button) {
       button.disabled = false;
@@ -639,122 +597,61 @@ async function login() {
   }
 }
 
-
-
-
-/* =========================================================
-   6. LOGOUT
-   ========================================================= */
-
 async function logout() {
-
-  sessionStorage.removeItem(
-    "vidoraAvatarWelcomed"
-  );
-
-  const button =
-    getElement("logoutBtn");
-
+  const button = getElement("logoutBtn");
   if (button) {
     button.disabled = true;
     button.textContent = "Logging out...";
   }
 
   try {
-
-    const { error } =
-      await supabaseClient.auth.signOut();
-
+    const { error } = await supabaseClient.auth.signOut();
     if (error) {
-
-      console.error(
-        "LOGOUT ERROR:",
-        error
-      );
-
-      alert(
-        error.message ||
-        "Unable to log out."
-      );
-
+      alert(error.message || "Unable to log out.");
       return;
     }
-
     currentUser = null;
-
-    showPublicFeed();
-
+    showAuthScreen();
   } catch (error) {
-
-    console.error(
-      "LOGOUT EXCEPTION:",
-      error
-    );
-
-    alert(
-      "Unable to log out."
-    );
-
+    console.error("LOGOUT EXCEPTION:", error);
+    alert("Unable to log out.");
   } finally {
-
     if (button) {
       button.disabled = false;
       button.textContent = "Log Out";
     }
-
   }
 }
-/* =========================================================
-   7. SHOW AUTH SCREEN
-   ========================================================= */
 
 function showAuthScreen() {
   const authScreen = getElement("authScreen");
   const app = getElement("app");
 
-  if (authScreen) {
-    authScreen.classList.remove("hidden");
-  }
-
-  if (app) {
-    app.classList.add("hidden");
-  }
+  if (authScreen) authScreen.classList.remove("hidden");
+  if (app) app.classList.add("hidden");
 
   clearMessage("uploadMessage");
   clearMessage("createMessage");
 }
 
 function showProfileSetup() {
-
-  const setup =
-    document.getElementById("profileSetup");
-
-  if (!setup) {
-    return;
-  }
-
-  setup.classList.remove("hidden");
+  const setup = document.getElementById("profileSetup");
+  if (setup) setup.classList.remove("hidden");
 }
+
 /* =========================================================
-   8. SHOW MAIN APP
+   10. SHOW APP
    ========================================================= */
 
 async function showApp() {
   const authScreen = getElement("authScreen");
   const app = getElement("app");
 
-  if (authScreen) {
-    authScreen.classList.add("hidden");
-  }
-
-  if (app) {
-    app.classList.remove("hidden");
-  }
+  if (authScreen) authScreen.classList.add("hidden");
+  if (app) app.classList.remove("hidden");
 
   if (!currentUser) {
-    const { data } =
-      await supabaseClient.auth.getUser();
-
+    const { data } = await supabaseClient.auth.getUser();
     currentUser = data?.user || null;
   }
 
@@ -764,24 +661,23 @@ async function showApp() {
   }
 
   showPage("home");
+  await loadProfile();
+  await loadFeed();
+  appInitialized = true;
 
-await loadProfile();
-
-
-
-await loadFeed();
-
-appInitialized = true;
+  if (interactiveAvatarEnabled) {
+    setTimeout(function () {
+      showInteractiveAvatar();
+    }, 600);
+  }
 }
 
 /* =========================================================
-  9. LOAD PROFILE
+   11. LOAD PROFILE
    ========================================================= */
 
 async function loadProfile() {
-  if (!currentUser) {
-    return;
-  }
+  if (!currentUser) return;
 
   try {
     const { data, error } = await supabaseClient
@@ -795,19 +691,16 @@ async function loadProfile() {
       return;
     }
 
-    // No profile yet → show setup form
     if (!data) {
       showProfileSetup();
       return;
     }
 
-    // ---------- Display Name ----------
     const displayNameEl = document.getElementById("profileDisplayName");
     if (displayNameEl) {
       displayNameEl.textContent = data.display_name || "Vidora User";
     }
 
-    // ---------- Username ----------
     const usernameEl = document.getElementById("profileUsername");
     if (usernameEl) {
       usernameEl.textContent = data.username
@@ -815,112 +708,211 @@ async function loadProfile() {
         : "Set up your username";
     }
 
-    // ---------- Bio ----------
     const bioEl = document.getElementById("profileBio");
-    if (bioEl) {
-      bioEl.textContent = data.bio || "No bio yet.";
-    }
+    if (bioEl) bioEl.textContent = data.bio || "No bio yet.";
 
-    // ---------- Email ----------
     const emailEl = document.getElementById("profileEmail");
-    if (emailEl) {
-      emailEl.textContent = currentUser.email || "";
-    }
+    if (emailEl) emailEl.textContent = currentUser.email || "";
 
-    // ---------- Profile Picture ----------
     const avatarEl = document.getElementById("profileAvatar");
     if (avatarEl) {
       if (data.avatar_url && !data.avatar_url.includes("dicebear.com")) {
-        // Show uploaded photo
         const img = document.createElement("img");
         img.src = data.avatar_url;
         img.alt = data.display_name || "Profile picture";
         img.className = "profileAvatarImage";
-
         img.onerror = function () {
           renderDefaultAvatar(avatarEl, data.display_name);
         };
-
         avatarEl.innerHTML = "";
         avatarEl.appendChild(img);
       } else {
-        // No uploaded photo → show selected Vidora avatar
         renderDefaultAvatar(avatarEl, data.display_name);
       }
     }
 
-    // ---------- Fill Edit Form ----------
     const displayInput = document.getElementById("profileDisplayNameInput");
-    if (displayInput) {
-      displayInput.value = data.display_name || "";
-    }
+    if (displayInput) displayInput.value = data.display_name || "";
 
     const usernameInput = document.getElementById("profileUsernameInput");
-    if (usernameInput) {
-      usernameInput.value = data.username || "";
-    }
+    if (usernameInput) usernameInput.value = data.username || "";
 
     const bioInput = document.getElementById("profileBioInput");
-    if (bioInput) {
-      bioInput.value = data.bio || "";
-    }
+    if (bioInput) bioInput.value = data.bio || "";
 
-    // Hide setup form
     const setup = document.getElementById("profileSetup");
-    if (setup) {
-      setup.classList.add("hidden");
-    }
-
+    if (setup) setup.classList.add("hidden");
   } catch (error) {
     console.error("LOAD PROFILE EXCEPTION:", error);
   }
 }
 
+/* =========================================================
+   12. SAVE PROFILE
+   ========================================================= */
 
-    
+async function saveProfile() {
+  if (!currentUser) {
+    setMessage("profileMessage", "Please log in first.");
+    return;
+  }
 
+  const displayName =
+    document.getElementById("profileDisplayNameInput")?.value.trim() || "";
+  const username =
+    document.getElementById("profileUsernameInput")?.value.trim().replace(/^@/, "") ||
+    "";
+  const bio = document.getElementById("profileBioInput")?.value.trim() || "";
+  const selectedAvatar = getSelectedVidoraAvatar();
 
-    
+  if (!displayName) {
+    setMessage("profileMessage", "Please enter a display name.");
+    return;
+  }
 
+  try {
+    const { error } = await supabaseClient.from("profiles").upsert({
+      id: currentUser.id,
+      display_name: displayName,
+      username: username || null,
+      bio: bio,
+      avatar_type: "preset",
+      avatar_name: selectedAvatar,
+      updated_at: new Date().toISOString()
+    });
 
+    if (error) {
+      setMessage("profileMessage", error.message || "Could not save profile.");
+      return;
+    }
+
+    setMessage("profileMessage", "Profile saved!", true);
+    await loadProfile();
+  } catch (error) {
+    console.error("SAVE PROFILE ERROR:", error);
+    setMessage("profileMessage", "Could not save profile.");
+  }
+}
 
 /* =========================================================
-   11. UPLOAD POST FROM HOME
+   13. MEDIA VALIDATION
    ========================================================= */
+
+function validateMediaFile(file) {
+  if (!file) {
+    return { valid: false, message: "Please choose a photo or video." };
+  }
+
+  const isImage = file.type.startsWith("image/");
+  const isVideo = file.type.startsWith("video/");
+
+  if (!isImage && !isVideo) {
+    return { valid: false, message: "Only images and videos are allowed." };
+  }
+
+  const maxSize = 50 * 1024 * 1024;
+  if (file.size > maxSize) {
+    return { valid: false, message: "File is too large (max 50MB)." };
+  }
+
+  return { valid: true, message: "" };
+}
+
+/* =========================================================
+   14. CREATE POST
+   ========================================================= */
+
+async function createPost(file, caption) {
+  if (!currentUser) {
+    return { success: false, message: "You are not logged in." };
+  }
+
+  const fileName = createSafeFileName(file);
+  const filePath = currentUser.id + "/" + fileName;
+  const mediaType = file.type.startsWith("video/") ? "video" : "image";
+  let uploadedPath = null;
+
+  try {
+    const { error: uploadError } = await supabaseClient.storage
+      .from("media")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type
+      });
+
+    if (uploadError) {
+      return {
+        success: false,
+        message: "Media upload failed: " + uploadError.message
+      };
+    }
+
+    uploadedPath = filePath;
+
+    const { data: publicData } = supabaseClient.storage
+      .from("media")
+      .getPublicUrl(filePath);
+
+    const mediaUrl = publicData?.publicUrl;
+    if (!mediaUrl) {
+      await supabaseClient.storage.from("media").remove([filePath]);
+      return { success: false, message: "Could not create media URL." };
+    }
+
+    const { data, error: postError } = await supabaseClient
+      .from("posts")
+      .insert({
+        user_id: currentUser.id,
+        media_url: mediaUrl,
+        media_type: mediaType,
+        caption: caption || "",
+        views: 0
+      })
+      .select()
+      .single();
+
+    if (postError) {
+      await supabaseClient.storage.from("media").remove([filePath]);
+      return {
+        success: false,
+        message: "Post could not be saved: " + postError.message
+      };
+    }
+
+    return { success: true, data: data };
+  } catch (error) {
+    console.error("CREATE POST EXCEPTION:", error);
+    if (uploadedPath) {
+      try {
+        await supabaseClient.storage.from("media").remove([uploadedPath]);
+      } catch (e) {}
+    }
+    return { success: false, message: "An unexpected error occurred." };
+  }
+}
 
 async function uploadPost() {
   const fileInput = getElement("mediaFile");
   const captionInput = getElement("postCaption");
-  const button =
-    document.querySelector(
-      '#homeScreen button[onclick="uploadPost()"]'
-    );
+  const button = document.querySelector(
+    '#homeScreen button[onclick="uploadPost()"]'
+  );
 
-  if (!fileInput || !captionInput) {
-    return;
-  }
+  if (!fileInput || !captionInput) return;
 
   const file = fileInput.files[0];
   const caption = captionInput.value.trim();
-
   clearMessage("uploadMessage");
 
   if (!currentUser) {
-    setMessage(
-      "uploadMessage",
-      "Please log in first."
-    );
+    setMessage("uploadMessage", "Please log in first.");
     return;
   }
 
-  const validation =
-    validateMediaFile(file);
-
+  const validation = validateMediaFile(file);
   if (!validation.valid) {
-    setMessage(
-      "uploadMessage",
-      validation.message
-    );
+    setMessage("uploadMessage", validation.message);
     return;
   }
 
@@ -930,36 +922,19 @@ async function uploadPost() {
   }
 
   try {
-    const result =
-      await createPost(file, caption);
-
+    const result = await createPost(file, caption);
     if (!result.success) {
-      setMessage(
-        "uploadMessage",
-        result.message
-      );
+      setMessage("uploadMessage", result.message);
       return;
     }
 
-    setMessage(
-      "uploadMessage",
-      "Post published successfully!",
-      true
-    );
-
+    setMessage("uploadMessage", "Post published successfully!", true);
     fileInput.value = "";
     captionInput.value = "";
-
     await loadFeed();
-
   } catch (error) {
     console.error("UPLOAD POST ERROR:", error);
-
-    setMessage(
-      "uploadMessage",
-      "Could not publish your post."
-    );
-
+    setMessage("uploadMessage", "Could not publish your post.");
   } finally {
     if (button) {
       button.disabled = false;
@@ -968,46 +943,27 @@ async function uploadPost() {
   }
 }
 
-
-/* =========================================================
-   12. PUBLISH FROM CREATE PAGE
-   ========================================================= */
-
 async function publishFromCreate() {
   const fileInput = getElement("createFile");
-  const captionInput =
-    getElement("createCaption");
+  const captionInput = getElement("createCaption");
+  const button = document.querySelector(
+    '#createScreen button[onclick="publishFromCreate()"]'
+  );
 
-  const button =
-    document.querySelector(
-      '#createScreen button[onclick="publishFromCreate()"]'
-    );
-
-  if (!fileInput || !captionInput) {
-    return;
-  }
+  if (!fileInput || !captionInput) return;
 
   const file = fileInput.files[0];
   const caption = captionInput.value.trim();
-
   clearMessage("createMessage");
 
   if (!currentUser) {
-    setMessage(
-      "createMessage",
-      "Please log in first."
-    );
+    setMessage("createMessage", "Please log in first.");
     return;
   }
 
-  const validation =
-    validateMediaFile(file);
-
+  const validation = validateMediaFile(file);
   if (!validation.valid) {
-    setMessage(
-      "createMessage",
-      validation.message
-    );
+    setMessage("createMessage", validation.message);
     return;
   }
 
@@ -1017,1758 +973,296 @@ async function publishFromCreate() {
   }
 
   try {
-    const result =
-      await createPost(file, caption);
-
+    const result = await createPost(file, caption);
     if (!result.success) {
-      setMessage(
-        "createMessage",
-        result.message
-      );
+      setMessage("createMessage", result.message);
       return;
     }
 
-    setMessage(
-      "createMessage",
-      "Post published successfully!",
-      true
-    );
-
+    setMessage("createMessage", "Post published successfully!", true);
     fileInput.value = "";
     captionInput.value = "";
-
     await loadFeed();
-
-    setTimeout(() => {
+    setTimeout(function () {
       showPage("home");
     }, 700);
-
   } catch (error) {
-    console.error(
-      "CREATE PAGE POST ERROR:",
-      error
-    );
-
-    setMessage(
-      "createMessage",
-      "Could not publish your post."
-    );
-
+    console.error("CREATE PAGE POST ERROR:", error);
+    setMessage("createMessage", "Could not publish your post.");
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent =
-        "🚀 Publish to Vidora";
+      button.textContent = "🚀 Publish to Vidora";
     }
   }
 }
 
-
 /* =========================================================
-   13. CREATE POST
+   15. LOAD FEED
    ========================================================= */
 
-async function createPost(file, caption) {
-  if (!currentUser) {
-    return {
-      success: false,
-      message: "You are not logged in."
-    };
-  }
-
-  const extension =
-    getFileExtension(file);
-
-  const fileName =
-    createSafeFileName(file);
-
-  const filePath =
-    currentUser.id + "/" + fileName;
-
-  const mediaType =
-    file.type.startsWith("video/")
-      ? "video"
-      : "image";
-
-  let uploadedPath = null;
-
-  try {
-
-    /* Upload to Storage */
-
-    const { error: uploadError } =
-      await supabaseClient.storage
-        .from("media")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type
-        });
-
-    if (uploadError) {
-      console.error(
-        "STORAGE UPLOAD ERROR:",
-        uploadError
-      );
-
-      return {
-        success: false,
-        message:
-          "Media upload failed: " +
-          uploadError.message
-      };
-    }
-
-    uploadedPath = filePath;
-
-    /* Get public URL */
-
-    const { data: publicData } =
-      supabaseClient.storage
-        .from("media")
-        .getPublicUrl(filePath);
-
-    const mediaUrl =
-      publicData?.publicUrl;
-
-    if (!mediaUrl) {
-
-      await supabaseClient.storage
-        .from("media")
-        .remove([filePath]);
-
-      return {
-        success: false,
-        message: "Could not create media URL."
-      };
-    }
-
-    /* Insert post into database */
-
-    const { data, error: postError } =
-      await supabaseClient
-        .from("posts")
-        .insert({
-          user_id: currentUser.id,
-          media_url: mediaUrl,
-          media_type: mediaType,
-          caption: caption || ""
-        })
-        .select()
-        .single();
-
-    if (postError) {
-      console.error(
-        "POST DATABASE ERROR:",
-        postError
-      );
-
-      /*
-        Remove uploaded file if database insert fails.
-      */
-
-      await supabaseClient.storage
-        .from("media")
-        .remove([filePath]);
-
-      return {
-        success: false,
-        message:
-          "Post could not be saved: " +
-          postError.message
-      };
-    }
-
-    console.log("POST CREATED:", data);
-
-    return {
-      success: true,
-      data: data
-    };
-
-  } catch (error) {
-    console.error(
-      "CREATE POST EXCEPTION:",
-      error
-    );
-
-    if (uploadedPath) {
-      try {
-        await supabaseClient.storage
-          .from("media")
-          .remove([uploadedPath]);
-      } catch (removeError) {
-        console.error(
-          "CLEANUP ERROR:",
-          removeError
-        );
-      }
-    }
-
-    return {
-      success: false,
-      message:
-        "An unexpected error occurred."
-    };
-  }
-}
-
-
-/* =========================================================
-   14. LOAD FEED
-   ========================================================= */
 async function loadFeed() {
   if (feedLoading) return;
-
   feedLoading = true;
 
   const feed = getElement("feed");
-
   if (!feed) {
     feedLoading = false;
     return;
   }
 
-  feed.innerHTML = `
-    <div class="loading">
-      Loading Vidora...
-    </div>
-  `;
+  feed.innerHTML = '<div class="loading">Loading Vidora...</div>';
 
   try {
-    const { data, error } =
-      await supabaseClient
-        .from("posts")
-        .select(
-          "id,user_id,media_url,media_type,caption,created_at"
-        )
-        .order("created_at", {
-          ascending: false
-        });
+    const { data, error } = await supabaseClient
+      .from("posts")
+      .select("id,user_id,media_url,media_type,caption,created_at,views")
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("LOAD FEED ERROR:", error);
-
-      feed.innerHTML = `
-        <div class="loading">
-          Unable to load posts.
-          <br><br>
-          ${escapeHTML(error.message)}
-        </div>
-      `;
-
+      feed.innerHTML =
+        '<div class="loading">Unable to load posts.<br><br>' +
+        escapeHTML(error.message) +
+        "</div>";
       return;
     }
 
     if (!data || data.length === 0) {
-      feed.innerHTML = `
-        <div class="loading">
-          No posts yet.
-          <br>
-          Be the first to publish something!
-        </div>
-      `;
-
+      feed.innerHTML =
+        '<div class="loading">No posts yet.<br>Be the first to publish something!</div>';
       return;
     }
 
     feed.innerHTML = "";
-
     for (const post of data) {
       const element = await createPostElement(post);
-
-      if (element) {
-        feed.appendChild(element);
-      }
+      if (element) feed.appendChild(element);
     }
-
   } catch (error) {
     console.error("LOAD FEED EXCEPTION:", error);
-
-    feed.innerHTML = `
-      <div class="loading">
-        Something went wrong while loading Vidora.
-      </div>
-    `;
-
+    feed.innerHTML =
+      '<div class="loading">Something went wrong while loading Vidora.</div>';
   } finally {
     feedLoading = false;
   }
 }
 
-/* =========================================================
-   15. CREATE POST ELEMENT
-   ========================================================= */
-
 async function createPostElement(post) {
-  const article =
-    document.createElement("article");
-
+  const article = document.createElement("article");
   article.className = "postCard";
-
   article.dataset.postId = post.id;
 
   let username = "Vidora User";
-
-  /*
-    Try to retrieve profile username.
-  */
-
   try {
-    const { data, error } =
-      await supabaseClient
-        .from("profiles")
-        .select("username")
-        .eq("id", post.user_id)
-        .maybeSingle();
-
-    if (!error &&
-        data &&
-        data.username) {
-      username = data.username;
-    }
-  } catch (error) {
-    /* Profiles are optional for now. */
-  }
-
-  const avatarLetter =
-    username.charAt(0).toUpperCase();
-
-  const mediaHTML =
-    post.media_type === "video"
-      ? `
-        <video
-          class="postMedia"
-          src="${escapeHTML(post.media_url)}"
-          controls
-          playsinline
-          preload="metadata"
-        ></video>
-      `
-      : `
-        <img
-          class="postMedia"
-          src="${escapeHTML(post.media_url)}"
-          alt="Vidora post"
-          loading="lazy"
-        >
-      `;
-
-  article.innerHTML = `
-    <div class="postHeader">
-
-      <div class="postAvatar">
-        ${escapeHTML(avatarLetter)}
-      </div>
-
-      <div class="postUser">
-        <strong>
-          ${escapeHTML(username)}
-        </strong>
-
-        <small>
-          @${escapeHTML(username.replace(/\s+/g, "").toLowerCase())}
-        </small>
-      </div>
-
-    </div>
-
-    <div class="postMediaContainer">
-      ${mediaHTML}
-    </div>
-
-    <div class="postContent">
-
-      ${
-        post.caption
-          ? `
-            <p class="postCaption">
-              ${escapeHTML(post.caption)}
-            </p>
-          `
-          : ""
-      }
-
-      <small class="postDate">
-        ${escapeHTML(formatDate(post.created_at))}
-      </small>
-
-      <div class="postStats">
-
-  <span class="likeCount">
-    ❤️ <span>0</span> Likes
-  </span>
-
-  <span class="commentCount">
-    💬 <span>0</span> Comments
-  </span>
-
-  ${
-    currentUser &&
-    currentUser.id === post.user_id
-      ? `
-        <span class="viewCount">
-          👁️ <span>0</span> Views
-        </span>
-      `
-      : ""
-  }
-
-</div>
-
-<div class="postActions">
-
-  <button
-    type="button"
-    class="likeButton"
-    data-post-id="${escapeHTML(post.id)}"
-  >
-    🤍 Like
-  </button>
-
-  <button
-    type="button"
-    class="shareButton"
-    data-post-id="${escapeHTML(post.id)}"
-  >
-    ↗️ Share
-  </button>
-
-  ${
-    currentUser &&
-    currentUser.id === post.user_id
-      ? `
-        <button
-          type="button"
-          class="deleteButton"
-          data-post-id="${escapeHTML(post.id)}"
-        >
-          🗑️ Delete
-        </button>
-      `
-      : ""
-  }
-
-</div>
-
-      <div class="commentArea">
-
-        <form class="commentForm">
-
-          <input
-            type="text"
-            class="commentInput"
-            placeholder="Write a comment..."
-            maxlength="500"
-          >
-
-          <button type="submit">
-            Send
-          </button>
-
-        </form>
-
-        <div class="commentsList">
-          Loading comments...
-        </div>
-
-      </div>
-
-    </div>
-  `;
-
-
-  /* Like */
-
-  const likeButton =
-    article.querySelector(".likeButton");
-
-  if (likeButton) {
-    likeButton.addEventListener(
-      "click",
-      () => toggleLike(post.id, likeButton)
-    );
-  }
-
-
-  /* Share */
-
-  const shareButton =
-    article.querySelector(".shareButton");
-
-  if (shareButton) {
-    shareButton.addEventListener(
-      "click",
-      () => sharePost(post)
-    );
-  }
-/* Delete */
-
-const deleteButton =
-  article.querySelector(".deleteButton");
-
-if (deleteButton) {
-  deleteButton.addEventListener(
-    "click",
-    () => deletePost(
-      post.id,
-      post.media_url,
-      article
-    )
-  );
-}
-
-  /* Comment */
-
-  const commentForm =
-    article.querySelector(".commentForm");
-
-  const commentInput =
-    article.querySelector(".commentInput");
-
-  if (commentForm) {
-    commentForm.addEventListener(
-      "submit",
-      async function(event) {
-
-        event.preventDefault();
-
-        const body =
-          commentInput.value.trim();
-
-        if (!body) {
-          return;
-        }
-
-        await addComment(
-          post.id,
-          body,
-          article
-        );
-
-        commentInput.value = "";
-      }
-    );
-  }
-
-
-  /* Load comments */
-
-  await loadComments(
-    post.id,
-    article
-  );
-
-
-  /* Load like state */
-
-  await updateLikeButton(
-  post.id,
-  likeButton
-);
-
-
-/* Load post counters */
-   
-await updateLikeButton(
-  post.id,
-  likeButton
-);
-
-return article;
-
-
-/* =========================================================
-   16. UPDATE LIKE BUTTON
-   ========================================================= */
-
-async function updateLikeButton(
-  postId,
-  button
-) {
-  if (!button || !currentUser) {
-    return;
-  }
-
-  try {
-    const { data, error } =
-      await supabaseClient
-        .from("likes")
-        .select("id")
-        .eq("post_id", postId)
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-
-    if (error) {
-      /*
-        If likes table/RLS isn't ready,
-        don't break the feed.
-      */
-      return;
-    }
+    const { data } = await supabaseClient
+      .from("profiles")
+      .select("username, display_name")
+      .eq("id", post.user_id)
+      .maybeSingle();
 
     if (data) {
-      button.textContent = "❤️ Liked";
-      button.dataset.liked = "true";
-    } else {
-      button.textContent = "🤍 Like";
-      button.dataset.liked = "false";
+      username = data.username || data.display_name || username;
     }
+  } catch (e) {}
 
-  } catch (error) {
-    console.log("Like state unavailable.");
-  }
+  const isOwner = currentUser && currentUser.id === post.user_id;
+  const mediaHTML =
+    post.media_type === "video"
+      ? '<video src="' +
+        escapeHTML(post.media_url) +
+        '" controls playsinline></video>'
+      : '<img src="' +
+        escapeHTML(post.media_url) +
+        '" alt="Post media">';
+
+  const viewsHTML = isOwner
+    ? '<span class="viewCount">👁️ ' + (post.views || 0) + " Views</span>"
+    : "";
+
+  article.innerHTML =
+    '<div class="postHeader"><strong>@' +
+    escapeHTML(username) +
+    "</strong><span>" +
+    escapeHTML(formatDate(post.created_at)) +
+    "</span></div>" +
+    '<div class="postMedia">' +
+    mediaHTML +
+    "</div>" +
+    '<div class="postCaption">' +
+    escapeHTML(post.caption || "") +
+    "</div>" +
+    '<div class="postStats">' +
+    '<span class="likeCount">❤️ 0 Likes</span>' +
+    '<span class="commentCount">💬 0 Comments</span>' +
+    viewsHTML +
+    "</div>";
+
+  return article;
 }
-
 
 /* =========================================================
-   17. TOGGLE LIKE
-   ========================================================= */
-
-async function toggleLike(
-  postId,
-  button
-) {
-  if (!currentUser) {
-  alert("Please log in first.");
-  showAuthScreen();
-  return;
-}
-  
-
-  if (!button) {
-    return;
-  }
-
-  button.disabled = true;
-
-  try {
-    const { data: existingLike, error: findError } =
-      await supabaseClient
-        .from("likes")
-        .select("id")
-        .eq("post_id", postId)
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-
-    if (findError) {
-      console.error(
-        "LIKE CHECK ERROR:",
-        findError
-      );
-
-      alert(
-        "Likes are not ready in the database yet."
-      );
-
-      return;
-    }
-
-    if (existingLike) {
-
-      const { error } =
-        await supabaseClient
-          .from("likes")
-          .delete()
-          .eq("id", existingLike.id);
-
-      if (error) {
-        console.error(
-          "UNLIKE ERROR:",
-          error
-        );
-
-        alert(error.message);
-        return;
-      }
-
-      button.textContent = "🤍 Like";
-      button.dataset.liked = "false";
-
-    } else {
-
-      const { error } =
-        await supabaseClient
-          .from("likes")
-          .insert({
-            post_id: postId,
-            user_id: currentUser.id
-          });
-
-      if (error) {
-        console.error(
-          "LIKE INSERT ERROR:",
-          error
-        );
-
-        alert(error.message);
-        return;
-      }
-
-      button.textContent = "❤️ Liked";
-      button.dataset.liked = "true";
-    }
-
-  } catch (error) {
-    console.error(
-      "LIKE EXCEPTION:",
-      error
-    );
-
-  } finally {
-    button.disabled = false;
-  }
-}
-/* =========================================================
-   DELETE POST
-   ========================================================= */
-
-async function deletePost(postId, mediaUrl, article) {
-
-  if (!currentUser) {
-    alert("Please log in first.");
-    showAuthScreen();
-    return;
-  }
-
-  const confirmed = confirm(
-    "Are you sure you want to delete this post?"
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-
-    /* Delete database post */
-
-    const { error: postError } =
-      await supabaseClient
-        .from("posts")
-        .delete()
-        .eq("id", postId)
-        .eq("user_id", currentUser.id);
-
-    if (postError) {
-      console.error(
-        "DELETE POST ERROR:",
-        postError
-      );
-
-      alert(
-        "Post could not be deleted:\n\n" +
-        postError.message
-      );
-
-      return;
-    }
-
-    /* Try to remove the media file */
-
-    if (mediaUrl) {
-
-      try {
-
-        const marker = "/storage/v1/object/public/media/";
-
-        const index = mediaUrl.indexOf(marker);
-
-        if (index !== -1) {
-
-          const filePath =
-            decodeURIComponent(
-              mediaUrl.substring(
-                index + marker.length
-              )
-            );
-
-          const { error: storageError } =
-            await supabaseClient.storage
-              .from("media")
-              .remove([filePath]);
-
-          if (storageError) {
-            console.error(
-              "STORAGE DELETE ERROR:",
-              storageError
-            );
-          }
-        }
-
-      } catch (storageError) {
-
-        console.error(
-          "MEDIA DELETE EXCEPTION:",
-          storageError
-        );
-      }
-    }
-
-    /* Remove post from screen */
-
-    if (article) {
-      article.remove();
-    }
-
-    alert("Post deleted successfully.");
-
-  } catch (error) {
-
-    console.error(
-      "DELETE POST EXCEPTION:",
-      error
-    );
-
-    alert(
-      "Something went wrong while deleting the post."
-    );
-  }
-}
-/* =========================================================
-   18. LOAD COMMENTS
-   ========================================================= */
-
-async function loadComments(postId, article) {
-
-  if (!article) {
-    return;
-  }
-
-  const commentsList =
-    article.querySelector(".commentsList");
-
-  if (!commentsList) {
-    return;
-  }
-
-  commentsList.innerHTML = `
-    <small>Loading comments...</small>
-  `;
-
-  try {
-
-    const { data, error } =
-      await supabaseClient
-        .from("comments")
-        .select(
-          "id,user_id,content,body,created_at"
-        )
-        .eq("post_id", postId)
-        .order("created_at", {
-          ascending: true
-        });
-
-    if (error) {
-      console.error(
-        "LOAD COMMENTS ERROR:",
-        error
-      );
-
-      commentsList.innerHTML = `
-        <small>
-          Comments unavailable.
-        </small>
-      `;
-
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      commentsList.innerHTML = `
-        <small>
-          No comments yet. Be the first!
-        </small>
-      `;
-
-      return;
-    }
-
-    commentsList.innerHTML = "";
-
-    for (const comment of data) {
-
-      let username = "Vidora User";
-
-      /* Get commenter's username */
-
-      try {
-
-        const { data: profileData } =
-          await supabaseClient
-            .from("profiles")
-            .select("username")
-            .eq("id", comment.user_id)
-            .maybeSingle();
-
-        if (
-          profileData &&
-          profileData.username
-        ) {
-          username = profileData.username;
-        }
-
-      } catch (profileError) {
-        console.log(
-          "Comment username unavailable."
-        );
-      }
-
-      const commentText =
-        comment.content ||
-        comment.body ||
-        "";
-
-      const item =
-        document.createElement("div");
-
-      item.className = "comment";
-
-      item.innerHTML = `
-        <div class="commentHeader">
-
-          <strong>
-            ${escapeHTML(username)}
-          </strong>
-
-          ${
-            currentUser &&
-            currentUser.id === comment.user_id
-              ? `
-                <button
-                  type="button"
-                  class="deleteCommentButton"
-                >
-                  🗑️
-                </button>
-              `
-              : ""
-          }
-
-        </div>
-
-        <div class="commentText">
-          ${escapeHTML(commentText)}
-        </div>
-      `;
-
-      /* Delete own comment */
-
-      const deleteButton =
-        item.querySelector(
-          ".deleteCommentButton"
-        );
-
-      if (deleteButton) {
-
-        deleteButton.addEventListener(
-          "click",
-          () => deleteComment(
-            comment.id,
-            item,
-            postId,
-            article
-          )
-        );
-      }
-
-      commentsList.appendChild(item);
-    }
-
-  } catch (error) {
-
-    console.error(
-      "LOAD COMMENTS EXCEPTION:",
-      error
-    );
-
-    commentsList.innerHTML = `
-      <small>
-        Unable to load comments.
-      </small>
-    `;
-  }
-}
-
-
-/* =========================================================
-   19. ADD COMMENT
-   ========================================================= */
-
-async function addComment(postId, body, article) {
-  if (!currentUser) {
-  alert("Please log in first.");
-  showAuthScreen();
-  return;
-
-  }
-
-  const cleanBody = body.trim();
-
-  if (!cleanBody) {
-    return;
-  }
-
-  try {
-    console.log("Adding comment...");
-    console.log("User:", currentUser.id);
-    console.log("Post:", postId);
-    console.log("Comment:", cleanBody);
-
-    const { data, error } =
-      await supabaseClient
-        .from("comments")
-        .insert({
-  post_id: postId,
-  user_id: currentUser.id,
-  body: cleanBody,
-  content: cleanBody
-})
-        .select()
-        .single();
-
-    if (error) {
-      console.error(
-        "COMMENT INSERT ERROR:",
-        error
-      );
-
-      alert(
-        "Comment could not be added:\n\n" +
-        error.message
-      );
-
-      return;
-    }
-
-    console.log(
-      "COMMENT CREATED:",
-      data
-    );
-
-    await loadComments(
-      postId,
-      article
-    );
-
-  } catch (error) {
-    console.error(
-      "COMMENT EXCEPTION:",
-      error
-    );
-
-    alert(
-      "Something went wrong while adding the comment."
-    );
-  }
-}
-/* =========================================================
-   DELETE COMMENT
-   ========================================================= */
-
-async function deleteComment(
-  commentId,
-  commentElement,
-  postId,
-  article
-) {
-
-  if (!currentUser) {
-    alert("Please log in first.");
-    showAuthScreen();
-    return;
-  }
-
-  const confirmed = confirm(
-    "Are you sure you want to delete this comment?"
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-
-    const { error } =
-      await supabaseClient
-        .from("comments")
-        .delete()
-        .eq("id", commentId)
-        .eq("user_id", currentUser.id);
-
-    if (error) {
-
-      console.error(
-        "DELETE COMMENT ERROR:",
-        error
-      );
-
-      alert(
-        "Comment could not be deleted:\n\n" +
-        error.message
-      );
-
-      return;
-    }
-
-    if (commentElement) {
-      commentElement.remove();
-    }
-
-    alert("Comment deleted successfully.");
-
-  } catch (error) {
-
-    console.error(
-      "DELETE COMMENT EXCEPTION:",
-      error
-    );
-
-    alert(
-      "Something went wrong while deleting the comment."
-    );
-  }
-}
-/* =========================================================
-   20. SHARE POST
-   ========================================================= */
-
-async function sharePost(post) {
-  if (!post) {
-    return;
-  }
-
-  const shareData = {
-    title: "Vidora",
-    text: post.caption || "Check out this post on Vidora.",
-    url: window.location.href
-  };
-
-  try {
-
-    if (
-      navigator.share &&
-      typeof navigator.share === "function"
-    ) {
-      await navigator.share(shareData);
-      return;
-    }
-
-    if (
-      navigator.clipboard &&
-      navigator.clipboard.writeText
-    ) {
-      await navigator.clipboard.writeText(
-        window.location.href
-      );
-
-      alert("Vidora link copied!");
-      return;
-    }
-
-    alert(
-      "Share this Vidora page: " +
-      window.location.href
-    );
-
-  } catch (error) {
-
-    /*
-      User cancelling the native share menu
-      is not an error we need to display.
-    */
-
-    if (error.name !== "AbortError") {
-      console.error(
-        "SHARE ERROR:",
-        error
-      );
-    }
-  }
-}
-
-
-/* =========================================================
-   21. SHOW PAGE
+   16. NAVIGATION
    ========================================================= */
 
 function showPage(page) {
-  
-const pages = {
-  home: "homeScreen",
-  discover: "discoverScreen",
-  create: "createScreen",
-  chat: "chatScreen",
-  friends: "friendsScreen",
-  profile: "profileScreen",
-  notifications: "notificationsScreen"
-};
-  const requestedScreen =
-    pages[page];
+  const pages = {
+    home: "homeScreen",
+    profile: "profileScreen",
+    create: "createScreen",
+    discover: "discoverScreen",
+    friends: "friendsScreen"
+  };
 
-  if (!requestedScreen) {
-    console.warn(
-      "Unknown Vidora page:",
-      page
-    );
+  Object.keys(pages).forEach(function (key) {
+    const el = document.getElementById(pages[key]);
+    if (el) el.classList.add("hidden");
+  });
 
-    return;
+  const target = document.getElementById(pages[page] || pages.home);
+  if (target) target.classList.remove("hidden");
+
+  if (page === "home") loadFeed();
+  if (page === "profile") loadProfile();
+  if (page === "discover" && typeof loadVidoraDiscover === "function") {
+    loadVidoraDiscover("for-you");
   }
-
-  Object.values(pages).forEach(
-    function(screenId) {
-
-      const screen =
-        getElement(screenId);
-
-      if (!screen) {
-        return;
-      }
-
-      if (screenId === requestedScreen) {
-        screen.classList.remove("hidden");
-      } else {
-        screen.classList.add("hidden");
-      }
-    }
-  );
-
-  updateNavigation(page);
-
-  /*
-    Useful page-specific actions.
-  */
-
-  if (page === "discover") {
-    const searchInput =
-      getElement("searchInput");
-
-    if (searchInput) {
-      setTimeout(() => {
-        searchInput.focus();
-      }, 100);
-    }
-  }
-
-  if (page === "profile") {
-    loadProfile();
-  }
-
-  
 }
-
-
-/* =========================================================
-   22. LOWERCASE NAVIGATION ALIAS
-   ========================================================= */
 
 function showpage(page) {
   showPage(page);
 }
 
-
 /* =========================================================
-   23. UPDATE BOTTOM NAVIGATION
-   ========================================================= */
-
-function updateNavigation(page) {
-  const buttons =
-    document.querySelectorAll(
-      ".bottomNav .navButton"
-    );
-
-  buttons.forEach(
-    function(button) {
-      button.classList.remove("active");
-    }
-  );
-
-  const pageIndex = {
-  home: 0,
-  discover: 1,
-  create: 2,
-  chat: 3,
-  friends: 4,
-  profile: 5
-};
-
-  const index =
-    pageIndex[page];
-
-  if (index === undefined) {
-    return;
-  }
-
-  if (buttons[index]) {
-    buttons[index].classList.add("active");
-  }
-}
-
-
-/* =========================================================
-   24. SEARCH POSTS
-   ========================================================= */
-
-function searchPosts() {
-  clearTimeout(searchTimer);
-
-  searchTimer = setTimeout(
-    async function() {
-
-      const input =
-        getElement("searchInput");
-
-      const results =
-        getElement("discoverResults");
-
-      if (!input || !results) {
-        return;
-      }
-
-      const query =
-        input.value.trim();
-
-      if (!query) {
-        results.innerHTML = `
-          <div class="loading">
-            Discover what's trending.
-          </div>
-        `;
-
-        return;
-      }
-
-      results.innerHTML = `
-        <div class="loading">
-          Searching Vidora...
-        </div>
-      `;
-
-      try {
-
-        const { data, error } =
-          await supabaseClient
-            .from("posts")
-            .select(
-              "id,user_id,media_url,media_type,caption,created_at"
-            )
-            .ilike(
-              "caption",
-              "%" + query + "%"
-            )
-            .order("created_at", {
-              ascending: false
-            });
-
-        if (error) {
-          console.error(
-            "SEARCH ERROR:",
-            error
-          );
-
-          results.innerHTML = `
-            <div class="loading">
-              Search failed.
-              <br><br>
-              ${escapeHTML(error.message)}
-            </div>
-          `;
-
-          return;
-        }
-
-        if (!data || data.length === 0) {
-          results.innerHTML = `
-            <div class="loading">
-              No posts found for "${escapeHTML(query)}".
-            </div>
-          `;
-
-          return;
-        }
-
-        results.innerHTML = "";
-
-        for (const post of data) {
-          const element =
-            await createPostElement(post);
-
-          results.appendChild(element);
-        }
-
-      } catch (error) {
-
-        console.error(
-          "SEARCH EXCEPTION:",
-          error
-        );
-
-        results.innerHTML = `
-          <div class="loading">
-            Something went wrong while searching.
-          </div>
-        `;
-      }
-
-    },
-    300
-  );
-}
-/* =========================================================
-   PUBLIC FEED - WATCH WITHOUT ACCOUNT
-   ========================================================= */
-
-async function showPublicFeed() {
-
-  const authScreen =
-    getElement("authScreen");
-
-  const app =
-    getElement("app");
-
-  if (authScreen) {
-    authScreen.classList.add("hidden");
-  }
-
-  if (app) {
-    app.classList.remove("hidden");
-  }
-
-  currentUser = null;
-
-  showPage("home");
-
-  await loadFeed();
-}
-
-
-/* =========================================================
-   25. CHECK CURRENT SESSION
+   17. SESSION CHECK
    ========================================================= */
 
 async function checkSession() {
   try {
-
-    console.log(
-      "Checking Vidora Supabase session..."
-    );
-
-    const { data, error } =
-      await supabaseClient.auth.getSession();
-
+    const { data, error } = await supabaseClient.auth.getSession();
     if (error) {
-      console.error(
-        "SESSION ERROR:",
-        error
-      );
-
-      showPublicFeed();
+      console.error("SESSION ERROR:", error);
+      showAuthScreen();
       return;
     }
 
-    if (data && data.session) {
-
-      currentUser =
-        data.session.user;
-
-      console.log(
-        "Existing session found:",
-        currentUser.email
-      );
-
+    if (data?.session?.user) {
+      currentUser = data.session.user;
       await showApp();
-
     } else {
-
-      console.log(
-        "No active session. Showing public feed."
-      );
-
-      currentUser = null;
-
-      showPublicFeed();
+      showAuthScreen();
     }
-
   } catch (error) {
-
-    console.error(
-      "SESSION EXCEPTION:",
-      error
-    );
-
-    currentUser = null;
-
-    showPublicFeed();
+    console.error("CHECK SESSION EXCEPTION:", error);
+    showAuthScreen();
   }
 }
-/* =========================================================
-   26. SUPABASE AUTH STATE LISTENER
-   ========================================================= */
-
-
-supabaseClient.auth.onAuthStateChange(
-  async function(event, session) {
-
-    console.log("AUTH EVENT:", event);
-
-    if (session && session.user) {
-
-      currentUser = session.user;
-
-      if (event === "SIGNED_IN") {
-        await showApp();
-      }
-
-    } else if (event === "SIGNED_OUT") {
-
-      currentUser = null;
-
-      await showPublicFeed();
-    }
-  }
-);
-/* =========================================================
-   27. INITIALIZE VIDORA
-   ========================================================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  async function() {
-
-    console.log(
-      "Vidora JavaScript loaded successfully."
-    );
-
-    /*
-      Confirm Supabase exists.
-    */
-
-    if (!window.supabase) {
-
-      console.error(
-        "Supabase JavaScript library was not loaded."
-      );
-
-      setMessage(
-        "authMessage",
-        "Vidora could not load Supabase."
-      );
-
-      return;
-    }
-
-    /*
-      Make sure authentication screen
-      is visible while checking session.
-    */
-
-    showAuthScreen();
-
-    /*
-      Set Home as the default page.
-    */
-
-    showPage("home");
-
-    /*
-      Check whether user is already logged in.
-    */
-
-    await checkSession();
-  }
-);
-
 
 /* =========================================================
-   VIDORA - HTML FUNCTION EXPORTS
+   18. DISCOVER (BASIC)
    ========================================================= */
 
-window.signUp = signUp;
-window.login = login;
-window.logout = logout;
+let vidoraDiscoverFilter = "for-you";
 
-window.showPage = showPage;
-window.showpage = showpage;
+async function loadVidoraDiscover(filter) {
+  filter = filter || "for-you";
+  vidoraDiscoverFilter = filter;
 
-window.uploadPost = uploadPost;
-window.publishFromCreate = publishFromCreate;
-window.searchPosts = searchPosts;
-window.deletePost = deletePost;
-window.deleteComment = deleteComment;
+  const results = document.getElementById("discoverResults");
+  if (!results) return;
 
-console.log("VIDORA CORE FUNCTIONS READY");
-/* =========================================================
-   FIND FRIENDS
-   ========================================================= */
-
-async function searchFriends() {
-
-  const input = document.getElementById("friendSearchInput");
-  const results = document.getElementById("friendSearchResults");
-
-  if (!input || !results) return;
-
-  const searchText = input.value.trim();
-
-  if (!searchText) {
-    results.innerHTML = "<p>Enter a username to search.</p>";
-    return;
-  }
-
-  results.innerHTML = "<p>Searching...</p>";
+  results.innerHTML =
+    '<div class="loading">Loading ' +
+    escapeHTML(filter.replace("-", " ")) +
+    "...</div>";
 
   try {
-
     const { data, error } = await supabaseClient
-      .from("profiles")
-      .select("id, username")
-      .ilike("username", "%" + searchText + "%")
-      .limit(20);
+      .from("posts")
+      .select("id,user_id,media_url,media_type,caption,created_at")
+      .order("created_at", { ascending: false })
+      .limit(30);
 
     if (error) {
-      console.error("FRIEND SEARCH ERROR:", error);
-
       results.innerHTML =
-        "<p>Could not search users.</p>";
-
+        '<div class="loading">Unable to load Discover.</div>';
       return;
     }
 
     if (!data || data.length === 0) {
-
-      results.innerHTML =
-        "<p>No users found.</p>";
-
+      results.innerHTML = '<div class="loading">Nothing to discover yet.</div>';
       return;
     }
 
     results.innerHTML = "";
+    const grid = document.createElement("div");
+    grid.className = "discoverGrid";
 
-    data.forEach(function(user) {
-
-      // Don't show yourself in the results
-      if (currentUser && user.id === currentUser.id) {
-        return;
-      }
-
+    data.forEach(function (post) {
       const card = document.createElement("div");
-
-      card.className = "friendCard";
-
-      card.innerHTML = `
-        <div class="friendInfo">
-
-          <strong>
-            ${escapeHTML(user.username || "Vidora User")}
-          </strong>
-
-          <span>
-            @${escapeHTML(user.username || "user")}
-          </span>
-
-        </div>
-
-        <button
-          type="button"
-          class="messageFriendButton"
-          data-user-id="${user.id}"
-          data-username="${escapeHTML(user.username || "Vidora User")}"
-        >
-          💬 Message
-        </button>
-      `;
-
-      results.appendChild(card);
-
+      card.className = "discoverCard";
+      if (post.media_type === "video") {
+        card.innerHTML =
+          '<video src="' +
+          escapeHTML(post.media_url) +
+          '" muted playsinline></video>';
+      } else {
+        card.innerHTML =
+          '<img src="' + escapeHTML(post.media_url) + '" alt="Discover">';
+      }
+      grid.appendChild(card);
     });
 
-    if (!results.innerHTML.trim()) {
-      results.innerHTML = "<p>No other users found.</p>";
-    }
-
+    results.appendChild(grid);
   } catch (error) {
-
-    console.error("FRIEND SEARCH EXCEPTION:", error);
-
-    results.innerHTML =
-      "<p>Something went wrong.</p>";
+    console.error("DISCOVER ERROR:", error);
+    results.innerHTML = '<div class="loading">Discover failed to load.</div>';
   }
 }
 
-
-/* Search button */
-
-const friendSearchButton =
-  document.getElementById("friendSearchButton");
-
-if (friendSearchButton) {
-
-  friendSearchButton.addEventListener(
-    "click",
-    searchFriends
-  );
-
-}
-
-
-/* Press Enter to search */
-
-const friendSearchInput =
-  document.getElementById("friendSearchInput");
-
-if (friendSearchInput) {
-
-  friendSearchInput.addEventListener(
-    "keydown",
-    function(event) {
-
-      if (event.key === "Enter") {
-        searchFriends();
-      }
-
-    }
-  );
-
-}
-
 /* =========================================================
-   29. VIDORA READY MESSAGE
+   19. INIT
    ========================================================= */
 
-console.log(
-  "Vidora app.js initialized."
-);
-window.showAuthScreen = showAuthScreen;
-window.showProfileSetup = showProfileSetup;
-window.loadProfile = loadProfile;
-window.selectVidoraAvatar = selectVidoraAvatar;
-window.toggleInteractiveAvatar = toggleInteractiveAvatar;
-window.closeInteractiveAvatar = closeInteractiveAvatar;
-window.avatarReact = avatarReact;
-window.openAvatarChat = openAvatarChat;
-window.closeAvatarChat = closeAvatarChat;
-window.sendAvatarMessage = sendAvatarMessage;
-  
-  
-
-
-
+document.addEventListener("DOMContentLoaded", async function () {
+  console.log("Vidora DOM ready");
+  initializeVidoraAvatarSystem();
+  showPage("home");
+  await checkSession();
+});
 
 /* =========================================================
-   VIDORA - GLOBAL FUNCTION EXPORTS
+   20. GLOBAL EXPORTS
    ========================================================= */
 
+window.login = login;
+window.signUp = signUp;
+window.logout = logout;
+
+window.showLoginForm = showLoginForm;
+window.showCreateAccount = showCreateAccount;
+window.showAuthChoice = showAuthChoice;
 window.showAuthScreen = showAuthScreen;
 window.showProfileSetup = showProfileSetup;
+window.togglePassword = togglePassword;
+
+window.showPage = showPage;
+window.showpage = showpage;
+
 window.loadProfile = loadProfile;
+window.saveProfile = saveProfile;
+
+window.uploadPost = uploadPost;
+window.publishFromCreate = publishFromCreate;
+window.loadFeed = loadFeed;
+window.loadVidoraDiscover = loadVidoraDiscover;
+
 window.selectVidoraAvatar = selectVidoraAvatar;
 window.getSelectedVidoraAvatar = getSelectedVidoraAvatar;
 window.getVidoraAvatarImage = getVidoraAvatarImage;
 window.getVidoraAvatarInfo = getVidoraAvatarInfo;
-
 window.updateAvatarPreview = updateAvatarPreview;
-window.renderProfileAvatar = renderProfileAvatar;
 window.renderDefaultAvatar = renderDefaultAvatar;
+window.renderProfileAvatar = renderProfileAvatar;
 
 window.showInteractiveAvatar = showInteractiveAvatar;
 window.closeInteractiveAvatar = closeInteractiveAvatar;
@@ -2777,720 +1271,9 @@ window.avatarReact = avatarReact;
 window.openAvatarChat = openAvatarChat;
 window.closeAvatarChat = closeAvatarChat;
 window.sendAvatarMessage = sendAvatarMessage;
-
 window.initializeVidoraAvatarSystem = initializeVidoraAvatarSystem;
 
-window.login = login;
-window.signUp = signUp;
-window.logout = logout;
-
-window.showPage = showPage;
-window.togglePassword = togglePassword;
-window.showCreateAccount = showCreateAccount;
-window.showLoginForm = showLoginForm;
-window.nextSignupStep = nextSignupStep;
-window.completeSignup = completeSignup;
+window.setVidoraTheme = setVidoraTheme;
+window.loadVidoraTheme = loadVidoraTheme;
 
 console.log("VIDORA AUTH FUNCTIONS READY");
-
-
-/* =========================================================
-   PASSWORD SHOW / HIDE
-   ========================================================= */
-
-function togglePassword(inputId, button) {
-
-  const input = document.getElementById(inputId);
-
-  if (!input) return;
-
-  if (input.type === "password") {
-
-    input.type = "text";
-
-    button.textContent = "🙈";
-    button.setAttribute("aria-label", "Hide password");
-
-  } else {
-
-    input.type = "password";
-
-    button.textContent = "👁";
-    button.setAttribute("aria-label", "Show password");
-
-  }
-}
-
-window.togglePassword = togglePassword;
-function showCreateAccount() {
-  const authChoice = document.getElementById("authChoice");
-  const loginForm = document.getElementById("loginForm");
-  const signupForm = document.getElementById("signupForm");
-
-  if (authChoice) {
-    authChoice.classList.add("hidden");
-  }
-
-  if (loginForm) {
-    loginForm.classList.add("hidden");
-  }
-
-  if (signupForm) {
-    signupForm.classList.remove("hidden");
-  }
-
-  const message = document.getElementById("authMessage");
-
-  if (message) {
-    message.textContent = "";
-  }
-}
-
-window.showCreateAccount = showCreateAccount;
-   
-/* =========================================================
-   AUTH FORM HELPERS
-   ========================================================= */
-
-function showLoginForm() {
-  const authChoice = document.getElementById("authChoice");
-  const signupForm = document.getElementById("signupForm");
-  const loginForm = document.getElementById("loginForm");
-
-  if (authChoice) authChoice.classList.add("hidden");
-  if (signupForm) signupForm.classList.add("hidden");
-  if (loginForm) loginForm.classList.remove("hidden");
-
-  const message = document.getElementById("authMessage");
-  if (message) message.textContent = "";
-}
-
-function showAuthChoice() {
-  const authChoice = document.getElementById("authChoice");
-  const signupForm = document.getElementById("signupForm");
-  const loginForm = document.getElementById("loginForm");
-
-  if (authChoice) authChoice.classList.remove("hidden");
-  if (signupForm) signupForm.classList.add("hidden");
-  if (loginForm) loginForm.classList.add("hidden");
-
-  const message = document.getElementById("authMessage");
-  if (message) message.textContent = "";
-}
-
-window.showLoginForm = showLoginForm;
-window.showAuthChoice = showAuthChoice;
- /* =========================================================
-   VIDORA SIGNUP — STEP 1 VALIDATION
-   ========================================================= */
-
-/* =========================================================
-   VIDORA SIGNUP — STEP NAVIGATION
-   ========================================================= */
-
-function nextSignupStep() {
-
-  const message =
-    document.getElementById("authMessage");
-
-
-  /* =========================
-     STEP 1 → STEP 2
-     ========================= */
-
-  if (!document.getElementById("signupStepOne")?.classList.contains("hidden")) {
-
-    const email =
-      document.getElementById("signupEmail")?.value.trim();
-
-    const password =
-      document.getElementById("signupPassword")?.value;
-
-    const confirmPassword =
-      document.getElementById("signupPasswordConfirm")?.value;
-
-
-    if (!email || !email.includes("@")) {
-      if (message) {
-        message.textContent =
-          "Please enter a valid email address.";
-      }
-      return;
-    }
-
-
-    if (!password || password.length < 6) {
-      if (message) {
-        message.textContent =
-          "Your password must be at least 6 characters.";
-      }
-      return;
-    }
-
-
-    if (password !== confirmPassword) {
-      if (message) {
-        message.textContent =
-          "Your passwords do not match.";
-      }
-      return;
-    }
-
-
-    document
-      .getElementById("signupStepOne")
-      ?.classList.add("hidden");
-
-    document
-      .getElementById("signupStepTwo")
-      ?.classList.remove("hidden");
-
-    document
-      .getElementById("signupStep1")
-      ?.classList.remove("active");
-
-    document
-      .getElementById("signupStep2")
-      ?.classList.add("active");
-
-
-    if (message) {
-      message.textContent = "";
-    }
-
-    return;
-  }
-
-
-  /* =========================
-     STEP 2 → STEP 3
-     ========================= */
-
-  if (!document.getElementById("signupStepTwo")?.classList.contains("hidden")) {
-
-    const name =
-      document.getElementById("signupDisplayName")?.value.trim();
-
-    const username =
-      document.getElementById("signupUsername")?.value
-        .trim()
-        .replace(/^@/, "");
-
-    const dob =
-      document.getElementById("signupDateOfBirth")?.value;
-
-
-    if (!name) {
-      if (message) {
-        message.textContent =
-          "Please enter your name.";
-      }
-      return;
-    }
-
-
-    if (!username || username.length < 3) {
-      if (message) {
-        message.textContent =
-          "Username must be at least 3 characters.";
-      }
-      return;
-    }
-
-
-    if (!/^[a-zA-Z0-9_.]+$/.test(username)) {
-      if (message) {
-        message.textContent =
-          "Username can only contain letters, numbers, _ or .";
-      }
-      return;
-    }
-
-
-    if (!dob) {
-      if (message) {
-        message.textContent =
-          "Please enter your date of birth.";
-      }
-      return;
-    }
-
-
-    document
-      .getElementById("signupStepTwo")
-      ?.classList.add("hidden");
-
-    document
-      .getElementById("signupStepThree")
-      ?.classList.remove("hidden");
-
-    document
-      .getElementById("signupStep2")
-      ?.classList.remove("active");
-
-    document
-      .getElementById("signupStep3")
-      ?.classList.add("active");
-
-
-    if (message) {
-      message.textContent = "";
-    }
-
-    return;
-  }
-}
-
-window.nextSignupStep = nextSignupStep;
-/* =========================================================
-   VIDORA — FINAL ACCOUNT CREATION
-   ========================================================= */
-
-async function completeSignup() {
-
-  const message =
-    document.getElementById("authMessage");
-
-  const button =
-    document.getElementById("createAccountFinalBtn");
-
-  const email =
-    document.getElementById("signupEmail")?.value.trim();
-
-  const password =
-    document.getElementById("signupPassword")?.value;
-
-  const name =
-    document.getElementById("signupDisplayName")?.value.trim();
-
-  const username =
-    document.getElementById("signupUsername")?.value
-      .trim()
-      .replace(/^@/, "");
-
-  const dob =
-    document.getElementById("signupDateOfBirth")?.value;
-
-  const terms =
-    document.getElementById("signupTerms")?.checked;
-
-
-  /* Check Step 3 */
-
-  if (!terms) {
-    if (message) {
-      message.textContent =
-        "Please agree to the Vidora Terms and Community Guidelines.";
-    }
-    return;
-  }
-
-
-  if (!email || !password || !name || !username || !dob) {
-    if (message) {
-      message.textContent =
-        "Please complete all required information.";
-    }
-    return;
-  }
-
-
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Creating account...";
-  }
-
-
-  try {
-
-    /* Create the Supabase account */
-
-    const { data, error } =
-      await supabaseClient.auth.signUp({
-        email: email,
-        password: password
-      });
-
-
-    if (error) {
-      throw error;
-    }
-
-
-    if (!data?.user) {
-      throw new Error("Account creation failed.");
-    }
-
-
-    /* Save profile information */
-
-    const { error: profileError } =
-      await supabaseClient
-        .from("profiles")
-        .upsert({
-          id: data.user.id,
-          display_name: name,
-          username: username,
-          date_of_birth: dob,
-          avatar_type: "preset",
-          avatar_name: "Nova",
-          onboarding_completed: false,
-          updated_at: new Date().toISOString()
-        });
-
-
-    if (profileError) {
-      console.error(
-        "Profile error:",
-        profileError
-      );
-    }
-
-
-    /* Tell Vidora this is a new account */
-
-    localStorage.setItem(
-      "vidoraOnboarding",
-      "true"
-    );
-
-    localStorage.setItem(
-      "vidoraAvatarName",
-      "Nova"
-    );
-
-
-    /*
-      If email confirmation is enabled in Supabase,
-      the user needs to confirm their email first.
-    */
-
-    if (!data.session) {
-
-      if (message) {
-        message.textContent =
-          "Account created! Please check your email to confirm your account.";
-      }
-
-      if (button) {
-        button.disabled = false;
-        button.textContent =
-          "🚀 Create My Account";
-      }
-
-      return;
-    }
-
-
-    /* Account is immediately signed in */
-
-    currentUser = data.user;
-
-
-    if (typeof showApp === "function") {
-      showApp();
-    }
-
-
-  } catch (error) {
-
-    console.error(
-      "CREATE ACCOUNT ERROR:",
-      error
-    );
-
-    if (message) {
-      message.textContent =
-        error.message ||
-        "Unable to create your account.";
-    }
-
-    if (button) {
-      button.disabled = false;
-      button.textContent =
-        "🚀 Create My Account";
-    }
-  }
-}
-
-window.completeSignup = completeSignup;
-/* =========================================
-   VIDORA ADVANCED DISCOVER SYSTEM
-========================================= */
-
-let vidoraDiscoverFilter = "for-you";
-
-async function loadVidoraDiscover(filter = "for-you") {
-  const results = document.getElementById("discoverResults");
-
-  if (!results) {
-    console.error("Vidora Discover: discoverResults not found");
-    return;
-  }
-
-  vidoraDiscoverFilter = filter;
-
-  results.innerHTML = `
-    <div class="loading">
-      Loading ${filter.replace("-", " ")}...
-    </div>
-  `;
-
-  try {
-    let query = supabaseClient
-      .from("posts")
-      .select(`
-        id,
-        user_id,
-        media_url,
-        media_type,
-        caption,
-        created_at
-      `);
-
-    /*
-      Discover sorting.
-
-      These are safe starting points because your
-      current posts table already contains created_at.
-    */
-
-    if (filter === "fresh") {
-      query = query.order("created_at", { ascending: false });
-    } else {
-      // For now, Discover starts with recent posts.
-      // Engagement-based ranking will be added next.
-      query = query.order("created_at", { ascending: false });
-    }
-
-    const { data, error } = await query.limit(30);
-
-    if (error) {
-      console.error("DISCOVER ERROR:", error);
-
-      results.innerHTML = `
-        <div class="loading">
-          Couldn't load Discover right now.
-        </div>
-      `;
-
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      results.innerHTML = `
-        <div class="loading">
-          No posts found yet.
-        </div>
-      `;
-
-      return;
-    }
-
-    results.innerHTML = "";
-
-    data.forEach(post => {
-      const card = document.createElement("div");
-
-      card.className = "postCard discoverPostCard";
-
-      const media =
-        post.media_type === "video"
-          ? `
-            <video
-              src="${post.media_url}"
-              controls
-              playsinline
-              preload="metadata"
-            ></video>
-          `
-          : `
-            <img
-              src="${post.media_url}"
-              alt="Vidora post"
-              loading="lazy"
-            >
-          `;
-
-      card.innerHTML = `
-        <div class="postMedia">
-          ${media}
-        </div>
-
-        <div class="postContent">
-          <div class="postCaption">
-            ${escapeHtml(post.caption || "")}
-          </div>
-
-          <div class="discoverMeta">
-            <span>🔥 Vidora</span>
-            <span>${new Date(post.created_at).toLocaleDateString()}</span>
-          </div>
-        </div>
-      `;
-
-      results.appendChild(card);
-    });
-
-  } catch (error) {
-    console.error("DISCOVER EXCEPTION:", error);
-
-    results.innerHTML = `
-      <div class="loading">
-        Something went wrong while loading Discover.
-      </div>
-    `;
-  }
-}
-document.addEventListener("click", function (event) {
-
-  const button = event.target.closest(".trend-filter");
-
-  if (!button) return;
-
-  const filter = button.dataset.filter;
-
-  if (!filter) return;
-
-  document.querySelectorAll(".trend-filter").forEach(btn => {
-    btn.classList.remove("active");
-  });
-
-  button.classList.add("active");
-
-  loadVidoraDiscover(filter);
-
-});
-/* =========================================================
-   VIDORA CREATE MEDIA PREVIEW
-========================================================= */
-
-async function createPostAdvanced() {
-  const fileInput = document.getElementById("createFile");
-  const captionInput = document.getElementById("createCaption");
-  const message = document.getElementById("createMessage");
-  const button = document.querySelector(
-    '.publishButton[onclick="createPostAdvanced()"]'
-  );
-
-  if (!currentUser) {
-    setMessage(
-      "createMessage",
-      "Please log in before publishing."
-    );
-    return;
-  }
-
-  const file = fileInput?.files?.[0];
-
-  if (!file) {
-    setMessage(
-      "createMessage",
-      "Please select a photo or video."
-    );
-    return;
-  }
-
-  if (
-    !file.type.startsWith("image/") &&
-    !file.type.startsWith("video/")
-  ) {
-    setMessage(
-      "createMessage",
-      "Please select an image or video."
-    );
-    return;
-  }
-
-  if (file.size > 50 * 1024 * 1024) {
-    setMessage(
-      "createMessage",
-      "Media must be 50 MB or smaller."
-    );
-    return;
-  }
-
-  const caption =
-    captionInput?.value.trim() || "";
-
-  try {
-    if (button) {
-      button.disabled = true;
-      button.textContent = "Publishing...";
-    }
-
-    setMessage(
-      "createMessage",
-      "Uploading your post..."
-    );
-
-    /*
-      Use Vidora's existing tested createPost()
-      upload/database system.
-    */
-    const result = await createPost(
-      file,
-      caption
-    );
-
-    if (!result || !result.success) {
-      setMessage(
-        "createMessage",
-        result?.message ||
-          "Could not publish your post."
-      );
-      return;
-    }
-
-    setMessage(
-      "createMessage",
-      "Post published successfully! 🚀",
-      true
-    );
-
-    fileInput.value = "";
-
-    if (captionInput) {
-      captionInput.value = "";
-    }
-
-    const preview =
-      document.getElementById(
-        "createMediaPreview"
-      );
-
-    if (preview) {
-      preview.innerHTML = "";
-      preview.classList.add("hidden");
-    }
-
-    await loadFeed();
-
-    setTimeout(function () {
-      showPage("home");
-    }, 800);
-
-  } catch (error) {
-
-    console.error(
-      "ADVANCED CREATE POST ERROR:",
-      error
-    );
-
-    setMessage(
-      "createMessage",
-      error.message ||
-        "Could not publish your post."
-    );
-
-  } finally {
-
-    if (button) {
-      button.disabled = false;
-      button.textContent =
-        "🚀 Publish to Vidora";
-    }
-  }
-}
-
-        
