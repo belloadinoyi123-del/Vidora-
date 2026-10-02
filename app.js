@@ -1229,6 +1229,135 @@ document.addEventListener("DOMContentLoaded", async function () {
   showPage("home");
   await checkSession();
 });
+/* =========================================================
+   VIDORA SOUNDS / BEATS / FILTERS
+   ========================================================= */
+
+const VIDORA_SOUNDS = [
+  { id: "neon-drive", name: "Neon Drive", artist: "Vidora Beats", type: "trending" },
+  { id: "night-pulse", name: "Night Pulse", artist: "Aether", type: "trending" },
+  { id: "soft-glow", name: "Soft Glow", artist: "Luna Wave", type: "chill" },
+  { id: "city-rain", name: "City Rain", artist: "Nova Keys", type: "chill" },
+  { id: "bass-room", name: "Bass Room", artist: "Rex Audio", type: "beats" },
+  { id: "heat-check", name: "Heat Check", artist: "Pixel Lab", type: "beats" },
+  { id: "orbit-flow", name: "Orbit Flow", artist: "Orion", type: "trending" },
+  { id: "violet-hour", name: "Violet Hour", artist: "Vexa", type: "chill" }
+];
+
+const VIDORA_FILTERS = [
+  { id: "normal", name: "Normal", css: "none" },
+  { id: "warm", name: "Warm", css: "sepia(0.25) saturate(1.2)" },
+  { id: "cool", name: "Cool", css: "hue-rotate(20deg) saturate(1.1)" },
+  { id: "mono", name: "B&W", css: "grayscale(1)" },
+  { id: "vivid", name: "Vivid", css: "contrast(1.15) saturate(1.35)" }
+];
+
+let selectedVidoraSound = null;
+let selectedVidoraFilter = "normal";
+
+function openVidoraSounds(filterType) {
+  const panel = document.getElementById("vidoraSoundPanel");
+  const list = document.getElementById("vidoraSoundList");
+  if (!panel || !list) return;
+
+  const type = filterType || "all";
+  const sounds =
+    type === "all"
+      ? VIDORA_SOUNDS
+      : VIDORA_SOUNDS.filter(function (s) {
+          return s.type === type;
+        });
+
+  list.innerHTML = "";
+  sounds.forEach(function (sound) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "soundItem";
+    btn.innerHTML =
+      "<div><strong>" +
+      escapeHTML(sound.name) +
+      "</strong><small>" +
+      escapeHTML(sound.artist) +
+      " · " +
+      escapeHTML(sound.type) +
+      "</small></div><span>＋</span>";
+    btn.onclick = function () {
+      selectVidoraSound(sound.id);
+    };
+    list.appendChild(btn);
+  });
+
+  panel.classList.remove("hidden");
+}
+
+function closeVidoraSounds() {
+  const panel = document.getElementById("vidoraSoundPanel");
+  if (panel) panel.classList.add("hidden");
+}
+
+function selectVidoraSound(soundId) {
+  selectedVidoraSound =
+    VIDORA_SOUNDS.find(function (s) {
+      return s.id === soundId;
+    }) || null;
+
+  const wrap = document.getElementById("selectedVidoraSound");
+  const nameEl = document.getElementById("selectedSoundName");
+  const artistEl = document.getElementById("selectedSoundArtist");
+
+  if (selectedVidoraSound && wrap && nameEl && artistEl) {
+    nameEl.textContent = selectedVidoraSound.name;
+    artistEl.textContent =
+      selectedVidoraSound.artist + " · " + selectedVidoraSound.type;
+    wrap.classList.remove("hidden");
+  }
+
+  closeVidoraSounds();
+}
+
+function removeVidoraSound() {
+  selectedVidoraSound = null;
+  const wrap = document.getElementById("selectedVidoraSound");
+  if (wrap) wrap.classList.add("hidden");
+}
+
+function selectVidoraFilter(filterId) {
+  selectedVidoraFilter = filterId || "normal";
+  const filter = VIDORA_FILTERS.find(function (f) {
+    return f.id === selectedVidoraFilter;
+  });
+
+  document.querySelectorAll(".filterChip").forEach(function (chip) {
+    chip.classList.toggle(
+      "active",
+      chip.dataset.filter === selectedVidoraFilter
+    );
+  });
+
+  const preview = document.getElementById("createMediaPreview");
+  if (preview) {
+    preview.style.filter = filter ? filter.css : "none";
+  }
+}
+
+function renderVidoraFilterChips() {
+  const box = document.getElementById("vidoraFilterChips");
+  if (!box) return;
+
+  box.innerHTML = "";
+  VIDORA_FILTERS.forEach(function (filter) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className =
+      "filterChip" + (filter.id === selectedVidoraFilter ? " active" : "");
+    btn.dataset.filter = filter.id;
+    btn.textContent = filter.name;
+    btn.onclick = function () {
+      selectVidoraFilter(filter.id);
+    };
+    box.appendChild(btn);
+  });
+}
 
 /* =========================================================
    20. GLOBAL EXPORTS
