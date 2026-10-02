@@ -3,1308 +3,283 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#09090f">
+  <meta name="theme-color" content="#0b0d12">
   <meta name="description" content="Vidora - Watch. Share. Connect.">
   <title>Vidora</title>
-
   <link rel="stylesheet" href="style.css">
-
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
 
- <!-- =========================
-     AUTHENTICATION
-========================== -->
+  <!-- =========================
+       AUTHENTICATION
+  ========================== -->
+  <section id="authScreen">
+    <div class="authBox">
 
-<section id="authScreen">
-
-  <div class="authBox">
-
-    <div class="brand">
-      Vi<span>dora</span>
-    </div>
-
-    <p class="tagline">
-      Watch. Share. Connect.
-    </p>
-
-    <!-- LOGIN / SIGNUP CHOICE -->
-
-    <div id="authChoice">
-
-      <button
-        id="showCreateAccountBtn"
-        type="button"
-        onclick="showCreateAccount()"
-      >
-        🚀 Create Account
-      </button>
-
-      <button
-        id="showLoginBtn"
-        type="button"
-        class="secondary"
-        onclick="showLoginForm()"
-      >
-        Log In
-      </button>
-
-    </div>
-
-
-    <!-- LOGIN FORM -->
-
-    <div id="loginForm" class="hidden">
-
-      <h2>Welcome back 👋</h2>
-
-      <input
-        id="email"
-        type="email"
-        placeholder="Email address"
-        autocomplete="email"
-      >
-
-<div class="passwordField">
-
-  <input
-    id="password"
-    type="password"
-    placeholder="Password"
-    autocomplete="current-password"
-  >
-
-  <button
-    type="button"
-    class="passwordToggle"
-    onclick="togglePassword('password', this)"
-    aria-label="Show password"
-  >
-    👁
-  </button>
-
-</div>
-
-      <button
-        id="loginBtn"
-        type="button"
-        onclick="login()"
-      >
-        Log In
-      </button>
-
-      <button
-        type="button"
-        class="secondary"
-        onclick="showAuthChoice()"
-      >
-        ← Back
-      </button>
-
-    </div>
-
-
-    <!-- CREATE ACCOUNT -->
-
-    <div id="signupForm" class="hidden">
-
-      <h2>Create your Vidora account</h2>
-
-      <p class="authSubtitle">
-        Join Vidora and make your profile yours.
-      </p>
-
-
-      <!-- STEP INDICATOR -->
-
-      <div class="signupProgress">
-
-        <span id="signupStep1" class="active">1</span>
-        <span></span>
-        <span id="signupStep2">2</span>
-        <span></span>
-        <span id="signupStep3">3</span>
-
+      <div class="brand">
+        <div class="vidoraLogoMark">V</div>
+        <div class="brandText">Vi<span>dora</span></div>
       </div>
 
+      <p class="tagline">Watch. Share. Connect.</p>
 
-      <!-- STEP 1 -->
-
-      <div
-        id="signupStepOne"
-        class="signupStep"
-      >
-
-        <h3>Let's create your account</h3>
-
-        <input
-          id="signupEmail"
-          type="email"
-          placeholder="Email address"
-          autocomplete="email"
-        >
-
-        <input
-          id="signupPassword"
-          type="password"
-          placeholder="Create a password"
-          autocomplete="new-password"
-        >
-
-        <input
-          id="signupPasswordConfirm"
-          type="password"
-          placeholder="Confirm password"
-          autocomplete="new-password"
-        >
-
-        <button
-          type="button"
-          onclick="nextSignupStep()"
-        >
-          Continue →
+      <!-- CHOICE -->
+      <div id="authChoice">
+        <button id="showCreateAccountBtn" type="button" onclick="showCreateAccount()">
+          🚀 Create Account
         </button>
-
+        <button id="showLoginBtn" type="button" class="secondary" onclick="showLoginForm()">
+          Log In
+        </button>
       </div>
 
+      <!-- LOGIN -->
+      <div id="loginForm" class="hidden">
+        <h2>Welcome back 👋</h2>
 
-      <!-- STEP 2 -->
+        <input id="email" type="email" placeholder="Email address" autocomplete="email">
 
-      <div
-        id="signupStepTwo"
-        class="signupStep hidden"
-      >
-
-        <h3>Tell us about you</h3>
-
-        <input
-          id="signupDisplayName"
-          type="text"
-          placeholder="Your name"
-          maxlength="50"
-          autocomplete="name"
-        >
-
-        <input
-          id="signupUsername"
-          type="text"
-          placeholder="@username"
-          maxlength="30"
-          autocomplete="username"
-        >
-
-        <label for="signupDateOfBirth">
-          Date of birth
-        </label>
-
-        <input
-          id="signupDateOfBirth"
-          type="date"
-        >
-
-        <div class="signupButtons">
-
-          <button
-            type="button"
-            class="secondary"
-            onclick="previousSignupStep()"
-          >
-            ← Back
-          </button>
-
-          <button
-            type="button"
-            onclick="nextSignupStep()"
-          >
-            Continue →
-          </button>
-
+        <div class="passwordField">
+          <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+          <button type="button" class="passwordToggle" onclick="togglePassword('password', this)" aria-label="Show password">👁</button>
         </div>
 
+        <button id="loginBtn" type="button" onclick="login()">Log In</button>
+        <button type="button" class="secondary" onclick="showAuthChoice()">← Back</button>
       </div>
 
+      <!-- SIGNUP (simple, matches app.js) -->
+      <div id="signupForm" class="hidden">
+        <h2>Create your Vidora account</h2>
+        <p class="authSubtitle">Join Vidora and start sharing.</p>
 
-      <!-- STEP 3 -->
+        <input id="email" type="email" placeholder="Email address" autocomplete="email">
+        <input id="password" type="password" placeholder="Create a password" autocomplete="new-password">
 
-      <div
-        id="signupStepThree"
-        class="signupStep hidden"
-      >
-
-        <h3>Choose your Vidora identity ✨</h3>
-
-        <p>
-          You can personalize your profile after creating your account.
-        </p>
-
-        <div class="signupAvatarPreview">
-          <img
-            src="./nova.png"
-            alt="Vidora Avatar"
-          >
-        </div>
-
-        <p>
-          Your default Vidora avatar will be <strong>Nova</strong>.
-        </p>
-
-        <label class="signupAgreement">
-
-          <input
-            type="checkbox"
-            id="signupTerms"
-          >
-
-          <span>
-            I agree to the Vidora Community Guidelines and Terms.
-          </span>
-
-        </label>
-
-        <div class="signupButtons">
-
-          <button
-            type="button"
-            class="secondary"
-            onclick="previousSignupStep()"
-          >
-            ← Back
-          </button>
-
-          <button
-            id="createAccountFinalBtn"
-            type="button"
-            onclick="completeSignup()"
-          >
-            🚀 Create My Account
-          </button>
-
-        </div>
-
+        <button id="signUpBtn" type="button" onclick="signUp()">🚀 Create Account</button>
+        <button type="button" class="secondary" onclick="showAuthChoice()">← Back</button>
       </div>
-
 
       <p id="authMessage"></p>
-
     </div>
-
-  </div>
-
-</section> 
-
+  </section>
 
   <!-- =========================
-       MAIN VIDORA APP
+       MAIN APP
   ========================== -->
-
   <div id="app" class="hidden">
 
-    <!-- HEADER -->
-
     <header>
-
-  <div class="logo">
-    Vi<span>dora</span>
-  </div>
-
-  <button
-    class="login-btn"
-    type="button"
-    onclick="showAuthScreen()"
-  >
-    Log In
-  </button>
-
-  <div class="headerButtons">
-
-      <div class="headerButtons">
-
-        <button
-          type="button"
-          onclick="showPage('discover')"
-          aria-label="Search"
-        >
-          🔍
-        </button>
-
-        <button
-          type="button"
-          onclick="showPage('notifications')"
-          aria-label="Notifications"
-        >
-          🔔
-        </button>
-
+      <div class="logo">
+        <div class="vidoraLogoMark small">V</div>
+        <span>Vi<span>dora</span></span>
       </div>
 
+      <div class="headerButtons">
+        <button type="button" onclick="showPage('discover')" aria-label="Search">🔍</button>
+        <button type="button" onclick="showPage('notifications')" aria-label="Notifications">🔔</button>
+      </div>
     </header>
-
-
-    <!-- MAIN CONTENT -->
 
     <main>
 
-      <!-- =========================
-           HOME
-      ========================== -->
-
+      <!-- HOME -->
       <section id="homeScreen" class="screen">
-
-        <!-- STORIES -->
-
-        <div class="stories">
-
-          <div class="story">
-            <div class="storyCircle">
-              <span>+</span>
-            </div>
-            <small>Your Story</small>
-          </div>
-
-          <div class="story">
-            <div class="storyCircle">
-              <span>J</span>
-            </div>
-            <small>James</small>
-          </div>
-
-          <div class="story">
-            <div class="storyCircle">
-              <span>S</span>
-            </div>
-            <small>Sarah</small>
-          </div>
-
-          <div class="story">
-            <div class="storyCircle">
-              <span>D</span>
-            </div>
-            <small>Daniel</small>
-          </div>
-
-          <div class="story">
-            <div class="storyCircle">
-              <span>A</span>
-            </div>
-            <small>Alex</small>
-          </div>
-
-        </div>
-
-
-        <!-- CREATE POST -->
-
         <div class="createCard">
-
-          <h2>
-            Create something ✨
-          </h2>
-
-          <textarea
-            id="postCaption"
-            placeholder="What's happening?"
-          ></textarea>
-
-          <input
-            id="mediaFile"
-            type="file"
-            accept="image/*,video/*"
-          >
-
-          <button
-            type="button"
-            onclick="uploadPost()"
-          >
-            📤 Publish
-          </button>
-
+          <h2>Create something ✨</h2>
+          <textarea id="postCaption" placeholder="What's happening?"></textarea>
+          <input id="mediaFile" type="file" accept="image/*,video/*">
+          <button type="button" onclick="uploadPost()">📤 Publish</button>
           <p id="uploadMessage"></p>
-
         </div>
-
-
-        <!-- FEED -->
 
         <div id="feed">
-
-          <div class="loading">
-            Loading Vidora...
-          </div>
-
+          <div class="loading">Loading Vidora...</div>
         </div>
-
       </section>
 
+      <!-- DISCOVER -->
+      <section id="discoverScreen" class="screen hidden">
+        <div class="discoverHeader">
+          <h2>Discover</h2>
+        </div>
 
-      <!-- =========================
-           DISCOVER
-      ========================== -->
-
-      <section
-        id="discoverScreen"
-        class="screen hidden"
-      >
-
-        <div class="searchBox">
-
-          <input
-            id="searchInput"
-            type="search"
-            placeholder="Search Vidora..."
-            autocomplete="off"
-            oninput="searchPosts()"
-          >
-<!-- VIDORA TRENDING FILTERS -->
-<div class="vidora-trending-filters">
-
-  <button class="trend-filter active" data-filter="for-you">
-    ✨ For You
-  </button>
-
-  <button class="trend-filter" data-filter="trending">
-    🔥 Trending
-  </button>
-
-  <button class="trend-filter" data-filter="rising">
-    ⚡ Rising
-  </button>
-
-  <button class="trend-filter" data-filter="most-viewed">
-    👀 Most Viewed
-  </button>
-
-  <button class="trend-filter" data-filter="most-liked">
-    ❤️ Most Liked
-  </button>
-
-  <button class="trend-filter" data-filter="fresh">
-    🆕 Fresh
-  </button>
-
-  <button class="trend-filter" data-filter="sounds">
-    🎵 Sounds
-  </button>
-
-</div>
+        <div class="discoverFilters">
+          <button class="trend-filter active" data-filter="for-you" onclick="loadVidoraDiscover('for-you')">✨ For You</button>
+          <button class="trend-filter" data-filter="fresh" onclick="loadVidoraDiscover('fresh')">🆕 Fresh</button>
+          <button class="trend-filter" data-filter="trending" onclick="loadVidoraDiscover('trending')">🔥 Trending</button>
         </div>
 
         <div id="discoverResults">
+          <div class="loading">Discover what's trending.</div>
+        </div>
+      </section>
 
-          <div class="loading">
-            Discover what's trending.
+      <!-- CREATE -->
+      <section id="createScreen" class="screen hidden">
+        <div class="createCard advancedCreateCard">
+          <div class="createHeader">
+            <h2>✨ Create Post</h2>
+            <p>Share something with the Vidora community.</p>
           </div>
 
-        </div>
+          <input id="createFile" type="file" accept="image/*,video/*">
+          <textarea id="createCaption" maxlength="2200" placeholder="What's happening on Vidora?"></textarea>
 
+          <button type="button" onclick="publishFromCreate()">🚀 Publish to Vidora</button>
+          <p id="createMessage"></p>
+        </div>
       </section>
 
-
-      <!-- =========================
-           CREATE
-      ========================== -->
-
-      <div class="createCard advancedCreateCard">
-
-  <!-- HEADER -->
-  <div class="createHeader">
-    <div>
-      <h2>✨ Create Post</h2>
-      <p>Share something with the Vidora community.</p>
-    </div>
-  </div>
-
-  <!-- MEDIA -->
-  <div class="createMediaBox">
-
-    <input
-      id="createFile"
-      type="file"
-      accept="image/*,video/*"
-      hidden
-      onchange="previewCreateMedia(event)"
-    >
-
-    <label
-      for="createFile"
-      class="mediaUploadArea"
-    >
-      <span class="mediaUploadIcon">＋</span>
-
-      <strong>Add photo or video</strong>
-
-      <small>
-        Photos and videos up to 50 MB
-      </small>
-    </label>
-
-    <div
-      id="createMediaPreview"
-      class="createMediaPreview hidden"
-    ></div>
-
-  </div>
-
-  <!-- CAPTION -->
-  <div class="captionSection">
-
-    <textarea
-      id="createCaption"
-      maxlength="2200"
-      placeholder="What's happening on Vidora?"
-      oninput="updateCaptionCount()"
-    ></textarea>
-
-    <div class="captionTools">
-
-      <span id="createCaptionCount">
-        0 / 2200
-      </span>
-
-      <button
-        type="button"
-        onclick="insertCreateHashtag()"
-      >
-        # Hashtag
-      </button>
-
-      <button
-        type="button"
-        onclick="insertCreateMention()"
-      >
-        @ Mention
-      </button>
-
-    </div>
-
-  </div>
-
-  <!-- ADVANCED OPTIONS -->
-  <div class="createOptions">
-
-    <button
-      type="button"
-      class="createOption"
-      onclick="openVidoraSounds()"
-    >
-      <span>🎵</span>
-
-      <div>
-        <strong>Add Sound</strong>
-        <small>Choose music for your post</small>
-      </div>
-
-      <span>›</span>
-    </button>
-
-
-    <button
-      type="button"
-      class="createOption"
-      onclick="openVidoraTrendingSounds()"
-    >
-      <span>🔥</span>
-
-      <div>
-        <strong>Trending Sounds</strong>
-        <small>Discover what's trending</small>
-      </div>
-
-      <span>›</span>
-    </button>
-
-
-    <button
-      type="button"
-      class="createOption"
-      onclick="openVidoraMentions()"
-    >
-      <span>👤</span>
-
-      <div>
-        <strong>Mention People</strong>
-        <small>@mention Vidora users</small>
-      </div>
-
-      <span>›</span>
-    </button>
-
-
-    <button
-      type="button"
-      class="createOption"
-      onclick="openVidoraTags()"
-    >
-      <span>👥</span>
-
-      <div>
-        <strong>Tag People</strong>
-        <small>Tag followers and friends</small>
-      </div>
-
-      <span>›</span>
-    </button>
-
-  </div>
-
-  <!-- SELECTED SOUND -->
-  <div
-    id="selectedVidoraSound"
-    class="selectedSound hidden"
-  >
-
-    <span>🎵</span>
-
-    <div>
-      <strong id="selectedSoundName">
-        No sound selected
-      </strong>
-
-      <small id="selectedSoundArtist">
-        Vidora Sound
-      </small>
-    </div>
-
-    <button
-      type="button"
-      onclick="removeVidoraSound()"
-    >
-      ×
-    </button>
-
-  </div>
-
-  <!-- TAGGED USERS -->
-  <div
-    id="createTaggedUsers"
-    class="taggedUsers hidden"
-  ></div>
-
-  <!-- VISIBILITY -->
-  <div class="postVisibility">
-
-    <span>🌐</span>
-
-    <div>
-      <strong>Post visibility</strong>
-
-      <small>
-        Choose who can see this post
-      </small>
-    </div>
-
-    <select id="createVisibility">
-
-      <option value="public">
-        Everyone
-      </option>
-
-      <option value="followers">
-        Followers
-      </option>
-
-      <option value="private">
-        Only me
-      </option>
-
-    </select>
-
-  </div>
-
-  <!-- ACTIONS -->
-  <div class="createActions">
-
-    <button
-      type="button"
-      class="secondary"
-      onclick="saveVidoraDraft()"
-    >
-      💾 Save Draft
-    </button>
-
-    <button
-      type="button"
-      class="publishButton"
-      onclick="createPostAdvanced()"
-    >
-      🚀 Publish to Vidora
-    </button>
-
-  </div>
-
-  <p id="createMessage"></p>
-
-</div>
-
-
-      <!-- =========================
-           CHAT
-      ========================== -->
-
-      <section
-        id="chatScreen"
-        class="screen hidden"
-      >
-
+      <!-- FRIENDS -->
+      <section id="friendsScreen" class="screen hidden">
         <div class="profileCard">
-
-          <h2>
-            💬 Vidora Chat
-          </h2>
-
-          <p id="chatStatus">
-            Messaging foundation ready.
-          </p>
-
-        </div>
-
-      </section>
-      <!-- =========================
-           FIND FRIENDS
-      ========================== -->
-
-      <section
-        id="friendsScreen"
-        class="screen hidden"
-      >
-
-        <div class="profileCard">
-
-          <h2>
-            👥 Find Friends
-          </h2>
-
+          <h2>👥 Find Friends</h2>
           <div class="searchBox">
-
-            <input
-              type="search"
-              id="friendSearchInput"
-              placeholder="Search people by username..."
-              autocomplete="off"
-            >
-
-            <button
-              type="button"
-              id="friendSearchButton"
-            >
-              🔍 Search
-            </button>
-
+            <input type="search" id="friendSearchInput" placeholder="Search people by username..." autocomplete="off">
+            <button type="button" id="friendSearchButton">🔍 Search</button>
           </div>
-
           <div id="friendSearchResults">
-
-            <p>
-              Search for people on Vidora.
-            </p>
-
+            <p>Search for people on Vidora.</p>
           </div>
-
         </div>
-
       </section>
 
-      
-
-    <!-- =========================
-     PROFILE
-========================= -->
-
-<section id="profileScreen" class="screen hidden">
-
-  <div class="profileCard">
-
-    <div class="profileAvatar" id="profileAvatar">
-      V
-    </div>
-
-    <h2 id="profileDisplayName">Welcome to Vidora</h2>
-
-    <p id="profileUsername">Set up your profile</p>
-
-    <p id="profileBio">
-      Add your name, username and bio.
-    </p>
-
-    <p id="profileEmail">Loading account...</p>
-
-    <button type="button" onclick="showProfileSetup()">
-      ✏️ Edit Profile
-    </button>
-
-    <button id="logoutBtn" type="button" onclick="logout()">
-      Log Out
-    </button>
-
-  </div>
-
-
-  <!-- PROFILE SETUP -->
-
-  <div id="profileSetup" class="createCard hidden">
-
-    <h2>Your Vidora Profile</h2>
-
-    <p class="profileSubtitle">
-      Personalize your Vidora profile
-    </p>
-
-
-    <!-- NAME -->
-
-    <input
-      id="profileDisplayNameInput"
-      type="text"
-      placeholder="Display name"
-      maxlength="50"
-    >
-
-
-    <!-- USERNAME -->
-
-    <input
-      id="profileUsernameInput"
-      type="text"
-      placeholder="Username"
-      maxlength="30"
-    >
-
-
-    <!-- BIO -->
-
-    <textarea
-      id="profileBioInput"
-      placeholder="Tell people about yourself..."
-      maxlength="160"
-    ></textarea>
-
-
-    <!-- PROFILE PICTURE -->
-
-    <h3 class="avatarTitle">
-      Profile Picture
-    </h3>
-
-
-    <!-- UPLOAD -->
-
-    <label
-      for="profileAvatarFile"
-      class="avatarUploadButton"
-    >
-      📷 Upload Your Own Photo
-    </label>
-
-    <input
-      id="profileAvatarFile"
-      type="file"
-      accept="image/*"
-      hidden
-    >
-
-
-    <p class="avatarOr">
-      — OR CHOOSE A VIDORA AVATAR —
-    </p>
-
-
-    <!-- VIDORA AVATARS -->
-<div class="avatarEditor">
-
-  <h3>Choose Your Vidora Avatar</h3>
-
-  <div id="profileAvatarPreview"
-       class="profileAvatarPreview">
-    <span>V</span>
-  </div>
-
-  <div id="vidoraAvatarChoices"
-       class="vidoraAvatarChoices">
-  </div>
-
-  <p class="avatarOr">OR</p>
-
-  <label
-    for="profileAvatarFile"
-    class="avatarUploadButton">
-    📷 Upload Your Own Avatar
-  </label>
-
-  <input
-    id="profileAvatarFile"
-    type="file"
-    accept="image/*"
-    hidden
-    onchange="handleAvatarUpload(event)"
-  >
-
-  <button
-    type="button"
-    onclick="useVidoraAvatar()">
-    🔄 Use Vidora Avatar
-  </button>
-
-  <button
-    type="button"
-    onclick="resetVidoraAvatar()">
-    ♻️ Reset Avatar
-  </button>
-
-  <input
-    type="hidden"
-    id="selectedVidoraAvatar"
-    value="Nova"
-  >
-
-</div>
-    <div
-      id="vidoraAvatarOptions"
-      class="vidoraAvatarGrid"
-    >
-
-      <div class="avatarChoices">
-
-  <button
-    type="button"
-    class="vidoraAvatar"
-    data-avatar="Nova"
-    onclick="selectVidoraAvatar('Nova')">
-    <img src="./nova.png" alt="Nova">
-    <span>Nova</span>
-  </button>
-
-  <button
-    type="button"
-    class="vidoraAvatar"
-    data-avatar="Kai"
-    onclick="selectVidoraAvatar('Kai')">
-    <img src="./kai.png" alt="Kai">
-    <span>Kai</span>
-  </button>
-
-  <button
-    type="button"
-    class="vidoraAvatar"
-    data-avatar="Luna"
-    onclick="selectVidoraAvatar('Luna')">
-    <img src="./luna.png" alt="Luna">
-    <span>Luna</span>
-  </button>
-
-  <button
-    type="button"
-    class="vidoraAvatar"
-    data-avatar="Ivy"
-    onclick="selectVidoraAvatar('Ivy')">
-    <img src="./ivy.png" alt="Ivy">
-    <span>Ivy</span>
-  </button>
-
-  <button
-    type="button"
-    class="vidoraAvatar"
-    data-avatar="Orion"
-    onclick="selectVidoraAvatar('Orion')">
-    <img src="./orion.png" alt="Orion">
-    <span>Orion</span>
-  </button>
-
-</div>
-
-
-    
-
-      
-
-    </div>
-
-<div class="interactiveAvatarSetting">
-
-  <div>
-    <strong>✨ Interactive Avatar</strong>
-
-    <p>
-      Let your Vidora avatar interact with you.
-    </p>
-  </div>
-
-  <label class="avatarSwitch">
-
-    <input
-      type="checkbox"
-      id="interactiveAvatarToggle"
-      onchange="toggleInteractiveAvatar(this.checked)"
-    >
-
-    <span class="avatarSlider"></span>
-
-  </label>
-
-</div>
-    <!-- SELECTED AVATAR -->
-
-    
-
-
-    <p id="profileMessage"></p>
-
-
-    <!-- SAVE -->
-
-    <button
-      type="button"
-      class="saveProfileButton"
-      onclick="saveProfile()"
-    >
-      💾 Save Profile
-    </button>
-
-  </div>
-
-</section>
-      <!-- =========================
-           NOTIFICATIONS
-      ========================== -->
-
-      <section
-        id="notificationsScreen"
-        class="screen hidden"
-      >
-
+      <!-- PROFILE -->
+      <section id="profileScreen" class="screen hidden">
         <div class="profileCard">
+          <div class="profileAvatar" id="profileAvatar">V</div>
+          <h2 id="profileDisplayName">Welcome to Vidora</h2>
+          <p id="profileUsername">Set up your profile</p>
+          <p id="profileBio">Add your name, username and bio.</p>
+          <p id="profileEmail">Loading account...</p>
 
-          <h2>
-            🔔 Notifications
-          </h2>
-
-          <p>
-            Your notifications will appear here.
-          </p>
-
+          <button type="button" onclick="showProfileSetup()">✏️ Edit Profile</button>
+          <button id="logoutBtn" type="button" onclick="logout()">Log Out</button>
         </div>
 
+        <!-- EDIT PROFILE -->
+        <div id="profileSetup" class="createCard editProfilePanel hidden">
+          <h2>Your Vidora Profile</h2>
+          <p class="profileSubtitle">Personalize your Vidora profile</p>
+
+          <input id="profileDisplayNameInput" type="text" placeholder="Display name" maxlength="50">
+          <input id="profileUsernameInput" type="text" placeholder="Username" maxlength="30">
+          <textarea id="profileBioInput" placeholder="Tell people about yourself..." maxlength="160"></textarea>
+
+          <h3 class="avatarTitle">Choose Your Vidora Avatar</h3>
+
+          <div id="profileAvatarPreview" class="profileAvatarPreview">
+            <span>V</span>
+          </div>
+
+          <div id="vidoraAvatarChoices" class="vidoraAvatarChoices"></div>
+
+          <input type="hidden" id="selectedVidoraAvatar" value="nova">
+
+          <div class="interactiveAvatarSetting">
+            <div>
+              <strong>✨ Interactive Avatar</strong>
+              <p>Let your Vidora avatar interact with you.</p>
+            </div>
+            <label class="avatarSwitch">
+              <input
+                type="checkbox"
+                id="interactiveAvatarToggle"
+                onchange="toggleInteractiveAvatar(this.checked)"
+              >
+              <span class="avatarSlider"></span>
+            </label>
+          </div>
+
+          <p id="profileMessage"></p>
+
+          <button type="button" class="saveProfileButton" onclick="saveProfile()">
+            💾 Save Profile
+          </button>
+        </div>
+      </section>
+
+      <!-- NOTIFICATIONS -->
+      <section id="notificationsScreen" class="screen hidden">
+        <div class="profileCard">
+          <h2>🔔 Notifications</h2>
+          <p>Your notifications will appear here.</p>
+        </div>
+      </section>
+
+      <!-- CHAT -->
+      <section id="chatScreen" class="screen hidden">
+        <div class="profileCard">
+          <h2>💬 Vidora Chat</h2>
+          <p id="chatStatus">Messaging foundation ready.</p>
+        </div>
       </section>
 
     </main>
 
-
-    <!-- =========================
-         BOTTOM NAVIGATION
-    ========================== -->
-
+    <!-- BOTTOM NAV -->
     <nav class="bottomNav">
-
-      <button
-        type="button"
-        class="navButton active"
-        onclick="showPage('home')"
-      >
-        <span>🏠</span>
-        Home
+      <button type="button" class="navButton active" onclick="showPage('home')">
+        <span>🏠</span> Home
       </button>
-
-<button
-  type="button"
-  class="navButton"
-  onclick="showPage('discover')"
->
-  <span>🔍</span>
-  Discover
-</button>
-      >
-        
-  
-
-      <button
-        type="button"
-        class="navButton createButton"
-        onclick="showPage('create')"
-      >
-        <span>+</span>
-        Create
+      <button type="button" class="navButton" onclick="showPage('discover')">
+        <span>🔍</span> Discover
       </button>
-
-      <button
-        type="button"
-        class="navButton"
-        onclick="showPage('chat')"
-      >
-        <span>💬</span>
-        Chat
+      <button type="button" class="navButton createButton" onclick="showPage('create')">
+        <span>+</span> Create
       </button>
-<button
-  type="button"
-  class="navButton"
-  onclick="showPage('friends')"
->
-  <span>👥</span>
-  Friends
-</button>
-      <button
-        type="button"
-        class="navButton"
-      onclick="showPage('profile')"
-      >
-        <span>👤</span>
-        Profile
+      <button type="button" class="navButton" onclick="showPage('friends')">
+        <span>👥</span> Friends
       </button>
-
+      <button type="button" class="navButton" onclick="showPage('profile')">
+        <span>👤</span> Profile
+      </button>
     </nav>
-
   </div>
 
+  <!-- INTERACTIVE AVATAR -->
+  <div id="interactiveAvatar" class="interactiveAvatar hidden">
+    <button type="button" class="avatarCloseButton" onclick="closeInteractiveAvatar()">×</button>
 
-  <!-- Vidora JavaScript -->
+    <div class="interactiveAvatarCharacter" onclick="avatarReact()">
+      <img id="interactiveAvatarImage" src="" alt="Vidora Avatar">
+    </div>
+
+    <div class="interactiveAvatarBubble">
+      <strong id="avatarGreeting">Hi! 👋</strong>
+      <p id="avatarMessage">Welcome back to Vidora!</p>
+    </div>
+
+    <button type="button" class="avatarChatButton" onclick="openAvatarChat()">
+      💬 Chat with me
+    </button>
+  </div>
+
+  <!-- AVATAR CHAT -->
+  <div id="avatarChatPanel" class="avatarChatPanel hidden">
+    <div class="avatarChatHeader">
+      <span id="avatarChatName">Vidora Avatar</span>
+      <button type="button" onclick="closeAvatarChat()">×</button>
+    </div>
+
+    <div id="avatarChatMessages" class="avatarChatMessages">
+      <div class="avatarChatMessage avatarBot">👋 Hey! I'm your Vidora avatar.</div>
+    </div>
+
+    <div class="avatarChatInputArea">
+      <input
+        id="avatarChatInput"
+        type="text"
+        placeholder="Talk to your avatar..."
+        maxlength="300"
+        onkeydown="if(event.key === 'Enter') sendAvatarMessage()"
+      >
+      <button type="button" onclick="sendAvatarMessage()">➤</button>
+    </div>
+  </div>
+
   <script src="app.js"></script>
-<!-- =========================================================
-     VIDORA INTERACTIVE AVATAR
-     ========================================================= -->
-
-<div id="interactiveAvatar" class="interactiveAvatar hidden">
-
-  <button
-    type="button"
-    class="avatarCloseButton"
-    onclick="closeInteractiveAvatar()"
-  >
-    ×
-  </button>
-
-  <div
-    class="interactiveAvatarCharacter"
-    onclick="avatarReact()"
-  >
-    <img
-      id="interactiveAvatarImage"
-      src=""
-      alt="Vidora Avatar"
-    >
-  </div>
-
-  <div class="interactiveAvatarBubble">
-    <strong id="avatarGreeting">
-      Hi! 👋
-    </strong>
-
-    <p id="avatarMessage">
-      Welcome back to Vidora!
-    </p>
-  </div>
-
-  <button
-    type="button"
-    class="avatarChatButton"
-    onclick="openAvatarChat()"
-  >
-    💬 Chat with me
-  </button>
-
-</div>
-
-
-<!-- AVATAR CHAT -->
-
-<div
-  id="avatarChatPanel"
-  class="avatarChatPanel hidden"
->
-
-  <div class="avatarChatHeader">
-
-    <span id="avatarChatName">
-      Vidora Avatar
-    </span>
-
-    <button
-      type="button"
-      onclick="closeAvatarChat()"
-    >
-      ×
-    </button>
-
-  </div>
-
-
-  <div
-    id="avatarChatMessages"
-    class="avatarChatMessages"
-  >
-
-    <div class="avatarChatMessage avatarBot">
-      👋 Hey! I'm your Vidora avatar.
-    </div>
-
-  </div>
-
-
-  <div class="avatarChatInputArea">
-
-    <input
-      id="avatarChatInput"
-      type="text"
-      placeholder="Talk to your avatar..."
-      maxlength="300"
-      onkeydown="if(event.key === 'Enter') sendAvatarMessage()"
-    >
-
-    <button
-      type="button"
-      onclick="sendAvatarMessage()"
-    >
-      ➤
-    </button>
-
-  </div>
-
-</div>
-  <!-- =====================================================
-     VIDORA SMART AVATAR
-     ===================================================== -->
-
-<div id="interactiveAvatar" class="interactiveAvatar hidden">
-
-  <button
-    type="button"
-    class="avatarCloseButton"
-    onclick="closeInteractiveAvatar()"
-  >
-    ×
-  </button>
-
-  <div class="avatarCharacter">
-    <div class="avatarGlow"></div>
-
-    <img
-      id="interactiveAvatarImage"
-      src=""
-      alt="Vidora Assistant"
-    >
-  </div>
-
-  <div class="avatarWelcomeCard">
-
-    <div class="avatarOnline">
-      <span class="avatarOnlineDot"></span>
-      Vidora Assistant
-    </div>
-
-    <h3 id="avatarGreeting">
-      Welcome to Vidora!
-    </h3>
-
-    <p id="avatarMessage">
-      I'm here to help you explore Vidora.
-    </p>
-
-    <div
-      id="avatarQuickActions"
-      class="avatarQuickActions"
-    ></div>
-
-  </div>
-
-</div>
 </body>
 </html>
