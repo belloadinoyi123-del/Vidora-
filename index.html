@@ -54,8 +54,19 @@
         <h2>Create your Vidora account</h2>
         <p class="authSubtitle">Join Vidora and start sharing.</p>
 
-        const email = document.getElementById("signupEmail")?.value.trim();
-const password = document.getElementById("signupPassword")?.value.trim();
+       <input
+  id="signupEmail"
+  type="email"
+  placeholder="Email address"
+  autocomplete="email"
+>
+
+<input
+  id="signupPassword"
+  type="password"
+  placeholder="Create a password"
+  autocomplete="new-password"
+> 
 
         <button id="signUpBtn" type="button" onclick="signUp()">🚀 Create Account</button>
         <button type="button" class="secondary" onclick="showAuthChoice()">← Back</button>
