@@ -2764,43 +2764,39 @@ window.showProfileSetup = showProfileSetup;
 window.loadProfile = loadProfile;
 window.saveProfile = saveProfile;
 
-/* Avatar selection */
 window.selectVidoraAvatar = selectVidoraAvatar;
 window.getSelectedVidoraAvatar = getSelectedVidoraAvatar;
 window.getVidoraAvatarImage = getVidoraAvatarImage;
 window.getVidoraAvatarInfo = getVidoraAvatarInfo;
 
+window.updateAvatarPreview = updateAvatarPreview;
+window.renderProfileAvatar = renderProfileAvatar;
+window.renderDefaultAvatar = renderDefaultAvatar;
 
+window.showInteractiveAvatar = showInteractiveAvatar;
+window.closeInteractiveAvatar = closeInteractiveAvatar;
+window.toggleInteractiveAvatar = toggleInteractiveAvatar;
+window.avatarReact = avatarReact;
+window.openAvatarChat = openAvatarChat;
+window.closeAvatarChat = closeAvatarChat;
+window.sendAvatarMessage = sendAvatarMessage;
 
-window.closeInteractiveAvatar =
-  closeInteractiveAvatar;
-
-window.avatarReact =
-  avatarReact;
-
-
-
-/* Avatar system */
-window.initializeVidoraAvatarSystem =
-  initializeVidoraAvatarSystem;
+window.initializeVidoraAvatarSystem = initializeVidoraAvatarSystem;
 
 window.login = login;
 window.signUp = signUp;
-window.showLoginForm = showLoginForm;
+window.logout = logout;
+
+window.showPage = showPage;
+window.togglePassword = togglePassword;
 window.showCreateAccount = showCreateAccount;
+window.showLoginForm = showLoginForm;
+window.nextSignupStep = nextSignupStep;
+window.completeSignup = completeSignup;
 
 console.log("VIDORA AUTH FUNCTIONS READY");
-function showLoginForm() {
-  document.getElementById("authChoice")?.classList.add("hidden");
-  document.getElementById("signupForm")?.classList.add("hidden");
-  document.getElementById("loginForm")?.classList.remove("hidden");
 
-  const message = document.getElementById("authMessage");
 
-  if (message) {
-    message.textContent = "";
-  }
-}
 /* =========================================================
    PASSWORD SHOW / HIDE
    ========================================================= */
