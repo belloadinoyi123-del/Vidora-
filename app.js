@@ -1226,6 +1226,7 @@ async function loadVidoraDiscover(filter) {
 document.addEventListener("DOMContentLoaded", async function () {
   console.log("Vidora DOM ready");
   initializeVidoraAvatarSystem();
+  renderVidoraFilterChips();
   showPage("home");
   await checkSession();
 });
