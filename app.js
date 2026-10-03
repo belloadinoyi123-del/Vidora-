@@ -1532,5 +1532,6 @@ window.initializeVidoraAvatarSystem = initializeVidoraAvatarSystem;
 
 window.setVidoraTheme = setVidoraTheme;
 window.loadVidoraTheme = loadVidoraTheme;
-
+window.playVidoraSound = playVidoraSound;
+window.stopVidoraSound = stopVidoraSound;
 console.log("VIDORA AUTH FUNCTIONS READY");
