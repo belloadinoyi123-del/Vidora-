@@ -1397,22 +1397,31 @@ function openVidoraSounds(filterType) {
         });
 
   list.innerHTML = "";
+
   sounds.forEach(function (sound) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "soundItem";
-    btn.innerHTML =
-      "<div><strong>" +
-      escapeHTML(sound.name) +
-      "</strong><small>" +
-      escapeHTML(sound.artist) +
-      " · " +
-      escapeHTML(sound.type) +
-      "</small></div><span>＋</span>";
-    btn.onclick = function () {
-      selectVidoraSound(sound.id);
+    const row = document.createElement("div");
+    row.className = "soundItemRow";
+
+    row.innerHTML =
+      "<div class='soundMeta'>" +
+      "<strong>" + escapeHTML(sound.name) + "</strong>" +
+      "<small>" + escapeHTML(sound.artist) + " · " + escapeHTML(sound.type) + "</small>" +
+      "</div>" +
+      "<div class='soundActions'>" +
+      "<button type='button' class='secondary soundPlayBtn'>▶</button>" +
+      "<button type='button' class='soundUseBtn'>Use</button>" +
+      "</div>";
+
+    row.querySelector(".soundPlayBtn").onclick = function () {
+      playVidoraSound(sound.id);
     };
-    list.appendChild(btn);
+
+    row.querySelector(".soundUseBtn").onclick = function () {
+      selectVidoraSound(sound.id);
+      stopVidoraSound();
+    };
+
+    list.appendChild(row);
   });
 
   panel.classList.remove("hidden");
