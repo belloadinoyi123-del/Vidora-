@@ -144,10 +144,11 @@
 
     <!-- Media upload -->
     <input
-      id="createFile"
-      type="file"
-      accept="image/*,video/*"
-    >
+  id="createFile"
+  type="file"
+  accept="image/*,video/*"
+  onchange="previewCreateMedia(event)"
+>
 
     <div id="createMediaPreview" class="createMediaPreview"></div>
 
