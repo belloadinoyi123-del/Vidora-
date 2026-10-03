@@ -953,7 +953,7 @@ async function publishFromCreate() {
   if (!fileInput || !captionInput) return;
 
   const file = fileInput.files[0];
-  const caption = captionInput.value.trim();
+  let caption = captionInput.value.trim();
   clearMessage("createMessage");
 
   if (!currentUser) {
@@ -967,6 +967,20 @@ async function publishFromCreate() {
     return;
   }
 
+  // Add selected sound to caption
+  if (selectedVidoraSound) {
+    caption +=
+      (caption ? "\n\n" : "") +
+      "🎵 " + selectedVidoraSound.name + " — " + selectedVidoraSound.artist;
+  }
+
+  // Add selected filter to caption
+  if (selectedVidoraFilter && selectedVidoraFilter !== "normal") {
+    caption +=
+      (caption ? "\n" : "") +
+      "🎨 Filter: " + selectedVidoraFilter;
+  }
+
   if (button) {
     button.disabled = true;
     button.textContent = "Publishing...";
@@ -974,15 +988,24 @@ async function publishFromCreate() {
 
   try {
     const result = await createPost(file, caption);
+
     if (!result.success) {
       setMessage("createMessage", result.message);
       return;
     }
 
     setMessage("createMessage", "Post published successfully!", true);
+
     fileInput.value = "";
     captionInput.value = "";
+    removeVidoraSound();
+    selectVidoraFilter("normal");
+
+    const preview = document.getElementById("createMediaPreview");
+    if (preview) preview.innerHTML = "";
+
     await loadFeed();
+
     setTimeout(function () {
       showPage("home");
     }, 700);
