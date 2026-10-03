@@ -942,7 +942,32 @@ async function uploadPost() {
     }
   }
 }
+function previewCreateMedia(event) {
+  const file = event?.target?.files?.[0];
+  const preview = document.getElementById("createMediaPreview");
+  if (!preview) return;
 
+  preview.innerHTML = "";
+  if (!file) return;
+
+  const url = URL.createObjectURL(file);
+
+  if (file.type.startsWith("video/")) {
+    const video = document.createElement("video");
+    video.src = url;
+    video.controls = true;
+    video.playsInline = true;
+    preview.appendChild(video);
+  } else {
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = "Preview";
+    preview.appendChild(img);
+  }
+
+  // Keep current filter on preview
+  selectVidoraFilter(selectedVidoraFilter || "normal");
+}
 async function publishFromCreate() {
   const fileInput = getElement("createFile");
   const captionInput = getElement("createCaption");
