@@ -991,7 +991,33 @@ async function publishFromCreate() {
     setMessage("createMessage", validation.message);
     return;
   }
+let vidoraAudioPlayer = null;
 
+function playVidoraSound(soundId) {
+  const sound = VIDORA_SOUNDS.find(function (s) {
+    return s.id === soundId;
+  });
+
+  if (!sound || !sound.audioUrl) return;
+
+  // Stop any sound already playing
+  if (vidoraAudioPlayer) {
+    vidoraAudioPlayer.pause();
+    vidoraAudioPlayer = null;
+  }
+
+  vidoraAudioPlayer = new Audio(sound.audioUrl);
+  vidoraAudioPlayer.play().catch(function (err) {
+    console.error("Audio play error:", err);
+  });
+}
+
+function stopVidoraSound() {
+  if (vidoraAudioPlayer) {
+    vidoraAudioPlayer.pause();
+    vidoraAudioPlayer = null;
+  }
+}
   // Add selected sound to caption
   const VIDORA_SOUNDS = [
   {
