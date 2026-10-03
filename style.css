@@ -943,3 +943,40 @@ body.lightMode .bottomNav {
   display: block;
   color: var(--vidora-muted);
 }
+.soundItemRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--vidora-border);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.soundMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.soundMeta strong {
+  display: block;
+}
+
+.soundMeta small {
+  display: block;
+  color: var(--vidora-muted);
+}
+
+.soundActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.soundPlayBtn,
+.soundUseBtn {
+  min-width: 48px;
+  padding: 10px 12px;
+}
