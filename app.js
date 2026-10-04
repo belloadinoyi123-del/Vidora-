@@ -1424,14 +1424,19 @@ function openVidoraSounds(filterType) {
       "<button type='button' class='soundUseBtn'>Use</button>" +
       "</div>";
 
-    row.querySelector(".soundPlayBtn").onclick = function () {
-      playVidoraSound(sound.id);
-    };
+    row.querySelector(".soundPlayBtn").onclick = function (event) {
+  event.preventDefault();
+  event.stopPropagation();
+  playVidoraSound(sound.id);
+};
 
-    row.querySelector(".soundUseBtn").onclick = function () {
-      selectVidoraSound(sound.id);
-      stopVidoraSound();
-    };
+row.querySelector(".soundUseBtn").onclick = function (event) {
+  event.preventDefault();
+  event.stopPropagation();
+  selectVidoraSound(sound.id);
+  // Keep sound playing while testing
+  // stopVidoraSound();
+};
 
     list.appendChild(row);
   });
