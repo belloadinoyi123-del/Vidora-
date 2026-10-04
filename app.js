@@ -991,7 +991,59 @@ async function publishFromCreate() {
     setMessage("createMessage", validation.message);
     return;
   }
-  
+  function handleCustomSoundUpload(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("audio/")) {
+    alert("Please choose an audio file.");
+    return;
+  }
+
+  // Stop old sound
+  if (vidoraAudioPlayer) {
+    try {
+      vidoraAudioPlayer.pause();
+    } catch (e) {}
+    vidoraAudioPlayer = null;
+  }
+
+  const audioUrl = URL.createObjectURL(file);
+
+  // Set as selected sound for the post
+  selectedVidoraSound = {
+    id: "custom-upload",
+    name: file.name || "My Sound",
+    artist: "Uploaded by you",
+    type: "custom",
+    audioUrl: audioUrl
+  };
+
+  // Show selected sound in UI
+  const wrap = document.getElementById("selectedVidoraSound");
+  const nameEl = document.getElementById("selectedSoundName");
+  const artistEl = document.getElementById("selectedSoundArtist");
+
+  if (wrap && nameEl && artistEl) {
+    nameEl.textContent = selectedVidoraSound.name;
+    artistEl.textContent = selectedVidoraSound.artist;
+    wrap.classList.remove("hidden");
+  }
+
+  // Play uploaded sound immediately
+  const audio = new Audio(audioUrl);
+  audio.volume = 1;
+  vidoraAudioPlayer = audio;
+
+  audio.play().then(function () {
+    console.log("Custom sound playing");
+  }).catch(function (err) {
+    console.error("Custom sound play failed:", err);
+    alert("Could not play uploaded sound: " + (err.message || "unknown error"));
+  });
+}
+
+window.handleCustomSoundUpload = handleCustomSoundUpload;
 function playVidoraSound(soundId) {
   const sound = VIDORA_SOUNDS.find(function (s) {
     return s.id === soundId;
