@@ -969,112 +969,8 @@ function previewCreateMedia(event) {
   // Keep current filter on preview
   selectVidoraFilter(selectedVidoraFilter || "normal");
 }
-async function publishFromCreate() {
-  const fileInput = getElement("createFile");
-  const captionInput = getElement("createCaption");
-  const button = document.querySelector(
-    '#createScreen button[onclick="publishFromCreate()"]'
-  );
 
-  if (!fileInput || !captionInput) return;
-
-  const file = fileInput.files[0];
-  let caption = captionInput.value.trim();
-  clearMessage("createMessage");
-
-  if (!currentUser) {
-    setMessage("createMessage", "Please log in first.");
-    return;
-  }
-
-  const validation = validateMediaFile(file);
-  if (!validation.valid) {
-    setMessage("createMessage", validation.message);
-    return;
-  }
-  function handleCustomSoundUpload(event) {
-  const file = event?.target?.files?.[0];
-  if (!file) return;
-
-  if (!file.type.startsWith("audio/")) {
-    alert("Please choose an audio file.");
-    return;
-  }
-
-  // Stop old sound
-  if (vidoraAudioPlayer) {
-    try {
-      vidoraAudioPlayer.pause();
-    } catch (e) {}
-    vidoraAudioPlayer = null;
-  }
-
-  const audioUrl = URL.createObjectURL(file);
-
-  // Set as selected sound for the post
-  selectedVidoraSound = {
-    id: "custom-upload",
-    name: file.name || "My Sound",
-    artist: "Uploaded by you",
-    type: "custom",
-    audioUrl: audioUrl
-  };
-
-  // Show selected sound in UI
-  const wrap = document.getElementById("selectedVidoraSound");
-  const nameEl = document.getElementById("selectedSoundName");
-  const artistEl = document.getElementById("selectedSoundArtist");
-
-  if (wrap && nameEl && artistEl) {
-    nameEl.textContent = selectedVidoraSound.name;
-    artistEl.textContent = selectedVidoraSound.artist;
-    wrap.classList.remove("hidden");
-  }
-
-  // Play uploaded sound immediately
-  const audio = new Audio(audioUrl);
-  audio.volume = 1;
-  vidoraAudioPlayer = audio;
-
-  audio.play().then(function () {
-    console.log("Custom sound playing");
-  }).catch(function (err) {
-    console.error("Custom sound play failed:", err);
-    alert("Could not play uploaded sound: " + (err.message || "unknown error"));
-  });
-}
-
-window.handleCustomSoundUpload = handleCustomSoundUpload;
-function playVidoraSound(soundId) {
-  const sound = VIDORA_SOUNDS.find(function (s) {
-    return s.id === soundId;
-  });
-
-  if (!sound || !sound.audioUrl) {
-    alert("No audio found for this sound.");
-    return;
-  }
-
-  // Stop old sound first
-  if (vidoraAudioPlayer) {
-    try {
-      vidoraAudioPlayer.pause();
-      vidoraAudioPlayer.src = "";
-    } catch (e) {}
-    vidoraAudioPlayer = null;
-  }
-
-  const audio = new Audio();
-  audio.src = sound.audioUrl;
-  audio.preload = "auto";
-  audio.volume = 1;
-
-  vidoraAudioPlayer = audio;
-
-  audio.addEventListener("error", function () {
-    console.error("Audio load error", audio.error);
-    alert("Could not load this sound.");
-
+  async function publishFromCreate() {
   const fileInput = getElement("createFile");
   const captionInput = getElement("createCaption");
   const button = document.querySelector(
@@ -1098,14 +994,12 @@ function playVidoraSound(soundId) {
     return;
   }
 
-  // Add selected sound to caption
   if (selectedVidoraSound) {
     caption +=
       (caption ? "\n\n" : "") +
       "🎵 " + selectedVidoraSound.name + " — " + selectedVidoraSound.artist;
   }
 
-  // Add selected filter to caption
   if (selectedVidoraFilter && selectedVidoraFilter !== "normal") {
     caption +=
       (caption ? "\n" : "") +
@@ -1127,10 +1021,12 @@ function playVidoraSound(soundId) {
 
     setMessage("createMessage", "Post published successfully!", true);
 
-    // Reset form
     fileInput.value = "";
     captionInput.value = "";
-    removeVidoraSound();
+
+    if (typeof removeVidoraSound === "function") {
+      removeVidoraSound();
+    }
 
     if (typeof selectVidoraFilter === "function") {
       selectVidoraFilter("normal");
