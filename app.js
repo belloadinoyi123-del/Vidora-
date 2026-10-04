@@ -661,8 +661,9 @@ async function showApp() {
   }
 
   showPage("home");
-  await loadProfile();
-  await loadFeed();
+await loadProfile();
+await loadFeed();
+await loadStories();
   appInitialized = true;
 
   if (interactiveAvatarEnabled) {
