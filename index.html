@@ -1245,7 +1245,91 @@
 </div>
 
 
+<!-- =========================================================
+     VIDORA CALL SCREEN
+========================================================= -->
 
+<div
+  id="vidoraCallOverlay"
+  class="vidoraCallOverlay hidden"
+>
+
+  <div class="vidoraCallBox">
+
+    <div class="vidoraCallHeader">
+
+      <strong id="vidoraCallName">
+        Vidora Call
+      </strong>
+
+      <span id="vidoraCallStatus">
+        Connecting...
+      </span>
+
+    </div>
+
+
+    <div class="vidoraRemoteWrap">
+
+      <video
+        id="vidoraRemoteVideo"
+        class="vidoraRemoteVideo"
+        autoplay
+        playsinline
+      ></video>
+
+      <div
+        id="vidoraHologramGlow"
+        class="vidoraHologramGlow"
+      ></div>
+
+    </div>
+
+
+    <video
+      id="vidoraLocalVideo"
+      class="vidoraLocalVideo"
+      autoplay
+      muted
+      playsinline
+    ></video>
+
+
+    <div class="vidoraCallButtons">
+
+      <button
+        type="button"
+        id="toggleCallMute"
+      >
+        🎤
+      </button>
+
+      <button
+        type="button"
+        id="toggleCallCamera"
+      >
+        📹
+      </button>
+
+      <button
+        type="button"
+        id="toggleHologram"
+      >
+        ✨
+      </button>
+
+      <button
+        type="button"
+        id="endVidoraCall"
+      >
+        📵
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 <!-- =========================================================
      APP JAVASCRIPT
 ========================================================= -->
