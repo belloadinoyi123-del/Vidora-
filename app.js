@@ -998,24 +998,36 @@ function playVidoraSound(soundId) {
     return s.id === soundId;
   });
 
-  if (!sound || !sound.audioUrl) return;
-
-  // Stop any sound already playing
-  if (vidoraAudioPlayer) {
-    vidoraAudioPlayer.pause();
-    vidoraAudioPlayer = null;
+  if (!sound || !sound.audioUrl) {
+    alert("No audio found for this sound.");
+    return;
   }
 
-  vidoraAudioPlayer = new Audio(sound.audioUrl);
-  vidoraAudioPlayer.play().catch(function (err) {
-    console.error("Audio play error:", err);
-  });
-}
+  try {
+    if (vidoraAudioPlayer) {
+      vidoraAudioPlayer.pause();
+      vidoraAudioPlayer = null;
+    }
 
-function stopVidoraSound() {
-  if (vidoraAudioPlayer) {
-    vidoraAudioPlayer.pause();
-    vidoraAudioPlayer = null;
+    vidoraAudioPlayer = new Audio(sound.audioUrl);
+    vidoraAudioPlayer.crossOrigin = "anonymous";
+    vidoraAudioPlayer.volume = 1.0;
+
+    const playPromise = vidoraAudioPlayer.play();
+
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise
+        .then(function () {
+          console.log("Playing:", sound.name);
+        })
+        .catch(function (err) {
+          console.error("Audio play error:", err);
+          alert("Could not play this sound. Try another one or check your network.");
+        });
+    }
+  } catch (error) {
+    console.error("Audio exception:", error);
+    alert("Sound player failed to start.");
   }
 }
   // Add selected sound to caption
