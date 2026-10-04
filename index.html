@@ -97,6 +97,50 @@
 
       <!-- HOME -->
       <section id="homeScreen" class="screen">
+       <!-- =========================
+     VIDORA STORIES
+========================= -->
+<section class="storiesSection">
+
+  <div class="storiesHeader">
+    <h2>Stories</h2>
+  </div>
+
+  <div id="storiesContainer" class="storiesContainer">
+
+    <!-- Your Story -->
+    <button
+      type="button"
+      class="storyItem yourStoryItem"
+      onclick="openStoryCreator()"
+    >
+      <div class="storyAvatarWrap">
+
+        <div
+          id="yourStoryAvatar"
+          class="storyAvatar"
+        >
+          V
+        </div>
+
+        <span class="storyAddButton">+</span>
+
+      </div>
+
+      <span class="storyName">
+        Your Story
+      </span>
+    </button>
+
+    <!-- Other users' stories -->
+    <div
+      id="otherStories"
+      class="otherStories"
+    ></div>
+
+  </div>
+
+</section> 
         <div class="createCard">
           <h2>Create something ✨</h2>
           <textarea id="postCaption" placeholder="What's happening?"></textarea>
