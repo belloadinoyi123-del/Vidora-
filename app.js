@@ -6514,3 +6514,49 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+/* =========================================================
+   VIDORA VOICE / VIDEO CALL ENGINE
+   ========================================================= */
+
+let vidoraCallStream = null;
+let vidoraCallPeer = null;
+
+async function startVoiceCall() {
+  try {
+    vidoraCallStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: false
+    });
+
+    alert("🎙️ Voice call started. Microphone is connected.");
+  } catch (error) {
+    console.error("Voice call error:", error);
+    alert("Microphone permission is required for a voice call.");
+  }
+}
+
+async function startVideoCall() {
+  try {
+    vidoraCallStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true
+    });
+
+    alert("🎥 Video call started. Camera and microphone are connected.");
+  } catch (error) {
+    console.error("Video call error:", error);
+    alert("Camera and microphone permissions are required for a video call.");
+  }
+}
+
+function endVidoraCall() {
+  if (vidoraCallStream) {
+    vidoraCallStream.getTracks().forEach(track => track.stop());
+    vidoraCallStream = null;
+  }
+
+  if (vidoraCallPeer) {
+    vidoraCallPeer.close();
+    vidoraCallPeer = null;
+  }
+}
