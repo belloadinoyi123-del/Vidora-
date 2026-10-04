@@ -915,7 +915,55 @@
 
   </main>
 
+<!-- =====================================================
+     CALLS
+===================================================== -->
 
+<section
+  id="callsScreen"
+  class="screen hidden"
+>
+
+  <div class="profileCard callCard">
+
+    <div class="callHeader">
+      <div>
+        <h2>📞 Vidora Calls</h2>
+        <p class="profileSubtitle">
+          Voice and video calls with your friends.
+        </p>
+      </div>
+    </div>
+
+    <div class="callActions">
+
+      <button
+        type="button"
+        class="callActionButton"
+        onclick="startVidoraCall('video')"
+      >
+        📹
+        <span>Video Call</span>
+      </button>
+
+      <button
+        type="button"
+        class="callActionButton"
+        onclick="startVidoraCall('voice')"
+      >
+        📞
+        <span>Voice Call</span>
+      </button>
+
+    </div>
+
+    <p id="callStatus" class="callStatus">
+      Choose a call type to get started.
+    </p>
+
+  </div>
+
+</section>
 
   <!-- =======================================================
        BOTTOM NAVIGATION
