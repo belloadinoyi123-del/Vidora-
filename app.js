@@ -5980,7 +5980,7 @@ function showPage(page) {
 
     friends:
       "friendsScreen"
-       calls:
+       
      "callsScreen"
   };
 
