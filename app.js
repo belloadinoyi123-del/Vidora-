@@ -2650,3 +2650,236 @@ document.addEventListener(
 
   }
 );
+/* =========================================================
+   VIDORA CREATE SOUND SYSTEM (CLEAN)
+   ========================================================= */
+
+let vidoraAudioPlayer = null;
+
+// Keep selected sound/filter if already declared
+if (typeof selectedVidoraSound === "undefined") {
+  var selectedVidoraSound = null;
+}
+if (typeof selectedVidoraFilter === "undefined") {
+  var selectedVidoraFilter = "normal";
+}
+
+const VIDORA_SOUNDS_CLEAN = [
+  {
+    id: "neon-drive",
+    name: "Neon Drive",
+    artist: "Vidora Beats",
+    type: "trending",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  },
+  {
+    id: "night-pulse",
+    name: "Night Pulse",
+    artist: "Aether",
+    type: "trending",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  },
+  {
+    id: "soft-glow",
+    name: "Soft Glow",
+    artist: "Luna Wave",
+    type: "chill",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  },
+  {
+    id: "bass-room",
+    name: "Bass Room",
+    artist: "Rex Audio",
+    type: "beats",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  },
+  {
+    id: "heat-check",
+    name: "Heat Check",
+    artist: "Pixel Lab",
+    type: "beats",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  }
+];
+
+function stopVidoraSound() {
+  if (vidoraAudioPlayer) {
+    try {
+      vidoraAudioPlayer.pause();
+      vidoraAudioPlayer.src = "";
+    } catch (e) {}
+    vidoraAudioPlayer = null;
+  }
+}
+
+function playVidoraSound(soundId) {
+  const list = (typeof VIDORA_SOUNDS !== "undefined" && VIDORA_SOUNDS.length)
+    ? VIDORA_SOUNDS
+    : VIDORA_SOUNDS_CLEAN;
+
+  const sound = list.find(function (s) {
+    return s.id === soundId;
+  });
+
+  if (!sound || !sound.audioUrl) {
+    alert("No audio found for this sound.");
+    return;
+  }
+
+  stopVidoraSound();
+
+  const audio = new Audio(sound.audioUrl);
+  audio.volume = 1;
+  vidoraAudioPlayer = audio;
+
+  audio.play().catch(function (err) {
+    console.error("Play failed:", err);
+    alert("Play failed: " + (err.message || "unknown error"));
+  });
+}
+
+function selectVidoraSound(soundId) {
+  const list = (typeof VIDORA_SOUNDS !== "undefined" && VIDORA_SOUNDS.length)
+    ? VIDORA_SOUNDS
+    : VIDORA_SOUNDS_CLEAN;
+
+  selectedVidoraSound =
+    list.find(function (s) {
+      return s.id === soundId;
+    }) || null;
+
+  const wrap = document.getElementById("selectedVidoraSound");
+  const nameEl = document.getElementById("selectedSoundName");
+  const artistEl = document.getElementById("selectedSoundArtist");
+
+  if (selectedVidoraSound && wrap && nameEl && artistEl) {
+    nameEl.textContent = selectedVidoraSound.name;
+    artistEl.textContent =
+      selectedVidoraSound.artist + " · " + selectedVidoraSound.type;
+    wrap.classList.remove("hidden");
+  }
+}
+
+function removeVidoraSound() {
+  selectedVidoraSound = null;
+  stopVidoraSound();
+
+  const wrap = document.getElementById("selectedVidoraSound");
+  if (wrap) wrap.classList.add("hidden");
+}
+
+function openVidoraSounds(filterType) {
+  const panel = document.getElementById("vidoraSoundPanel");
+  const listBox = document.getElementById("vidoraSoundList");
+  if (!panel || !listBox) return;
+
+  const list = (typeof VIDORA_SOUNDS !== "undefined" && VIDORA_SOUNDS.length)
+    ? VIDORA_SOUNDS
+    : VIDORA_SOUNDS_CLEAN;
+
+  const type = filterType || "all";
+  const sounds =
+    type === "all"
+      ? list
+      : list.filter(function (s) {
+          return s.type === type;
+        });
+
+  listBox.innerHTML = "";
+
+  sounds.forEach(function (sound) {
+    const row = document.createElement("div");
+    row.className = "soundItemRow";
+
+    row.innerHTML =
+      "<div class='soundMeta'>" +
+      "<strong>" + escapeHTML(sound.name) + "</strong>" +
+      "<small>" + escapeHTML(sound.artist) + " · " + escapeHTML(sound.type) + "</small>" +
+      "</div>" +
+      "<div class='soundActions'>" +
+      "<button type='button' class='secondary soundPlayBtn'>▶</button>" +
+      "<button type='button' class='soundUseBtn'>Use</button>" +
+      "</div>";
+
+    row.querySelector(".soundPlayBtn").onclick = function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      playVidoraSound(sound.id);
+    };
+
+    row.querySelector(".soundUseBtn").onclick = function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      selectVidoraSound(sound.id);
+    };
+
+    listBox.appendChild(row);
+  });
+
+  panel.classList.remove("hidden");
+}
+
+function closeVidoraSounds() {
+  const panel = document.getElementById("vidoraSoundPanel");
+  if (panel) panel.classList.add("hidden");
+}
+
+function handleCustomSoundUpload(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("audio/")) {
+    alert("Please choose an audio file.");
+    return;
+  }
+
+  stopVidoraSound();
+
+  const audioUrl = URL.createObjectURL(file);
+
+  selectedVidoraSound = {
+    id: "custom-upload",
+    name: file.name || "My Sound",
+    artist: "Uploaded by you",
+    type: "custom",
+    audioUrl: audioUrl,
+    file: file
+  };
+
+  const wrap = document.getElementById("selectedVidoraSound");
+  const nameEl = document.getElementById("selectedSoundName");
+  const artistEl = document.getElementById("selectedSoundArtist");
+
+  if (wrap && nameEl && artistEl) {
+    nameEl.textContent = selectedVidoraSound.name;
+    artistEl.textContent = selectedVidoraSound.artist;
+    wrap.classList.remove("hidden");
+  }
+}
+
+function playSelectedCustomSound() {
+  if (!selectedVidoraSound || !selectedVidoraSound.audioUrl) {
+    alert("Please choose or upload a sound first.");
+    return;
+  }
+
+  stopVidoraSound();
+
+  const audio = new Audio(selectedVidoraSound.audioUrl);
+  audio.volume = 1;
+  vidoraAudioPlayer = audio;
+
+  audio.play().catch(function (err) {
+    console.error(err);
+    alert("Play failed: " + (err.message || "unknown error"));
+  });
+}
+
+window.openVidoraSounds = openVidoraSounds;
+window.closeVidoraSounds = closeVidoraSounds;
+window.selectVidoraSound = selectVidoraSound;
+window.removeVidoraSound = removeVidoraSound;
+window.playVidoraSound = playVidoraSound;
+window.stopVidoraSound = stopVidoraSound;
+window.handleCustomSoundUpload = handleCustomSoundUpload;
+window.playSelectedCustomSound = playSelectedCustomSound;
