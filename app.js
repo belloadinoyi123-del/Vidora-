@@ -2543,14 +2543,11 @@ document.addEventListener(
 
     if (chooseButton && fileInput) {
 
-      chooseButton.addEventListener(
-        "click",
-        function () {
-          fileInput.click();
-        }
-      );
+  chooseButton.onclick = function () {
+    fileInput.click();
+  };
 
-    }
+}
 
     if (fileInput) {
 
