@@ -151,7 +151,18 @@
 >
 
     <div id="createMediaPreview" class="createMediaPreview"></div>
-
+<div class="createTools">
+  <label for="customSoundFile" class="secondary" style="display:inline-block; padding:12px 18px; border-radius:14px; border:1px solid var(--vidora-border); cursor:pointer;">
+    🎤 Upload My Sound
+  </label>
+  <input
+    id="customSoundFile"
+    type="file"
+    accept="audio/*"
+    hidden
+    onchange="handleCustomSoundUpload(event)"
+  >
+</div>
     <!-- Sounds / Beats -->
     <div class="createTools">
       <button type="button" class="secondary" onclick="openVidoraSounds('all')">
