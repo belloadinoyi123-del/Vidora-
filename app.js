@@ -6484,3 +6484,33 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+/* =========================================================
+   VIDORA CALL BUTTON CONNECTION
+   ========================================================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const voiceCallBtn = document.getElementById("startVoiceCallBtn");
+  const videoCallBtn = document.getElementById("startVideoCallBtn");
+
+  if (voiceCallBtn) {
+    voiceCallBtn.addEventListener("click", () => {
+      if (typeof startVoiceCall === "function") {
+        startVoiceCall();
+      } else {
+        alert("Voice calling is not connected yet.");
+      }
+    });
+  }
+
+  if (videoCallBtn) {
+    videoCallBtn.addEventListener("click", () => {
+      if (typeof startVideoCall === "function") {
+        startVideoCall();
+      } else {
+        alert("Video calling is not connected yet.");
+      }
+    });
+  }
+
+});
