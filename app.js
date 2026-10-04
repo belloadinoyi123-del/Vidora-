@@ -2607,3 +2607,49 @@ window.previousStory =
 
 window.closeStoryViewer =
   closeStoryViewer;
+/* =========================================================
+   STORY VIEWER BUTTONS
+========================================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
+
+    const closeButton =
+      document.getElementById(
+        "closeStoryViewerBtn"
+      );
+
+    const previousButton =
+      document.getElementById(
+        "storyPreviousBtn"
+      );
+
+    const nextButton =
+      document.getElementById(
+        "storyNextBtn"
+      );
+
+    if (closeButton) {
+      closeButton.addEventListener(
+        "click",
+        closeStoryViewer
+      );
+    }
+
+    if (previousButton) {
+      previousButton.addEventListener(
+        "click",
+        previousStory
+      );
+    }
+
+    if (nextButton) {
+      nextButton.addEventListener(
+        "click",
+        nextStory
+      );
+    }
+
+  }
+);
