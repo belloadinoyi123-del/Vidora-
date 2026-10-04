@@ -1074,75 +1074,38 @@ function playVidoraSound(soundId) {
   audio.addEventListener("error", function () {
     console.error("Audio load error", audio.error);
     alert("Could not load this sound.");
-  });
 
-  audio.play().then(function () {
-    console.log("Now playing:", sound.name);
-  }).catch(function (err) {
-    console.error("Play blocked/failed:", err);
-    alert("Play failed: " + (err && err.message ? err.message : "unknown error"));
-  });
-}
+async function publishFromCreate() {
+  const fileInput = getElement("createFile");
+  const captionInput = getElement("createCaption");
+  const button = document.querySelector(
+    '#createScreen button[onclick="publishFromCreate()"]'
+  );
+
+  if (!fileInput || !captionInput) return;
+
+  const file = fileInput.files[0];
+  let caption = captionInput.value.trim();
+  clearMessage("createMessage");
+
+  if (!currentUser) {
+    setMessage("createMessage", "Please log in first.");
+    return;
+  }
+
+  const validation = validateMediaFile(file);
+  if (!validation.valid) {
+    setMessage("createMessage", validation.message);
+    return;
+  }
 
   // Add selected sound to caption
-  const VIDORA_SOUNDS = [
-  {
-    id: "neon-drive",
-    name: "Neon Drive",
-    artist: "Vidora Beats",
-    type: "trending",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: "night-pulse",
-    name: "Night Pulse",
-    artist: "Aether",
-    type: "trending",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: "soft-glow",
-    name: "Soft Glow",
-    artist: "Luna Wave",
-    type: "chill",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: "city-rain",
-    name: "City Rain",
-    artist: "Nova Keys",
-    type: "chill",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: "bass-room",
-    name: "Bass Room",
-    artist: "Rex Audio",
-    type: "beats",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: "heat-check",
-    name: "Heat Check",
-    artist: "Pixel Lab",
-    type: "beats",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: "orbit-flow",
-    name: "Orbit Flow",
-    artist: "Orion",
-    type: "trending",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: "violet-hour",
-    name: "Violet Hour",
-    artist: "Vexa",
-    type: "chill",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  if (selectedVidoraSound) {
+    caption +=
+      (caption ? "\n\n" : "") +
+      "🎵 " + selectedVidoraSound.name + " — " + selectedVidoraSound.artist;
   }
-];
+
   // Add selected filter to caption
   if (selectedVidoraFilter && selectedVidoraFilter !== "normal") {
     caption +=
@@ -1165,10 +1128,14 @@ function playVidoraSound(soundId) {
 
     setMessage("createMessage", "Post published successfully!", true);
 
+    // Reset form
     fileInput.value = "";
     captionInput.value = "";
     removeVidoraSound();
-    selectVidoraFilter("normal");
+
+    if (typeof selectVidoraFilter === "function") {
+      selectVidoraFilter("normal");
+    }
 
     const preview = document.getElementById("createMediaPreview");
     if (preview) preview.innerHTML = "";
