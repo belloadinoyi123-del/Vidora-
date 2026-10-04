@@ -2850,3 +2850,4 @@ window.playVidoraSound = playVidoraSound;
 window.stopVidoraSound = stopVidoraSound;
 window.handleCustomSoundUpload = handleCustomSoundUpload;
 window.playSelectedCustomSound = playSelectedCustomSound;
+window.publishFromCreate = publishFromCreate;
