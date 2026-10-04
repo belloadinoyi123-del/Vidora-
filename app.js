@@ -991,8 +991,6 @@ async function publishFromCreate() {
     setMessage("createMessage", validation.message);
     return;
   }
-let vidoraAudioPlayer = null;
-
 function playVidoraSound(soundId) {
   const sound = VIDORA_SOUNDS.find(function (s) {
     return s.id === soundId;
@@ -1003,33 +1001,35 @@ function playVidoraSound(soundId) {
     return;
   }
 
-  try {
-    if (vidoraAudioPlayer) {
+  // Stop old sound first
+  if (vidoraAudioPlayer) {
+    try {
       vidoraAudioPlayer.pause();
-      vidoraAudioPlayer = null;
-    }
-
-    vidoraAudioPlayer = new Audio(sound.audioUrl);
-    vidoraAudioPlayer.crossOrigin = "anonymous";
-    vidoraAudioPlayer.volume = 1.0;
-
-    const playPromise = vidoraAudioPlayer.play();
-
-    if (playPromise && typeof playPromise.then === "function") {
-      playPromise
-        .then(function () {
-          console.log("Playing:", sound.name);
-        })
-        .catch(function (err) {
-          console.error("Audio play error:", err);
-          alert("Could not play this sound. Try another one or check your network.");
-        });
-    }
-  } catch (error) {
-    console.error("Audio exception:", error);
-    alert("Sound player failed to start.");
+      vidoraAudioPlayer.src = "";
+    } catch (e) {}
+    vidoraAudioPlayer = null;
   }
+
+  const audio = new Audio();
+  audio.src = sound.audioUrl;
+  audio.preload = "auto";
+  audio.volume = 1;
+
+  vidoraAudioPlayer = audio;
+
+  audio.addEventListener("error", function () {
+    console.error("Audio load error", audio.error);
+    alert("Could not load this sound.");
+  });
+
+  audio.play().then(function () {
+    console.log("Now playing:", sound.name);
+  }).catch(function (err) {
+    console.error("Play blocked/failed:", err);
+    alert("Play failed: " + (err && err.message ? err.message : "unknown error"));
+  });
 }
+
   // Add selected sound to caption
   const VIDORA_SOUNDS = [
   {
