@@ -1045,52 +1045,51 @@ function playVidoraSound(soundId) {
     name: "Night Pulse",
     artist: "Aether",
     type: "trending",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   },
   {
     id: "soft-glow",
     name: "Soft Glow",
     artist: "Luna Wave",
     type: "chill",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   },
   {
     id: "city-rain",
     name: "City Rain",
     artist: "Nova Keys",
     type: "chill",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   },
   {
     id: "bass-room",
     name: "Bass Room",
     artist: "Rex Audio",
     type: "beats",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   },
   {
     id: "heat-check",
     name: "Heat Check",
     artist: "Pixel Lab",
     type: "beats",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   },
   {
     id: "orbit-flow",
     name: "Orbit Flow",
     artist: "Orion",
     type: "trending",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   },
   {
     id: "violet-hour",
     name: "Violet Hour",
     artist: "Vexa",
     type: "chill",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   }
 ];
-
   // Add selected filter to caption
   if (selectedVidoraFilter && selectedVidoraFilter !== "normal") {
     caption +=
