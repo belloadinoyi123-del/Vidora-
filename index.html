@@ -401,7 +401,66 @@
       <button type="button" onclick="sendAvatarMessage()">➤</button>
     </div>
   </div>
+<!-- =========================
+     VIDORA STORY CREATOR
+========================= -->
 
+<input
+  type="file"
+  id="storyFileInput"
+  accept="image/*,video/*"
+  hidden
+>
+
+<div
+  id="storyCreator"
+  class="storyCreator hidden"
+>
+
+  <div class="storyCreatorBox">
+
+    <div class="storyCreatorHeader">
+
+      <h2>✨ Create Story</h2>
+
+      <button
+        type="button"
+        id="closeStoryCreatorBtn"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <p>
+      Share a photo or video to your story.
+    </p>
+
+    <button
+      type="button"
+      id="chooseStoryFileBtn"
+    >
+      📸 Choose Photo or Video
+    </button>
+
+    <div
+      id="storyPreview"
+      class="storyPreview"
+    ></div>
+
+    <button
+      type="button"
+      id="publishStoryButton"
+      class="hidden"
+    >
+      🚀 Share to Story
+    </button>
+
+    <p id="storyMessage"></p>
+
+  </div>
+
+</div>
   <script src="app.js"></script>
 </body>
 </html>
