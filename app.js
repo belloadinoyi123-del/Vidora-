@@ -1,22 +1,36 @@
 /* =========================================================
-   VIDORA - COMPLETE APP.JS (CLEAN VERSION)
+   VIDORA - COMPLETE APP.JS
+   AUTH + PROFILE + POSTS + STORIES + SOUNDS + FILTERS
+   + LIKES + COMMENTS + FOLLOW + BLOCK
+   + CHAT + VOICE NOTES + CALLS + NOTIFICATIONS
+   + AVATAR ASSISTANT
    ========================================================= */
-console.log("VIDORA APP.JS LOADED");
+
+console.log("VIDORA COMPLETE APP.JS LOADED");
 
 /* =========================================================
    1. SUPABASE CONFIGURATION
    ========================================================= */
 
-const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
-const SUPABASE_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
+const SUPABASE_URL =
+  "https://htnrqgzxkfktwoioscjr.supabase.co";
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  }
-});
+const SUPABASE_KEY =
+  "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    }
+  );
+
 
 /* =========================================================
    2. GLOBAL STATE
@@ -26,86 +40,239 @@ let currentUser = null;
 let searchTimer = null;
 let appInitialized = false;
 let feedLoading = false;
+
 let interactiveAvatarEnabled =
-  localStorage.getItem("vidoraInteractiveAvatar") === "true";
+  localStorage.getItem(
+    "vidoraInteractiveAvatar"
+  ) === "true";
+
+let selectedVidoraSound = null;
+let selectedVidoraFilter = "normal";
+
+let vidoraAudioPlayer = null;
+
+let vidoraStories = [];
+let currentStoryIndex = 0;
+let currentStory = null;
+let selectedStoryFile = null;
+let storyTimer = null;
+
+let currentChatUser = null;
+let currentCall = null;
+let localStream = null;
+let remoteStream = null;
+let peerConnection = null;
+
+const VIDORA_STORY_DURATION = 5000;
+
 
 /* =========================================================
-   3. SMALL HELPERS
+   3. BASIC HELPERS
    ========================================================= */
 
 function getElement(id) {
   return document.getElementById(id);
 }
 
-function setMessage(id, message, success = false) {
+function setMessage(
+  id,
+  message,
+  success = false
+) {
   const element = getElement(id);
+
   if (!element) return;
+
   element.textContent = message;
-  element.style.color = success ? "#4ade80" : "#ff6b6b";
+
+  element.style.color =
+    success
+      ? "#4ade80"
+      : "#ff6b6b";
 }
 
 function clearMessage(id) {
   const element = getElement(id);
-  if (element) element.textContent = "";
+
+  if (element) {
+    element.textContent = "";
+  }
 }
 
 function escapeHTML(value) {
-  const div = document.createElement("div");
-  div.textContent = value == null ? "" : String(value);
+  const div =
+    document.createElement("div");
+
+  div.textContent =
+    value == null
+      ? ""
+      : String(value);
+
   return div.innerHTML;
-}
-
-function getFileExtension(file) {
-  if (!file || !file.name) return "bin";
-  const parts = file.name.split(".");
-  if (parts.length < 2) return "bin";
-  return parts.pop().toLowerCase();
-}
-
-function createSafeFileName(file) {
-  const extension = getFileExtension(file);
-  let id;
-  if (window.crypto && typeof window.crypto.randomUUID === "function") {
-    id = window.crypto.randomUUID();
-  } else {
-    id = Date.now().toString() + "-" + Math.random().toString(36).substring(2);
-  }
-  return id + "." + extension;
 }
 
 function formatDate(dateString) {
   if (!dateString) return "";
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+
+  const date =
+    new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleString(
+    [],
+    {
+      dateStyle: "medium",
+      timeStyle: "short"
+    }
+  );
 }
 
+function getFileExtension(file) {
+  if (!file || !file.name) {
+    return "bin";
+  }
+
+  const parts =
+    file.name.split(".");
+
+  if (parts.length < 2) {
+    return "bin";
+  }
+
+  return parts
+    .pop()
+    .toLowerCase();
+}
+
+function createSafeFileName(file) {
+  const extension =
+    getFileExtension(file);
+
+  let id;
+
+  if (
+    window.crypto &&
+    typeof window.crypto.randomUUID ===
+      "function"
+  ) {
+    id =
+      window.crypto.randomUUID();
+  } else {
+    id =
+      Date.now() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .substring(2);
+  }
+
+  return id + "." + extension;
+}
+
+function safeJsonParse(value) {
+  try {
+    return JSON.parse(value);
+  } catch (e) {
+    return null;
+  }
+}
+
+
 /* =========================================================
-   4. VIDORA AVATAR SYSTEM
+   4. VIDORA AVATARS
    ========================================================= */
 
 const VIDORA_AVATARS = {
-  nova:  { id: "nova",  name: "Nova",  image: "./nova.png" },
-  kai:   { id: "kai",   name: "Kai",   image: "./kai.png" },
-  luna:  { id: "luna",  name: "Luna",  image: "./luna.png" },
-  ivy:   { id: "ivy",   name: "Ivy",   image: "./ivy.png" },
-  orion: { id: "orion", name: "Orion", image: "./orion.png" },
-  zeno:  { id: "zeno",  name: "Zeno",  image: "./zeno.png" },
-  sage:  { id: "sage",  name: "Sage",  image: "./sage.png" },
-  rex:   { id: "rex",   name: "Rex",   image: "./rex.png" },
-  pixel: { id: "pixel", name: "Pixel", image: "./pixel.png" },
-  vexa:  { id: "vexa",  name: "Vexa",  image: "./vexa.png" }
+  nova: {
+    id: "nova",
+    name: "Nova",
+    image: "./nova.png"
+  },
+
+  kai: {
+    id: "kai",
+    name: "Kai",
+    image: "./kai.png"
+  },
+
+  luna: {
+    id: "luna",
+    name: "Luna",
+    image: "./luna.png"
+  },
+
+  ivy: {
+    id: "ivy",
+    name: "Ivy",
+    image: "./ivy.png"
+  },
+
+  orion: {
+    id: "orion",
+    name: "Orion",
+    image: "./orion.png"
+  },
+
+  zeno: {
+    id: "zeno",
+    name: "Zeno",
+    image: "./zeno.png"
+  },
+
+  sage: {
+    id: "sage",
+    name: "Sage",
+    image: "./sage.png"
+  },
+
+  rex: {
+    id: "rex",
+    name: "Rex",
+    image: "./rex.png"
+  },
+
+  pixel: {
+    id: "pixel",
+    name: "Pixel",
+    image: "./pixel.png"
+  },
+
+  vexa: {
+    id: "vexa",
+    name: "Vexa",
+    image: "./vexa.png"
+  }
 };
 
 function getSelectedVidoraAvatar() {
-  const saved = localStorage.getItem("vidoraSelectedAvatar");
-  if (saved && VIDORA_AVATARS[saved]) return saved;
+  const saved =
+    localStorage.getItem(
+      "vidoraSelectedAvatar"
+    );
+
+  if (
+    saved &&
+    VIDORA_AVATARS[saved]
+  ) {
+    return saved;
+  }
+
   return "nova";
 }
 
 function getVidoraAvatarInfo(name) {
-  const key = String(name || "").toLowerCase().trim();
-  return VIDORA_AVATARS[key] || VIDORA_AVATARS.nova;
+  const key =
+    String(name || "")
+      .toLowerCase()
+      .trim();
+
+  return (
+    VIDORA_AVATARS[key] ||
+    VIDORA_AVATARS.nova
+  );
 }
 
 function getVidoraAvatarImage(name) {
@@ -113,150 +280,333 @@ function getVidoraAvatarImage(name) {
 }
 
 function selectVidoraAvatar(name) {
-  const key = String(name || "").toLowerCase().trim();
+  const key =
+    String(name || "")
+      .toLowerCase()
+      .trim();
+
   if (!VIDORA_AVATARS[key]) {
-    console.warn("Unknown avatar:", name);
     return;
   }
 
-  localStorage.setItem("vidoraSelectedAvatar", key);
-  localStorage.setItem("vidoraAvatarMode", "preset");
+  localStorage.setItem(
+    "vidoraSelectedAvatar",
+    key
+  );
 
-  const hidden = document.getElementById("selectedVidoraAvatar");
-  if (hidden) hidden.value = key;
+  localStorage.setItem(
+    "vidoraAvatarMode",
+    "preset"
+  );
 
-  document.querySelectorAll(".vidoraAvatar").forEach(function (btn) {
-    const btnKey = String(btn.dataset.avatar || "").toLowerCase();
-    btn.classList.toggle("selected", btnKey === key);
-  });
+  const hidden =
+    getElement(
+      "selectedVidoraAvatar"
+    );
 
-  const info = getVidoraAvatarInfo(key);
-  updateAvatarPreview(info.image, info.name);
+  if (hidden) {
+    hidden.value = key;
+  }
 
-  const profileAvatar = document.getElementById("profileAvatar");
-  if (profileAvatar) renderDefaultAvatar(profileAvatar, info.name);
+  document
+    .querySelectorAll(
+      ".vidoraAvatar"
+    )
+    .forEach(function (btn) {
+      btn.classList.toggle(
+        "selected",
+        String(
+          btn.dataset.avatar || ""
+        ).toLowerCase() === key
+      );
+    });
 
-  console.log("Avatar selected:", key);
+  const info =
+    getVidoraAvatarInfo(key);
+
+  updateAvatarPreview(
+    info.image,
+    info.name
+  );
+
+  const profileAvatar =
+    getElement("profileAvatar");
+
+  if (profileAvatar) {
+    renderDefaultAvatar(
+      profileAvatar,
+      info.name
+    );
+  }
 }
 
-function updateAvatarPreview(imageUrl, name) {
-  const preview = document.getElementById("profileAvatarPreview");
+function updateAvatarPreview(
+  imageUrl,
+  name
+) {
+  const preview =
+    getElement(
+      "profileAvatarPreview"
+    );
+
   if (!preview) return;
 
   preview.innerHTML = "";
-  const img = document.createElement("img");
+
+  const img =
+    document.createElement("img");
+
   img.src = imageUrl;
   img.alt = name || "Avatar";
-  img.className = "profileAvatarImage";
+  img.className =
+    "profileAvatarImage";
+
   img.onerror = function () {
     img.src = "./nova.png";
   };
+
   preview.appendChild(img);
 }
 
-function renderDefaultAvatar(container, displayName) {
+function renderDefaultAvatar(
+  container,
+  displayName
+) {
   if (!container) return;
 
   container.innerHTML = "";
-  const info = getVidoraAvatarInfo(getSelectedVidoraAvatar());
 
-  const img = document.createElement("img");
+  const info =
+    getVidoraAvatarInfo(
+      getSelectedVidoraAvatar()
+    );
+
+  const img =
+    document.createElement("img");
+
   img.src = info.image;
-  img.alt = displayName || info.name;
-  img.className = "profileAvatarImage";
-  img.onerror = function () {
-    container.innerHTML =
-      "<span>" + (displayName || "V").charAt(0).toUpperCase() + "</span>";
-  };
+
+  img.alt =
+    displayName ||
+    info.name;
+
+  img.className =
+    "profileAvatarImage";
+
+  img.onerror =
+    function () {
+      container.innerHTML =
+        "<span>" +
+        (
+          displayName ||
+          "V"
+        )
+          .charAt(0)
+          .toUpperCase() +
+        "</span>";
+    };
+
   container.appendChild(img);
 }
 
-function renderProfileAvatar(container, avatarUrl, displayName) {
+function renderProfileAvatar(
+  container,
+  avatarUrl,
+  displayName
+) {
   if (!container) return;
+
   container.innerHTML = "";
 
-  if (avatarUrl && !String(avatarUrl).includes("dicebear.com")) {
-    const img = document.createElement("img");
+  if (
+    avatarUrl &&
+    !String(
+      avatarUrl
+    ).includes("dicebear.com")
+  ) {
+    const img =
+      document.createElement("img");
+
     img.src = avatarUrl;
-    img.alt = displayName || "Profile";
-    img.className = "profileAvatarImage";
-    img.onerror = function () {
-      renderDefaultAvatar(container, displayName);
-    };
+
+    img.alt =
+      displayName ||
+      "Profile";
+
+    img.className =
+      "profileAvatarImage";
+
+    img.onerror =
+      function () {
+        renderDefaultAvatar(
+          container,
+          displayName
+        );
+      };
+
     container.appendChild(img);
   } else {
-    renderDefaultAvatar(container, displayName);
+    renderDefaultAvatar(
+      container,
+      displayName
+    );
   }
 }
+
 
 /* =========================================================
    5. INTERACTIVE AVATAR
    ========================================================= */
 
 async function showInteractiveAvatar() {
-  if (!interactiveAvatarEnabled) return;
+  if (!interactiveAvatarEnabled) {
+    return;
+  }
 
-  const box = document.getElementById("interactiveAvatar");
-  const img = document.getElementById("interactiveAvatarImage");
-  if (!box || !img) return;
+  const box =
+    getElement(
+      "interactiveAvatar"
+    );
 
-  let avatarUrl = getVidoraAvatarImage(getSelectedVidoraAvatar());
-  let displayName = "Vidora User";
+  const img =
+    getElement(
+      "interactiveAvatarImage"
+    );
+
+  if (!box || !img) {
+    return;
+  }
+
+  let avatarUrl =
+    getVidoraAvatarImage(
+      getSelectedVidoraAvatar()
+    );
+
+  let displayName =
+    "Vidora User";
 
   if (currentUser) {
     try {
-      const { data } = await supabaseClient
-        .from("profiles")
-        .select("display_name, avatar_url")
-        .eq("id", currentUser.id)
-        .maybeSingle();
+      const { data } =
+        await supabaseClient
+          .from("profiles")
+          .select(
+            "display_name,avatar_url"
+          )
+          .eq(
+            "id",
+            currentUser.id
+          )
+          .maybeSingle();
 
       if (data) {
-        displayName = data.display_name || displayName;
-        if (data.avatar_url && !data.avatar_url.includes("dicebear.com")) {
-          avatarUrl = data.avatar_url;
+        displayName =
+          data.display_name ||
+          displayName;
+
+        if (
+          data.avatar_url &&
+          !data.avatar_url.includes(
+            "dicebear.com"
+          )
+        ) {
+          avatarUrl =
+            data.avatar_url;
         }
       }
-    } catch (err) {
-      console.error("Avatar load error:", err);
+    } catch (error) {
+      console.error(
+        "AVATAR LOAD ERROR:",
+        error
+      );
     }
   }
 
   img.src = avatarUrl;
-  img.onerror = function () {
-    img.src = "./nova.png";
-  };
 
-  const greetingEl = document.getElementById("avatarGreeting");
-  const messageEl = document.getElementById("avatarMessage");
-  const hour = new Date().getHours();
-  let greeting = "Hello";
-  if (hour < 12) greeting = "Good morning";
-  else if (hour < 18) greeting = "Good afternoon";
-  else greeting = "Good evening";
+  img.onerror =
+    function () {
+      img.src = "./nova.png";
+    };
 
-  if (greetingEl) greetingEl.textContent = greeting + ", " + displayName + "!";
-  if (messageEl) {
-    messageEl.textContent = "I'm your Vidora assistant. How can I help you?";
+  const greetingEl =
+    getElement(
+      "avatarGreeting"
+    );
+
+  const messageEl =
+    getElement(
+      "avatarMessage"
+    );
+
+  const hour =
+    new Date().getHours();
+
+  let greeting =
+    "Hello";
+
+  if (hour < 12) {
+    greeting =
+      "Good morning";
+  } else if (hour < 18) {
+    greeting =
+      "Good afternoon";
+  } else {
+    greeting =
+      "Good evening";
   }
 
-  box.classList.remove("hidden");
+  if (greetingEl) {
+    greetingEl.textContent =
+      greeting +
+      ", " +
+      displayName +
+      "!";
+  }
+
+  if (messageEl) {
+    messageEl.textContent =
+      "I'm your Vidora assistant. How can I help you?";
+  }
+
+  box.classList.remove(
+    "hidden"
+  );
 }
 
 function closeInteractiveAvatar() {
-  const box = document.getElementById("interactiveAvatar");
-  if (box) box.classList.add("hidden");
+  const box =
+    getElement(
+      "interactiveAvatar"
+    );
+
+  if (box) {
+    box.classList.add(
+      "hidden"
+    );
+  }
 }
 
-function toggleInteractiveAvatar(enabled) {
-  interactiveAvatarEnabled = !!enabled;
+function toggleInteractiveAvatar(
+  enabled
+) {
+  interactiveAvatarEnabled =
+    !!enabled;
+
   localStorage.setItem(
     "vidoraInteractiveAvatar",
-    interactiveAvatarEnabled ? "true" : "false"
+    interactiveAvatarEnabled
+      ? "true"
+      : "false"
   );
 
-  if (interactiveAvatarEnabled) showInteractiveAvatar();
-  else closeInteractiveAvatar();
+  if (
+    interactiveAvatarEnabled
+  ) {
+    showInteractiveAvatar();
+  } else {
+    closeInteractiveAvatar();
+  }
 }
 
 function avatarReact() {
@@ -265,394 +615,819 @@ function avatarReact() {
     "I'm here for you 🚀",
     "Want me to guide you?",
     "Tap Chat to talk to me!",
-    "I can change the theme for you too!"
+    "I can help you navigate Vidora."
   ];
-  const msg = messages[Math.floor(Math.random() * messages.length)];
-  const messageEl = document.getElementById("avatarMessage");
-  if (messageEl) messageEl.textContent = msg;
+
+  const msg =
+    messages[
+      Math.floor(
+        Math.random() *
+          messages.length
+      )
+    ];
+
+  const messageEl =
+    getElement(
+      "avatarMessage"
+    );
+
+  if (messageEl) {
+    messageEl.textContent =
+      msg;
+  }
 }
 
 function openAvatarChat() {
-  const panel = document.getElementById("avatarChatPanel");
-  if (panel) panel.classList.remove("hidden");
+  const panel =
+    getElement(
+      "avatarChatPanel"
+    );
+
+  if (panel) {
+    panel.classList.remove(
+      "hidden"
+    );
+  }
 }
 
 function closeAvatarChat() {
-  const panel = document.getElementById("avatarChatPanel");
-  if (panel) panel.classList.add("hidden");
+  const panel =
+    getElement(
+      "avatarChatPanel"
+    );
+
+  if (panel) {
+    panel.classList.add(
+      "hidden"
+    );
+  }
 }
 
 function sendAvatarMessage() {
-  const input = document.getElementById("avatarChatInput");
-  const messages = document.getElementById("avatarChatMessages");
-  if (!input || !messages) return;
+  const input =
+    getElement(
+      "avatarChatInput"
+    );
 
-  const text = input.value.trim();
+  const messages =
+    getElement(
+      "avatarChatMessages"
+    );
+
+  if (!input || !messages) {
+    return;
+  }
+
+  const text =
+    input.value.trim();
+
   if (!text) return;
 
-  const userMsg = document.createElement("div");
-  userMsg.className = "avatarChatMessage avatarUser";
-  userMsg.textContent = text;
-  messages.appendChild(userMsg);
+  const userMsg =
+    document.createElement(
+      "div"
+    );
+
+  userMsg.className =
+    "avatarChatMessage avatarUser";
+
+  userMsg.textContent =
+    text;
+
+  messages.appendChild(
+    userMsg
+  );
 
   input.value = "";
-  messages.scrollTop = messages.scrollHeight;
 
-  setTimeout(function () {
-    const reply = getAvatarReply(text);
-    const botMsg = document.createElement("div");
-    botMsg.className = "avatarChatMessage avatarBot";
-    botMsg.textContent = reply;
-    messages.appendChild(botMsg);
-    messages.scrollTop = messages.scrollHeight;
-  }, 500);
+  const reply =
+    getAvatarReply(text);
+
+  setTimeout(
+    function () {
+      const botMsg =
+        document.createElement(
+          "div"
+        );
+
+      botMsg.className =
+        "avatarChatMessage avatarBot";
+
+      botMsg.textContent =
+        reply;
+
+      messages.appendChild(
+        botMsg
+      );
+
+      messages.scrollTop =
+        messages.scrollHeight;
+    },
+    400
+  );
 }
 
 function getAvatarReply(text) {
-  const msg = String(text || "").toLowerCase();
+  const msg =
+    String(text || "")
+      .toLowerCase();
 
-  if (msg.includes("home") || msg.includes("feed")) {
+  if (
+    msg.includes("home") ||
+    msg.includes("feed")
+  ) {
     showPage("home");
     closeInteractiveAvatar();
-    return "Taking you to Home 🏠";
+    return "Opening Home 🏠";
   }
-  if (msg.includes("profile")) {
+
+  if (
+    msg.includes("profile")
+  ) {
     showPage("profile");
     closeInteractiveAvatar();
     return "Opening your Profile 👤";
   }
-  if (msg.includes("create") || msg.includes("post")) {
+
+  if (
+    msg.includes("create") ||
+    msg.includes("post")
+  ) {
     showPage("create");
     closeInteractiveAvatar();
-    return "Let's create something! ✨";
+    return "Let's create something ✨";
   }
-  if (msg.includes("discover") || msg.includes("search")) {
+
+  if (
+    msg.includes("discover") ||
+    msg.includes("search")
+  ) {
     showPage("discover");
     closeInteractiveAvatar();
-    return "Exploring Discover 🔍";
+    return "Opening Discover 🔍";
   }
-  if (msg.includes("dark") || msg.includes("night mode")) {
+
+  if (
+    msg.includes("dark")
+  ) {
     setVidoraTheme("dark");
     return "Dark mode enabled 🌙";
   }
-  if (msg.includes("light") || msg.includes("day mode")) {
+
+  if (
+    msg.includes("light")
+  ) {
     setVidoraTheme("light");
     return "Light mode enabled ☀️";
   }
-  if (msg.includes("theme") || msg.includes("mode")) {
-    const hour = new Date().getHours();
-    if (hour >= 18 || hour < 6) {
-      setVidoraTheme("dark");
-      return "It's getting late — Dark Mode enabled 🌙";
-    }
-    setVidoraTheme("light");
-    return "Nice day! Light Mode enabled ☀️";
+
+  if (
+    msg.includes("theme") ||
+    msg.includes("mode")
+  ) {
+    return "You can say 'dark mode' or 'light mode' and I'll change it.";
   }
-  if (msg.includes("hello") || msg.includes("hi") || msg.includes("hey")) {
+
+  if (
+    msg.includes("hello") ||
+    msg.includes("hi") ||
+    msg.includes("hey")
+  ) {
     return "Hey there! 👋 How can I help you on Vidora?";
   }
-  if (msg.includes("help")) {
-    return "I can take you to Home, Profile, Create, Discover, or change the theme.";
-  }
-  if (msg.includes("thank")) return "You're welcome! 💜";
 
-  return "I'm still learning! Try asking me to go somewhere or change the theme.";
+  if (
+    msg.includes("help")
+  ) {
+    return "I can take you to Home, Profile, Create or Discover, and help with Vidora features.";
+  }
+
+  if (
+    msg.includes("thank")
+  ) {
+    return "You're welcome! 💜";
+  }
+
+  return "I'm still learning. Try asking me to open Home, Profile, Create or Discover.";
 }
+
 
 /* =========================================================
    6. THEME
    ========================================================= */
 
 function setVidoraTheme(theme) {
-  localStorage.setItem("vidoraTheme", theme);
-  document.body.classList.toggle("lightMode", theme === "light");
-  document.body.classList.toggle("darkMode", theme === "dark");
+  localStorage.setItem(
+    "vidoraTheme",
+    theme
+  );
+
+  document.body.classList.toggle(
+    "lightMode",
+    theme === "light"
+  );
+
+  document.body.classList.toggle(
+    "darkMode",
+    theme === "dark"
+  );
 }
 
 function loadVidoraTheme() {
-  const saved = localStorage.getItem("vidoraTheme");
-  if (saved) setVidoraTheme(saved);
+  const saved =
+    localStorage.getItem(
+      "vidoraTheme"
+    );
+
+  if (saved) {
+    setVidoraTheme(saved);
+  }
 }
 
+
 /* =========================================================
-   7. AVATAR INIT
+   7. AVATAR INITIALIZATION
    ========================================================= */
 
 function initializeVidoraAvatarSystem() {
-  const selected = getSelectedVidoraAvatar();
-  const hidden = document.getElementById("selectedVidoraAvatar");
-  if (hidden) hidden.value = selected;
+  const selected =
+    getSelectedVidoraAvatar();
 
-  const container = document.getElementById("vidoraAvatarChoices");
+  const hidden =
+    getElement(
+      "selectedVidoraAvatar"
+    );
+
+  if (hidden) {
+    hidden.value = selected;
+  }
+
+  const container =
+    getElement(
+      "vidoraAvatarChoices"
+    );
+
   if (container) {
     container.innerHTML = "";
-    Object.keys(VIDORA_AVATARS).forEach(function (key) {
-      const avatar = VIDORA_AVATARS[key];
-      const btn = document.createElement("button");
+
+    Object.keys(
+      VIDORA_AVATARS
+    ).forEach(function (key) {
+      const avatar =
+        VIDORA_AVATARS[key];
+
+      const btn =
+        document.createElement(
+          "button"
+        );
+
       btn.type = "button";
-      btn.className = "vidoraAvatar";
-      btn.dataset.avatar = key;
-      if (key === selected) btn.classList.add("selected");
+
+      btn.className =
+        "vidoraAvatar";
+
+      btn.dataset.avatar =
+        key;
+
+      if (key === selected) {
+        btn.classList.add(
+          "selected"
+        );
+      }
 
       btn.innerHTML =
         '<img src="' +
         avatar.image +
         '" alt="' +
-        avatar.name +
-        '"><span>' +
-        avatar.name +
+        escapeHTML(
+          avatar.name
+        ) +
+        '">' +
+        "<span>" +
+        escapeHTML(
+          avatar.name
+        ) +
         "</span>";
 
-      btn.onclick = function () {
-        selectVidoraAvatar(key);
-      };
-      container.appendChild(btn);
+      btn.onclick =
+        function () {
+          selectVidoraAvatar(
+            key
+          );
+        };
+
+      container.appendChild(
+        btn
+      );
     });
   }
 
   loadVidoraTheme();
 
-  if (interactiveAvatarEnabled) {
-    setTimeout(function () {
-      showInteractiveAvatar();
-    }, 800);
+  if (
+    interactiveAvatarEnabled
+  ) {
+    setTimeout(
+      showInteractiveAvatar,
+      800
+    );
   }
 }
 
+
 /* =========================================================
-   8. AUTH HELPERS
+   8. AUTHENTICATION
    ========================================================= */
 
 function showLoginForm() {
-  const authChoice = document.getElementById("authChoice");
-  const signupForm = document.getElementById("signupForm");
-  const loginForm = document.getElementById("loginForm");
+  const authChoice =
+    getElement("authChoice");
 
-  if (authChoice) authChoice.classList.add("hidden");
-  if (signupForm) signupForm.classList.add("hidden");
-  if (loginForm) loginForm.classList.remove("hidden");
+  const signupForm =
+    getElement("signupForm");
 
-  clearMessage("authMessage");
+  const loginForm =
+    getElement("loginForm");
+
+  if (authChoice) {
+    authChoice.classList.add(
+      "hidden"
+    );
+  }
+
+  if (signupForm) {
+    signupForm.classList.add(
+      "hidden"
+    );
+  }
+
+  if (loginForm) {
+    loginForm.classList.remove(
+      "hidden"
+    );
+  }
+
+  clearMessage(
+    "authMessage"
+  );
 }
 
 function showCreateAccount() {
-  const authChoice = document.getElementById("authChoice");
-  const loginForm = document.getElementById("loginForm");
-  const signupForm = document.getElementById("signupForm");
+  const authChoice =
+    getElement("authChoice");
 
-  if (authChoice) authChoice.classList.add("hidden");
-  if (loginForm) loginForm.classList.add("hidden");
-  if (signupForm) signupForm.classList.remove("hidden");
+  const loginForm =
+    getElement("loginForm");
 
-  clearMessage("authMessage");
+  const signupForm =
+    getElement("signupForm");
+
+  if (authChoice) {
+    authChoice.classList.add(
+      "hidden"
+    );
+  }
+
+  if (loginForm) {
+    loginForm.classList.add(
+      "hidden"
+    );
+  }
+
+  if (signupForm) {
+    signupForm.classList.remove(
+      "hidden"
+    );
+  }
+
+  clearMessage(
+    "authMessage"
+  );
 }
 
 function showAuthChoice() {
-  const authChoice = document.getElementById("authChoice");
-  const signupForm = document.getElementById("signupForm");
-  const loginForm = document.getElementById("loginForm");
+  const authChoice =
+    getElement("authChoice");
 
-  if (authChoice) authChoice.classList.remove("hidden");
-  if (signupForm) signupForm.classList.add("hidden");
-  if (loginForm) loginForm.classList.add("hidden");
+  const signupForm =
+    getElement("signupForm");
 
-  clearMessage("authMessage");
+  const loginForm =
+    getElement("loginForm");
+
+  if (authChoice) {
+    authChoice.classList.remove(
+      "hidden"
+    );
+  }
+
+  if (signupForm) {
+    signupForm.classList.add(
+      "hidden"
+    );
+  }
+
+  if (loginForm) {
+    loginForm.classList.add(
+      "hidden"
+    );
+  }
+
+  clearMessage(
+    "authMessage"
+  );
 }
 
-function togglePassword(inputId, button) {
-  const input = document.getElementById(inputId);
+function togglePassword(
+  inputId,
+  button
+) {
+  const input =
+    getElement(inputId);
+
   if (!input) return;
 
-  if (input.type === "password") {
+  if (
+    input.type ===
+    "password"
+  ) {
     input.type = "text";
+
     if (button) {
-      button.textContent = "🙈";
-      button.setAttribute("aria-label", "Hide password");
+      button.textContent =
+        "🙈";
+
+      button.setAttribute(
+        "aria-label",
+        "Hide password"
+      );
     }
   } else {
     input.type = "password";
+
     if (button) {
-      button.textContent = "👁";
-      button.setAttribute("aria-label", "Show password");
+      button.textContent =
+        "👁";
+
+      button.setAttribute(
+        "aria-label",
+        "Show password"
+      );
     }
   }
 }
 
+
 /* =========================================================
-   9. AUTHENTICATION
+   9. SIGN UP
    ========================================================= */
 
 async function signUp() {
-  const email = document.getElementById("signupEmail")?.value.trim();
-const password = document.getElementById("signupPassword")?.value.trim();
-  const message = document.getElementById("authMessage");
-  const button = document.getElementById("signUpBtn");
+  const email =
+    getElement(
+      "signupEmail"
+    )?.value.trim();
+
+  const password =
+    getElement(
+      "signupPassword"
+    )?.value.trim();
+
+  const message =
+    getElement(
+      "authMessage"
+    );
+
+  const button =
+    getElement(
+      "signUpBtn"
+    );
 
   if (!email || !password) {
-    if (message) message.textContent = "Enter your email and password.";
+    if (message) {
+      message.textContent =
+        "Enter your email and password.";
+
+      message.style.color =
+        "#ff6b6b";
+    }
+
     return;
   }
+
   if (password.length < 6) {
-    if (message) message.textContent = "Password must be at least 6 characters.";
+    if (message) {
+      message.textContent =
+        "Password must be at least 6 characters.";
+
+      message.style.color =
+        "#ff6b6b";
+    }
+
     return;
   }
 
   if (button) {
     button.disabled = true;
-    button.textContent = "Creating...";
+    button.textContent =
+      "Creating...";
   }
 
   try {
-    const { data, error } = await supabaseClient.auth.signUp({
-      email: email,
-      password: password
-    });
+    const { data, error } =
+      await supabaseClient.auth.signUp(
+        {
+          email: email,
+          password: password
+        }
+      );
 
     if (error) {
       if (message) {
-        message.textContent = error.message;
-        message.style.color = "#ff6b6b";
+        message.textContent =
+          error.message;
+
+        message.style.color =
+          "#ff6b6b";
       }
+
       return;
     }
 
     if (data.session) {
-      currentUser = data.user;
+      currentUser =
+        data.user;
+
       if (message) {
-        message.textContent = "Account created successfully!";
-        message.style.color = "#4ade80";
+        message.textContent =
+          "Account created successfully!";
+
+        message.style.color =
+          "#4ade80";
       }
+
       await showApp();
     } else if (message) {
       message.textContent =
         "Account created. Check your email to confirm your account.";
-      message.style.color = "#4ade80";
+
+      message.style.color =
+        "#4ade80";
     }
+
   } catch (error) {
-    console.error("SIGNUP EXCEPTION:", error);
+    console.error(
+      "SIGNUP EXCEPTION:",
+      error
+    );
+
     if (message) {
-      message.textContent = error.message || "Sign up failed.";
-      message.style.color = "#ff6b6b";
+      message.textContent =
+        error.message ||
+        "Sign up failed.";
+
+      message.style.color =
+        "#ff6b6b";
     }
+
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent = "Create Account";
+      button.textContent =
+        "Create Account";
     }
   }
 }
 
+
+/* =========================================================
+   10. LOGIN
+   ========================================================= */
+
 async function login() {
-  const email = document.getElementById("email")?.value.trim();
-  const password = document.getElementById("password")?.value.trim();
-  const message = document.getElementById("authMessage");
-  const button = document.getElementById("loginBtn");
+  const email =
+    getElement(
+      "email"
+    )?.value.trim();
+
+  const password =
+    getElement(
+      "password"
+    )?.value.trim();
+
+  const message =
+    getElement(
+      "authMessage"
+    );
+
+  const button =
+    getElement(
+      "loginBtn"
+    );
 
   if (!email || !password) {
-    if (message) message.textContent = "Enter your email and password.";
+    if (message) {
+      message.textContent =
+        "Enter your email and password.";
+
+      message.style.color =
+        "#ff6b6b";
+    }
+
     return;
   }
 
   if (button) {
     button.disabled = true;
-    button.textContent = "Logging in...";
+    button.textContent =
+      "Logging in...";
   }
 
   try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword(
+        {
+          email: email,
+          password: password
+        }
+      );
 
-    console.log("LOGIN RESULT:", data);
-    console.log("LOGIN ERROR:", error);
+    console.log(
+      "LOGIN RESULT:",
+      data
+    );
+
+    console.log(
+      "LOGIN ERROR:",
+      error
+    );
 
     if (error) {
       if (message) {
-        message.textContent = error.message;
-        message.style.color = "#ff6b6b";
+        message.textContent =
+          error.message;
+
+        message.style.color =
+          "#ff6b6b";
       }
+
       return;
     }
 
-    currentUser = data.user;
+    currentUser =
+      data.user;
 
     if (message) {
-      message.textContent = "Login successful!";
-      message.style.color = "#4ade80";
+      message.textContent =
+        "Login successful!";
+
+      message.style.color =
+        "#4ade80";
     }
 
     await showApp();
+
   } catch (error) {
-    console.error("LOGIN EXCEPTION:", error);
+    console.error(
+      "LOGIN EXCEPTION:",
+      error
+    );
+
     if (message) {
-      message.textContent = error.message || "Login failed.";
-      message.style.color = "#ff6b6b";
+      message.textContent =
+        error.message ||
+        "Login failed.";
+
+      message.style.color =
+        "#ff6b6b";
     }
+
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent = "Log In";
+      button.textContent =
+        "Log In";
     }
   }
 }
 
+
+/* =========================================================
+   11. LOGOUT
+   ========================================================= */
+
 async function logout() {
-  const button = getElement("logoutBtn");
+  const button =
+    getElement(
+      "logoutBtn"
+    );
+
   if (button) {
     button.disabled = true;
-    button.textContent = "Logging out...";
+    button.textContent =
+      "Logging out...";
   }
 
   try {
-    const { error } = await supabaseClient.auth.signOut();
+    const { error } =
+      await supabaseClient.auth.signOut();
+
     if (error) {
-      alert(error.message || "Unable to log out.");
+      alert(
+        error.message ||
+        "Unable to log out."
+      );
+
       return;
     }
+
     currentUser = null;
+
+    stopCurrentCall();
+
     showAuthScreen();
+
   } catch (error) {
-    console.error("LOGOUT EXCEPTION:", error);
-    alert("Unable to log out.");
+    console.error(
+      "LOGOUT ERROR:",
+      error
+    );
+
+    alert(
+      "Unable to log out."
+    );
+
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent = "Log Out";
+      button.textContent =
+        "Log Out";
     }
   }
 }
 
 function showAuthScreen() {
-  const authScreen = getElement("authScreen");
-  const app = getElement("app");
+  const authScreen =
+    getElement(
+      "authScreen"
+    );
 
-  if (authScreen) authScreen.classList.remove("hidden");
-  if (app) app.classList.add("hidden");
+  const app =
+    getElement("app");
 
-  clearMessage("uploadMessage");
-  clearMessage("createMessage");
+  if (authScreen) {
+    authScreen.classList.remove(
+      "hidden"
+    );
+  }
+
+  if (app) {
+    app.classList.add(
+      "hidden"
+    );
+  }
+
+  clearMessage(
+    "uploadMessage"
+  );
+
+  clearMessage(
+    "createMessage"
+  );
 }
 
-function showProfileSetup() {
-  const setup = document.getElementById("profileSetup");
-  if (setup) setup.classList.remove("hidden");
-}
 
 /* =========================================================
-   10. SHOW APP
+   12. APP START
    ========================================================= */
 
 async function showApp() {
-  const authScreen = getElement("authScreen");
-  const app = getElement("app");
+  const authScreen =
+    getElement(
+      "authScreen"
+    );
 
-  if (authScreen) authScreen.classList.add("hidden");
-  if (app) app.classList.remove("hidden");
+  const app =
+    getElement("app");
+
+  if (authScreen) {
+    authScreen.classList.add(
+      "hidden"
+    );
+  }
+
+  if (app) {
+    app.classList.remove(
+      "hidden"
+    );
+  }
 
   if (!currentUser) {
-    const { data } = await supabaseClient.auth.getUser();
-    currentUser = data?.user || null;
+    const { data } =
+      await supabaseClient.auth.getUser();
+
+    currentUser =
+      data?.user || null;
   }
 
   if (!currentUser) {
@@ -661,34 +1436,108 @@ async function showApp() {
   }
 
   showPage("home");
-await loadProfile();
-await loadFeed();
-await loadStories();
+
+  await loadProfile();
+
+  await loadFeed();
+
+  await loadStories();
+
   appInitialized = true;
 
-  if (interactiveAvatarEnabled) {
-    setTimeout(function () {
-      showInteractiveAvatar();
-    }, 600);
+  if (
+    interactiveAvatarEnabled
+  ) {
+    setTimeout(
+      showInteractiveAvatar,
+      600
+    );
+  }
+
+  loadNotifications();
+}
+
+
+/* =========================================================
+   13. SESSION CHECK
+   ========================================================= */
+
+async function checkSession() {
+  try {
+    const { data, error } =
+      await supabaseClient.auth.getSession();
+
+    if (error) {
+      console.error(
+        "SESSION ERROR:",
+        error
+      );
+
+      showAuthScreen();
+      return;
+    }
+
+    if (
+      data?.session?.user
+    ) {
+      currentUser =
+        data.session.user;
+
+      await showApp();
+    } else {
+      showAuthScreen();
+    }
+
+  } catch (error) {
+    console.error(
+      "CHECK SESSION ERROR:",
+      error
+    );
+
+    showAuthScreen();
   }
 }
 
+
 /* =========================================================
-   11. LOAD PROFILE
+   14. PROFILE
    ========================================================= */
+
+function showProfileSetup() {
+  const setup =
+    getElement(
+      "profileSetup"
+    );
+
+  if (setup) {
+    setup.classList.remove(
+      "hidden"
+    );
+  }
+}
 
 async function loadProfile() {
   if (!currentUser) return;
 
   try {
-    const { data, error } = await supabaseClient
-      .from("profiles")
-      .select("id, username, display_name, avatar_url, bio, created_at")
-      .eq("id", currentUser.id)
-      .maybeSingle();
+    const { data, error } =
+      await supabaseClient
+        .from("profiles")
+        .select(
+          "id,username,display_name,avatar_url,bio,created_at"
+        )
+        .eq(
+          "id",
+          currentUser.id
+        )
+        .maybeSingle();
 
     if (error) {
-      console.error("LOAD PROFILE ERROR:", error);
+      console.error(
+        "LOAD PROFILE ERROR:",
+        error
+      );
+
       return;
     }
 
@@ -697,820 +1546,2771 @@ async function loadProfile() {
       return;
     }
 
-    const displayNameEl = document.getElementById("profileDisplayName");
+    const displayNameEl =
+      getElement(
+        "profileDisplayName"
+      );
+
     if (displayNameEl) {
-      displayNameEl.textContent = data.display_name || "Vidora User";
+      displayNameEl.textContent =
+        data.display_name ||
+        "Vidora User";
     }
 
-    const usernameEl = document.getElementById("profileUsername");
+    const usernameEl =
+      getElement(
+        "profileUsername"
+      );
+
     if (usernameEl) {
-      usernameEl.textContent = data.username
-        ? "@" + data.username
-        : "Set up your username";
+      usernameEl.textContent =
+        data.username
+          ? "@" +
+            data.username
+          : "Set up your username";
     }
 
-    const bioEl = document.getElementById("profileBio");
-    if (bioEl) bioEl.textContent = data.bio || "No bio yet.";
+    const bioEl =
+      getElement(
+        "profileBio"
+      );
 
-    const emailEl = document.getElementById("profileEmail");
-    if (emailEl) emailEl.textContent = currentUser.email || "";
+    if (bioEl) {
+      bioEl.textContent =
+        data.bio ||
+        "No bio yet.";
+    }
 
-    const avatarEl = document.getElementById("profileAvatar");
+    const emailEl =
+      getElement(
+        "profileEmail"
+      );
+
+    if (emailEl) {
+      emailEl.textContent =
+        currentUser.email ||
+        "";
+    }
+
+    const avatarEl =
+      getElement(
+        "profileAvatar"
+      );
+
     if (avatarEl) {
-      if (data.avatar_url && !data.avatar_url.includes("dicebear.com")) {
-        const img = document.createElement("img");
-        img.src = data.avatar_url;
-        img.alt = data.display_name || "Profile picture";
-        img.className = "profileAvatarImage";
-        img.onerror = function () {
-          renderDefaultAvatar(avatarEl, data.display_name);
-        };
-        avatarEl.innerHTML = "";
-        avatarEl.appendChild(img);
-      } else {
-        renderDefaultAvatar(avatarEl, data.display_name);
-      }
+      renderProfileAvatar(
+        avatarEl,
+        data.avatar_url,
+        data.display_name
+      );
     }
 
-    const displayInput = document.getElementById("profileDisplayNameInput");
-    if (displayInput) displayInput.value = data.display_name || "";
+    const displayInput =
+      getElement(
+        "profileDisplayNameInput"
+      );
 
-    const usernameInput = document.getElementById("profileUsernameInput");
-    if (usernameInput) usernameInput.value = data.username || "";
+    if (displayInput) {
+      displayInput.value =
+        data.display_name ||
+        "";
+    }
 
-    const bioInput = document.getElementById("profileBioInput");
-    if (bioInput) bioInput.value = data.bio || "";
+    const usernameInput =
+      getElement(
+        "profileUsernameInput"
+      );
 
-    const setup = document.getElementById("profileSetup");
-    if (setup) setup.classList.add("hidden");
+    if (usernameInput) {
+      usernameInput.value =
+        data.username ||
+        "";
+    }
+
+    const bioInput =
+      getElement(
+        "profileBioInput"
+      );
+
+    if (bioInput) {
+      bioInput.value =
+        data.bio ||
+        "";
+    }
+
+    const setup =
+      getElement(
+        "profileSetup"
+      );
+
+    if (setup) {
+      setup.classList.add(
+        "hidden"
+      );
+    }
+
   } catch (error) {
-    console.error("LOAD PROFILE EXCEPTION:", error);
+    console.error(
+      "LOAD PROFILE EXCEPTION:",
+      error
+    );
   }
 }
 
-/* =========================================================
-   12. SAVE PROFILE
-   ========================================================= */
-
 async function saveProfile() {
   if (!currentUser) {
-    setMessage("profileMessage", "Please log in first.");
+    setMessage(
+      "profileMessage",
+      "Please log in first."
+    );
+
     return;
   }
 
   const displayName =
-    document.getElementById("profileDisplayNameInput")?.value.trim() || "";
-  const username =
-    document.getElementById("profileUsernameInput")?.value.trim().replace(/^@/, "") ||
+    getElement(
+      "profileDisplayNameInput"
+    )?.value.trim() ||
     "";
-  const bio = document.getElementById("profileBioInput")?.value.trim() || "";
-  const selectedAvatar = getSelectedVidoraAvatar();
+
+  const username =
+    getElement(
+      "profileUsernameInput"
+    )?.value
+      .trim()
+      .replace(
+        /^@/,
+        ""
+      ) || "";
+
+  const bio =
+    getElement(
+      "profileBioInput"
+    )?.value.trim() ||
+    "";
 
   if (!displayName) {
-    setMessage("profileMessage", "Please enter a display name.");
+    setMessage(
+      "profileMessage",
+      "Please enter a display name."
+    );
+
     return;
   }
 
   try {
-    const { error } = await supabaseClient.from("profiles").upsert({
-      id: currentUser.id,
-      display_name: displayName,
-      username: username || null,
-      bio: bio,
-      avatar_type: "preset",
-      avatar_name: selectedAvatar,
-      updated_at: new Date().toISOString()
-    });
+    const { error } =
+      await supabaseClient
+        .from("profiles")
+        .upsert({
+          id: currentUser.id,
+          display_name:
+            displayName,
+          username:
+            username || null,
+          bio: bio,
+          updated_at:
+            new Date().toISOString()
+        });
 
     if (error) {
-      setMessage("profileMessage", error.message || "Could not save profile.");
+      setMessage(
+        "profileMessage",
+        error.message
+      );
+
       return;
     }
 
-    setMessage("profileMessage", "Profile saved!", true);
+    setMessage(
+      "profileMessage",
+      "Profile saved!",
+      true
+    );
+
     await loadProfile();
+
   } catch (error) {
-    console.error("SAVE PROFILE ERROR:", error);
-    setMessage("profileMessage", "Could not save profile.");
+    console.error(
+      "SAVE PROFILE ERROR:",
+      error
+    );
+
+    setMessage(
+      "profileMessage",
+      "Could not save profile."
+    );
   }
 }
 
+
 /* =========================================================
-   13. MEDIA VALIDATION
+   15. MEDIA
    ========================================================= */
 
 function validateMediaFile(file) {
   if (!file) {
-    return { valid: false, message: "Please choose a photo or video." };
+    return {
+      valid: false,
+      message:
+        "Please choose a photo or video."
+    };
   }
 
-  const isImage = file.type.startsWith("image/");
-  const isVideo = file.type.startsWith("video/");
+  const isImage =
+    file.type.startsWith(
+      "image/"
+    );
+
+  const isVideo =
+    file.type.startsWith(
+      "video/"
+    );
 
   if (!isImage && !isVideo) {
-    return { valid: false, message: "Only images and videos are allowed." };
+    return {
+      valid: false,
+      message:
+        "Only images and videos are allowed."
+    };
   }
 
-  const maxSize = 50 * 1024 * 1024;
+  const maxSize =
+    50 * 1024 * 1024;
+
   if (file.size > maxSize) {
-    return { valid: false, message: "File is too large (max 50MB)." };
+    return {
+      valid: false,
+      message:
+        "File is too large. Maximum is 50MB."
+    };
   }
 
-  return { valid: true, message: "" };
+  return {
+    valid: true,
+    message: ""
+  };
 }
 
+
 /* =========================================================
-   14. CREATE POST
+   16. CREATE POST
    ========================================================= */
 
-async function createPost(file, caption) {
+async function createPost(
+  file,
+  caption
+) {
   if (!currentUser) {
-    return { success: false, message: "You are not logged in." };
+    return {
+      success: false,
+      message:
+        "You are not logged in."
+    };
   }
 
-  const fileName = createSafeFileName(file);
-  const filePath = currentUser.id + "/" + fileName;
-  const mediaType = file.type.startsWith("video/") ? "video" : "image";
+  const fileName =
+    createSafeFileName(file);
+
+  const filePath =
+    currentUser.id +
+    "/" +
+    fileName;
+
+  const mediaType =
+    file.type.startsWith(
+      "video/"
+    )
+      ? "video"
+      : "image";
+
   let uploadedPath = null;
 
   try {
-    const { error: uploadError } = await supabaseClient.storage
-      .from("media")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type
-      });
+    const {
+      error: uploadError
+    } =
+      await supabaseClient.storage
+        .from("media")
+        .upload(
+          filePath,
+          file,
+          {
+            cacheControl:
+              "3600",
+            upsert: false,
+            contentType:
+              file.type
+          }
+        );
 
     if (uploadError) {
       return {
         success: false,
-        message: "Media upload failed: " + uploadError.message
+        message:
+          "Media upload failed: " +
+          uploadError.message
       };
     }
 
-    uploadedPath = filePath;
+    uploadedPath =
+      filePath;
 
-    const { data: publicData } = supabaseClient.storage
-      .from("media")
-      .getPublicUrl(filePath);
+    const { data: publicData } =
+      supabaseClient.storage
+        .from("media")
+        .getPublicUrl(
+          filePath
+        );
 
-    const mediaUrl = publicData?.publicUrl;
+    const mediaUrl =
+      publicData?.publicUrl;
+
     if (!mediaUrl) {
-      await supabaseClient.storage.from("media").remove([filePath]);
-      return { success: false, message: "Could not create media URL." };
-    }
+      await supabaseClient.storage
+        .from("media")
+        .remove([
+          filePath
+        ]);
 
-    const { data, error: postError } = await supabaseClient
-      .from("posts")
-      .insert({
-        user_id: currentUser.id,
-        media_url: mediaUrl,
-        media_type: mediaType,
-        caption: caption || "",
-        views: 0
-      })
-      .select()
-      .single();
-
-    if (postError) {
-      await supabaseClient.storage.from("media").remove([filePath]);
       return {
         success: false,
-        message: "Post could not be saved: " + postError.message
+        message:
+          "Could not create media URL."
       };
     }
 
-    return { success: true, data: data };
+    const {
+      data,
+      error: postError
+    } =
+      await supabaseClient
+        .from("posts")
+        .insert({
+          user_id:
+            currentUser.id,
+          media_url:
+            mediaUrl,
+          media_type:
+            mediaType,
+          caption:
+            caption || "",
+          views: 0
+        })
+        .select()
+        .single();
+
+    if (postError) {
+      await supabaseClient.storage
+        .from("media")
+        .remove([
+          filePath
+        ]);
+
+      return {
+        success: false,
+        message:
+          "Post could not be saved: " +
+          postError.message
+      };
+    }
+
+    return {
+      success: true,
+      data: data
+    };
+
   } catch (error) {
-    console.error("CREATE POST EXCEPTION:", error);
+    console.error(
+      "CREATE POST ERROR:",
+      error
+    );
+
     if (uploadedPath) {
       try {
-        await supabaseClient.storage.from("media").remove([uploadedPath]);
+        await supabaseClient.storage
+          .from("media")
+          .remove([
+            uploadedPath
+          ]);
       } catch (e) {}
     }
-    return { success: false, message: "An unexpected error occurred." };
+
+    return {
+      success: false,
+      message:
+        "An unexpected error occurred."
+    };
   }
 }
 
+
+/* =========================================================
+   17. OLD HOME UPLOAD
+   ========================================================= */
+
 async function uploadPost() {
-  const fileInput = getElement("mediaFile");
-  const captionInput = getElement("postCaption");
-  const button = document.querySelector(
-    '#homeScreen button[onclick="uploadPost()"]'
+  const fileInput =
+    getElement("mediaFile");
+
+  const captionInput =
+    getElement("postCaption");
+
+  if (!fileInput ||
+      !captionInput) {
+    return;
+  }
+
+  const file =
+    fileInput.files[0];
+
+  const caption =
+    captionInput.value.trim();
+
+  clearMessage(
+    "uploadMessage"
   );
 
-  if (!fileInput || !captionInput) return;
-
-  const file = fileInput.files[0];
-  const caption = captionInput.value.trim();
-  clearMessage("uploadMessage");
-
   if (!currentUser) {
-    setMessage("uploadMessage", "Please log in first.");
+    setMessage(
+      "uploadMessage",
+      "Please log in first."
+    );
+
     return;
   }
 
-  const validation = validateMediaFile(file);
+  const validation =
+    validateMediaFile(file);
+
   if (!validation.valid) {
-    setMessage("uploadMessage", validation.message);
+    setMessage(
+      "uploadMessage",
+      validation.message
+    );
+
     return;
   }
+
+  const button =
+    document.querySelector(
+      '#homeScreen button[onclick="uploadPost()"]'
+    );
 
   if (button) {
     button.disabled = true;
-    button.textContent = "Uploading...";
+    button.textContent =
+      "Uploading...";
   }
 
   try {
-    const result = await createPost(file, caption);
+    const result =
+      await createPost(
+        file,
+        caption
+      );
+
     if (!result.success) {
-      setMessage("uploadMessage", result.message);
+      setMessage(
+        "uploadMessage",
+        result.message
+      );
+
       return;
     }
 
-    setMessage("uploadMessage", "Post published successfully!", true);
+    setMessage(
+      "uploadMessage",
+      "Post published successfully!",
+      true
+    );
+
     fileInput.value = "";
     captionInput.value = "";
+
     await loadFeed();
-  } catch (error) {
-    console.error("UPLOAD POST ERROR:", error);
-    setMessage("uploadMessage", "Could not publish your post.");
+
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent = "📤 Publish";
+      button.textContent =
+        "📤 Publish";
     }
   }
 }
+
+
+/* =========================================================
+   18. CREATE PAGE
+   ========================================================= */
+
 function previewCreateMedia(event) {
-  const file = event?.target?.files?.[0];
-  const preview = document.getElementById("createMediaPreview");
+  const file =
+    event?.target?.files?.[0];
+
+  const preview =
+    getElement(
+      "createMediaPreview"
+    );
+
   if (!preview) return;
 
   preview.innerHTML = "";
+
   if (!file) return;
 
-  const url = URL.createObjectURL(file);
+  const url =
+    URL.createObjectURL(
+      file
+    );
 
-  if (file.type.startsWith("video/")) {
-    const video = document.createElement("video");
+  if (
+    file.type.startsWith(
+      "video/"
+    )
+  ) {
+    const video =
+      document.createElement(
+        "video"
+      );
+
     video.src = url;
     video.controls = true;
     video.playsInline = true;
-    preview.appendChild(video);
+
+    preview.appendChild(
+      video
+    );
   } else {
-    const img = document.createElement("img");
+    const img =
+      document.createElement(
+        "img"
+      );
+
     img.src = url;
     img.alt = "Preview";
-    preview.appendChild(img);
+
+    preview.appendChild(
+      img
+    );
   }
 
-  // Keep current filter on preview
-  selectVidoraFilter(selectedVidoraFilter || "normal");
+  selectVidoraFilter(
+    selectedVidoraFilter
+  );
 }
 
-  async function publishFromCreate() {
-  const fileInput = getElement("createFile");
-  const captionInput = getElement("createCaption");
-  const button = document.querySelector(
-    '#createScreen button[onclick="publishFromCreate()"]'
-  );
+async function publishFromCreate() {
+  const fileInput =
+    getElement(
+      "createFile"
+    );
 
-  if (!fileInput || !captionInput) return;
+  const captionInput =
+    getElement(
+      "createCaption"
+    );
 
-  const file = fileInput.files[0];
-  let caption = captionInput.value.trim();
-  clearMessage("createMessage");
-
-  if (!currentUser) {
-    setMessage("createMessage", "Please log in first.");
+  if (!fileInput ||
+      !captionInput) {
     return;
   }
 
-  const validation = validateMediaFile(file);
+  const file =
+    fileInput.files[0];
+
+  let caption =
+    captionInput.value.trim();
+
+  clearMessage(
+    "createMessage"
+  );
+
+  if (!currentUser) {
+    setMessage(
+      "createMessage",
+      "Please log in first."
+    );
+
+    return;
+  }
+
+  const validation =
+    validateMediaFile(file);
+
   if (!validation.valid) {
-    setMessage("createMessage", validation.message);
+    setMessage(
+      "createMessage",
+      validation.message
+    );
+
     return;
   }
 
   if (selectedVidoraSound) {
     caption +=
-      (caption ? "\n\n" : "") +
-      "🎵 " + selectedVidoraSound.name + " — " + selectedVidoraSound.artist;
+      (caption
+        ? "\n\n"
+        : "") +
+      "🎵 " +
+      selectedVidoraSound.name +
+      " — " +
+      selectedVidoraSound.artist;
   }
 
-  if (selectedVidoraFilter && selectedVidoraFilter !== "normal") {
+  if (
+    selectedVidoraFilter &&
+    selectedVidoraFilter !==
+      "normal"
+  ) {
     caption +=
-      (caption ? "\n" : "") +
-      "🎨 Filter: " + selectedVidoraFilter;
+      (caption
+        ? "\n"
+        : "") +
+      "🎨 Filter: " +
+      selectedVidoraFilter;
   }
+
+  const button =
+    document.querySelector(
+      '#createScreen button[onclick="publishFromCreate()"]'
+    );
 
   if (button) {
     button.disabled = true;
-    button.textContent = "Publishing...";
+    button.textContent =
+      "Publishing...";
   }
 
   try {
-    const result = await createPost(file, caption);
+    const result =
+      await createPost(
+        file,
+        caption
+      );
 
     if (!result.success) {
-      setMessage("createMessage", result.message);
+      setMessage(
+        "createMessage",
+        result.message
+      );
+
       return;
     }
 
-    setMessage("createMessage", "Post published successfully!", true);
+    setMessage(
+      "createMessage",
+      "Post published successfully!",
+      true
+    );
 
     fileInput.value = "";
     captionInput.value = "";
 
-    if (typeof removeVidoraSound === "function") {
-      removeVidoraSound();
-    }
+    removeVidoraSound();
 
-    if (typeof selectVidoraFilter === "function") {
-      selectVidoraFilter("normal");
-    }
+    selectVidoraFilter(
+      "normal"
+    );
 
-    const preview = document.getElementById("createMediaPreview");
-    if (preview) preview.innerHTML = "";
+    const preview =
+      getElement(
+        "createMediaPreview"
+      );
+
+    if (preview) {
+      preview.innerHTML = "";
+    }
 
     await loadFeed();
 
-    setTimeout(function () {
-      showPage("home");
-    }, 700);
-  } catch (error) {
-    console.error("CREATE PAGE POST ERROR:", error);
-    setMessage("createMessage", "Could not publish your post.");
+    setTimeout(
+      function () {
+        showPage("home");
+      },
+      700
+    );
+
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent = "🚀 Publish to Vidora";
+      button.textContent =
+        "🚀 Publish to Vidora";
     }
   }
 }
 
+
 /* =========================================================
-   15. LOAD FEED
+   19. LOAD FEED
    ========================================================= */
 
 async function loadFeed() {
   if (feedLoading) return;
+
   feedLoading = true;
 
-  const feed = getElement("feed");
+  const feed =
+    getElement("feed");
+
   if (!feed) {
     feedLoading = false;
     return;
   }
 
-  feed.innerHTML = '<div class="loading">Loading Vidora...</div>';
+  feed.innerHTML =
+    '<div class="loading">Loading Vidora...</div>';
 
   try {
-    const { data, error } = await supabaseClient
-      .from("posts")
-      .select("id,user_id,media_url,media_type,caption,created_at,views")
-      .order("created_at", { ascending: false });
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("posts")
+        .select(
+          "id,user_id,media_url,media_type,caption,created_at,views"
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
 
     if (error) {
       feed.innerHTML =
-        '<div class="loading">Unable to load posts.<br><br>' +
-        escapeHTML(error.message) +
+        '<div class="loading">' +
+        escapeHTML(
+          error.message
+        ) +
         "</div>";
+
       return;
     }
 
-    if (!data || data.length === 0) {
+    if (
+      !data ||
+      data.length === 0
+    ) {
       feed.innerHTML =
         '<div class="loading">No posts yet.<br>Be the first to publish something!</div>';
+
       return;
     }
 
     feed.innerHTML = "";
-    for (const post of data) {
-      const element = await createPostElement(post);
-      if (element) feed.appendChild(element);
+
+    for (
+      const post of data
+    ) {
+      const element =
+        await createPostElement(
+          post
+        );
+
+      if (element) {
+        feed.appendChild(
+          element
+        );
+      }
     }
+
   } catch (error) {
-    console.error("LOAD FEED EXCEPTION:", error);
+    console.error(
+      "LOAD FEED ERROR:",
+      error
+    );
+
     feed.innerHTML =
       '<div class="loading">Something went wrong while loading Vidora.</div>';
+
   } finally {
     feedLoading = false;
   }
 }
 
-async function createPostElement(post) {
-  const article = document.createElement("article");
-  article.className = "postCard";
-  article.dataset.postId = post.id;
 
-  let username = "Vidora User";
+/* =========================================================
+   20. POST ELEMENT
+   ========================================================= */
+
+async function createPostElement(
+  post
+) {
+  const article =
+    document.createElement(
+      "article"
+    );
+
+  article.className =
+    "postCard";
+
+  article.dataset.postId =
+    post.id;
+
+  let username =
+    "Vidora User";
+
+  let displayName =
+    "Vidora User";
+
   try {
-    const { data } = await supabaseClient
-      .from("profiles")
-      .select("username, display_name")
-      .eq("id", post.user_id)
-      .maybeSingle();
+    const { data } =
+      await supabaseClient
+        .from("profiles")
+        .select(
+          "username,display_name,avatar_url"
+        )
+        .eq(
+          "id",
+          post.user_id
+        )
+        .maybeSingle();
 
     if (data) {
-      username = data.username || data.display_name || username;
+      username =
+        data.username ||
+        data.display_name ||
+        username;
+
+      displayName =
+        data.display_name ||
+        username;
     }
   } catch (e) {}
 
-  const isOwner = currentUser && currentUser.id === post.user_id;
+  const isOwner =
+    currentUser &&
+    currentUser.id ===
+      post.user_id;
+
   const mediaHTML =
-    post.media_type === "video"
+    post.media_type ===
+    "video"
       ? '<video src="' +
-        escapeHTML(post.media_url) +
+        escapeHTML(
+          post.media_url
+        ) +
         '" controls playsinline></video>'
       : '<img src="' +
-        escapeHTML(post.media_url) +
+        escapeHTML(
+          post.media_url
+        ) +
         '" alt="Post media">';
 
-  const viewsHTML = isOwner
-    ? '<span class="viewCount">👁️ ' + (post.views || 0) + " Views</span>"
-    : "";
+  const viewsHTML =
+    isOwner
+      ? '<span class="viewCount">👁️ ' +
+        (
+          post.views ||
+          0
+        ) +
+        " Views</span>"
+      : "";
 
   article.innerHTML =
-    '<div class="postHeader"><strong>@' +
-    escapeHTML(username) +
-    "</strong><span>" +
-    escapeHTML(formatDate(post.created_at)) +
-    "</span></div>" +
+    '<div class="postHeader">' +
+    "<strong>@" +
+    escapeHTML(
+      username
+    ) +
+    "</strong>" +
+    "<span>" +
+    escapeHTML(
+      formatDate(
+        post.created_at
+      )
+    ) +
+    "</span>" +
+    "</div>" +
+
     '<div class="postMedia">' +
     mediaHTML +
     "</div>" +
+
     '<div class="postCaption">' +
-    escapeHTML(post.caption || "") +
+    escapeHTML(
+      post.caption ||
+        ""
+    ) +
     "</div>" +
+
     '<div class="postStats">' +
     '<span class="likeCount">❤️ 0 Likes</span>' +
     '<span class="commentCount">💬 0 Comments</span>' +
     viewsHTML +
+    "</div>" +
+
+    '<div class="vidoraPostActions">' +
+    '<button type="button" class="vidoraLikeBtn">❤️ Like</button>' +
+    '<button type="button" class="vidoraCommentBtn">💬 Comment</button>' +
+    '<button type="button" class="vidoraFollowBtn">👤 Follow</button>' +
+    '<button type="button" class="vidoraChatBtn">💬 Chat</button>' +
+    "</div>" +
+
+    '<div class="vidoraCommentBox hidden">' +
+    '<input type="text" class="vidoraCommentInput" maxlength="500" placeholder="Write a comment...">' +
+    '<button type="button" class="vidoraSendCommentBtn">Send</button>' +
+    '<div class="vidoraCommentsList"></div>' +
     "</div>";
+
+  const likeBtn =
+    article.querySelector(
+      ".vidoraLikeBtn"
+    );
+
+  const commentBtn =
+    article.querySelector(
+      ".vidoraCommentBtn"
+    );
+
+  const followBtn =
+    article.querySelector(
+      ".vidoraFollowBtn"
+    );
+
+  const chatBtn =
+    article.querySelector(
+      ".vidoraChatBtn"
+    );
+
+  const commentBox =
+    article.querySelector(
+      ".vidoraCommentBox"
+    );
+
+  const sendCommentBtn =
+    article.querySelector(
+      ".vidoraSendCommentBtn"
+    );
+
+  const commentInput =
+    article.querySelector(
+      ".vidoraCommentInput"
+    );
+
+  likeBtn.onclick =
+    function () {
+      togglePostLike(
+        post.id,
+        article
+      );
+    };
+
+  commentBtn.onclick =
+    async function () {
+      commentBox.classList.toggle(
+        "hidden"
+      );
+
+      if (
+        !commentBox.classList.contains(
+          "hidden"
+        )
+      ) {
+        await loadPostComments(
+          post.id,
+          article
+        );
+      }
+    };
+
+  sendCommentBtn.onclick =
+    async function () {
+      await addPostComment(
+        post.id,
+        commentInput,
+        article
+      );
+    };
+
+  followBtn.onclick =
+    async function () {
+      await toggleFollowUser(
+        post.user_id,
+        followBtn
+      );
+    };
+
+  chatBtn.onclick =
+    function () {
+      openChat(
+        post.user_id,
+        displayName
+      );
+    };
+
+  await updatePostLikeUI(
+    post.id,
+    article
+  );
+
+  await updateFollowButton(
+    post.user_id,
+    followBtn
+  );
 
   return article;
 }
 
+
 /* =========================================================
-   16. NAVIGATION
+   21. POST LIKES
    ========================================================= */
 
-function showPage(page) {
-  const pages = {
-    home: "homeScreen",
-    profile: "profileScreen",
-    create: "createScreen",
-    discover: "discoverScreen",
-    friends: "friendsScreen"
-  };
+async function updatePostLikeUI(
+  postId,
+  article
+) {
+  if (!article) return;
 
-  Object.keys(pages).forEach(function (key) {
-    const el = document.getElementById(pages[key]);
-    if (el) el.classList.add("hidden");
-  });
+  try {
+    const {
+      count
+    } =
+      await supabaseClient
+        .from("post_likes")
+        .select(
+          "*",
+          {
+            count:
+              "exact",
+            head: true
+          }
+        )
+        .eq(
+          "post_id",
+          postId
+        );
 
-  const target = document.getElementById(pages[page] || pages.home);
-  if (target) target.classList.remove("hidden");
+    const likeBtn =
+      article.querySelector(
+        ".vidoraLikeBtn"
+      );
 
-  if (page === "home") loadFeed();
-  if (page === "profile") loadProfile();
-  if (page === "discover" && typeof loadVidoraDiscover === "function") {
-    loadVidoraDiscover("for-you");
+    const stat =
+      article.querySelector(
+        ".likeCount"
+      );
+
+    if (stat) {
+      stat.textContent =
+        "❤️ " +
+        (
+          count || 0
+        ) +
+        " Likes";
+    }
+
+    if (likeBtn &&
+        currentUser) {
+      const { data } =
+        await supabaseClient
+          .from("post_likes")
+          .select("id")
+          .eq(
+            "post_id",
+            postId
+          )
+          .eq(
+            "user_id",
+            currentUser.id
+          )
+          .maybeSingle();
+
+      likeBtn.textContent =
+        data
+          ? "💖 Liked"
+          : "❤️ Like";
+    }
+
+  } catch (error) {
+    console.warn(
+      "LIKE UI:",
+      error.message
+    );
   }
 }
 
-function showpage(page) {
-  showPage(page);
-}
+async function togglePostLike(
+  postId,
+  article
+) {
+  if (!currentUser) {
+    alert(
+      "Please log in first."
+    );
 
-/* =========================================================
-   17. SESSION CHECK
-   ========================================================= */
+    return;
+  }
 
-async function checkSession() {
   try {
-    const { data, error } = await supabaseClient.auth.getSession();
-    if (error) {
-      console.error("SESSION ERROR:", error);
-      showAuthScreen();
-      return;
-    }
+    const { data } =
+      await supabaseClient
+        .from("post_likes")
+        .select("id")
+        .eq(
+          "post_id",
+          postId
+        )
+        .eq(
+          "user_id",
+          currentUser.id
+        )
+        .maybeSingle();
 
-    if (data?.session?.user) {
-      currentUser = data.session.user;
-      await showApp();
+    if (data) {
+      await supabaseClient
+        .from("post_likes")
+        .delete()
+        .eq(
+          "id",
+          data.id
+        );
     } else {
-      showAuthScreen();
+      await supabaseClient
+        .from("post_likes")
+        .insert({
+          post_id:
+            postId,
+          user_id:
+            currentUser.id
+        });
     }
+
+    await updatePostLikeUI(
+      postId,
+      article
+    );
+
   } catch (error) {
-    console.error("CHECK SESSION EXCEPTION:", error);
-    showAuthScreen();
+    console.error(
+      "LIKE ERROR:",
+      error
+    );
   }
 }
 
+
 /* =========================================================
-   18. DISCOVER (BASIC)
+   22. COMMENTS
    ========================================================= */
 
-let vidoraDiscoverFilter = "for-you";
+async function loadPostComments(
+  postId,
+  article
+) {
+  const list =
+    article.querySelector(
+      ".vidoraCommentsList"
+    );
 
-async function loadVidoraDiscover(filter) {
-  filter = filter || "for-you";
-  vidoraDiscoverFilter = filter;
+  if (!list) return;
 
-  const results = document.getElementById("discoverResults");
-  if (!results) return;
-
-  results.innerHTML =
-    '<div class="loading">Loading ' +
-    escapeHTML(filter.replace("-", " ")) +
-    "...</div>";
+  list.innerHTML =
+    "<div>Loading comments...</div>";
 
   try {
-    const { data, error } = await supabaseClient
-      .from("posts")
-      .select("id,user_id,media_url,media_type,caption,created_at")
-      .order("created_at", { ascending: false })
-      .limit(30);
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("post_comments")
+        .select(
+          "id,user_id,content,created_at"
+        )
+        .eq(
+          "post_id",
+          postId
+        )
+        .order(
+          "created_at",
+          {
+            ascending: true
+          }
+        );
 
     if (error) {
-      results.innerHTML =
-        '<div class="loading">Unable to load Discover.</div>';
+      list.innerHTML =
+        "<div>" +
+        escapeHTML(
+          error.message
+        ) +
+        "</div>";
+
       return;
     }
 
-    if (!data || data.length === 0) {
-      results.innerHTML = '<div class="loading">Nothing to discover yet.</div>';
+    list.innerHTML = "";
+
+    if (
+      !data ||
+      data.length === 0
+    ) {
+      list.innerHTML =
+        "<div>No comments yet.</div>";
+
       return;
     }
 
-    results.innerHTML = "";
-    const grid = document.createElement("div");
-    grid.className = "discoverGrid";
+    for (
+      const comment of data
+    ) {
+      const item =
+        document.createElement(
+          "div"
+        );
 
-    data.forEach(function (post) {
-      const card = document.createElement("div");
-      card.className = "discoverCard";
-      if (post.media_type === "video") {
-        card.innerHTML =
-          '<video src="' +
-          escapeHTML(post.media_url) +
-          '" muted playsinline></video>';
-      } else {
-        card.innerHTML =
-          '<img src="' + escapeHTML(post.media_url) + '" alt="Discover">';
+      item.className =
+        "vidoraCommentItem";
+
+      const mine =
+        currentUser &&
+        currentUser.id ===
+          comment.user_id;
+
+      item.innerHTML =
+        "<span>" +
+        escapeHTML(
+          comment.content
+        ) +
+        "</span>" +
+        (
+          mine
+            ? '<button type="button">Delete</button>'
+            : ""
+        );
+
+      if (mine) {
+        item
+          .querySelector(
+            "button"
+          )
+          .onclick =
+          async function () {
+            await deletePostComment(
+              comment.id,
+              postId,
+              article
+            );
+          };
       }
-      grid.appendChild(card);
-    });
 
-    results.appendChild(grid);
+      list.appendChild(
+        item
+      );
+    }
+
   } catch (error) {
-    console.error("DISCOVER ERROR:", error);
-    results.innerHTML = '<div class="loading">Discover failed to load.</div>';
+    list.innerHTML =
+      "<div>Could not load comments.</div>";
   }
 }
 
-/* =========================================================
-   19. INIT
-   ========================================================= */
+async function addPostComment(
+  postId,
+  input,
+  article
+) {
+  if (!currentUser) {
+    alert(
+      "Please log in first."
+    );
 
-document.addEventListener("DOMContentLoaded", async function () {
-  console.log("Vidora DOM ready");
-  initializeVidoraAvatarSystem();
-  renderVidoraFilterChips();
-  showPage("home");
-  await checkSession();
-});
-/* =========================================================
-   VIDORA SOUNDS / BEATS / FILTERS
-   ========================================================= */
+    return;
+  }
 
-const VIDORA_SOUNDS = [
-  { id: "neon-drive", name: "Neon Drive", artist: "Vidora Beats", type: "trending" },
-  { id: "night-pulse", name: "Night Pulse", artist: "Aether", type: "trending" },
-  { id: "soft-glow", name: "Soft Glow", artist: "Luna Wave", type: "chill" },
-  { id: "city-rain", name: "City Rain", artist: "Nova Keys", type: "chill" },
-  { id: "bass-room", name: "Bass Room", artist: "Rex Audio", type: "beats" },
-  { id: "heat-check", name: "Heat Check", artist: "Pixel Lab", type: "beats" },
-  { id: "orbit-flow", name: "Orbit Flow", artist: "Orion", type: "trending" },
-  { id: "violet-hour", name: "Violet Hour", artist: "Vexa", type: "chill" }
-];
+  const content =
+    input.value.trim();
 
-const VIDORA_FILTERS = [
-  { id: "normal", name: "Normal", css: "none" },
-  { id: "warm", name: "Warm", css: "sepia(0.25) saturate(1.2)" },
-  { id: "cool", name: "Cool", css: "hue-rotate(20deg) saturate(1.1)" },
-  { id: "mono", name: "B&W", css: "grayscale(1)" },
-  { id: "vivid", name: "Vivid", css: "contrast(1.15) saturate(1.35)" }
-];
+  if (!content) return;
 
-let selectedVidoraSound = null;
-let selectedVidoraFilter = "normal";
-
-function openVidoraSounds(filterType) {
-  const panel = document.getElementById("vidoraSoundPanel");
-  const list = document.getElementById("vidoraSoundList");
-  if (!panel || !list) return;
-
-  const type = filterType || "all";
-  const sounds =
-    type === "all"
-      ? VIDORA_SOUNDS
-      : VIDORA_SOUNDS.filter(function (s) {
-          return s.type === type;
+  try {
+    const { error } =
+      await supabaseClient
+        .from("post_comments")
+        .insert({
+          post_id:
+            postId,
+          user_id:
+            currentUser.id,
+          content:
+            content
         });
 
-  list.innerHTML = "";
+    if (error) {
+      alert(
+        error.message
+      );
 
-  sounds.forEach(function (sound) {
-    const row = document.createElement("div");
-    row.className = "soundItemRow";
+      return;
+    }
 
-    row.innerHTML =
-      "<div class='soundMeta'>" +
-      "<strong>" + escapeHTML(sound.name) + "</strong>" +
-      "<small>" + escapeHTML(sound.artist) + " · " + escapeHTML(sound.type) + "</small>" +
-      "</div>" +
-      "<div class='soundActions'>" +
-      "<button type='button' class='secondary soundPlayBtn'>▶</button>" +
-      "<button type='button' class='soundUseBtn'>Use</button>" +
-      "</div>";
+    input.value = "";
 
-    row.querySelector(".soundPlayBtn").onclick = function (event) {
-  event.preventDefault();
-  event.stopPropagation();
-  playVidoraSound(sound.id);
-};
-
-row.querySelector(".soundUseBtn").onclick = function (event) {
-  event.preventDefault();
-  event.stopPropagation();
-  selectVidoraSound(sound.id);
-  // Keep sound playing while testing
-  // stopVidoraSound();
-};
-
-    list.appendChild(row);
-  });
-
-  panel.classList.remove("hidden");
-}
-
-function closeVidoraSounds() {
-  const panel = document.getElementById("vidoraSoundPanel");
-  if (panel) panel.classList.add("hidden");
-}
-
-function selectVidoraSound(soundId) {
-  selectedVidoraSound =
-    VIDORA_SOUNDS.find(function (s) {
-      return s.id === soundId;
-    }) || null;
-
-  const wrap = document.getElementById("selectedVidoraSound");
-  const nameEl = document.getElementById("selectedSoundName");
-  const artistEl = document.getElementById("selectedSoundArtist");
-
-  if (selectedVidoraSound && wrap && nameEl && artistEl) {
-    nameEl.textContent = selectedVidoraSound.name;
-    artistEl.textContent =
-      selectedVidoraSound.artist + " · " + selectedVidoraSound.type;
-    wrap.classList.remove("hidden");
-  }
-
-  closeVidoraSounds();
-}
-
-function removeVidoraSound() {
-  selectedVidoraSound = null;
-  const wrap = document.getElementById("selectedVidoraSound");
-  if (wrap) wrap.classList.add("hidden");
-}
-
-function selectVidoraFilter(filterId) {
-  selectedVidoraFilter = filterId || "normal";
-  const filter = VIDORA_FILTERS.find(function (f) {
-    return f.id === selectedVidoraFilter;
-  });
-
-  document.querySelectorAll(".filterChip").forEach(function (chip) {
-    chip.classList.toggle(
-      "active",
-      chip.dataset.filter === selectedVidoraFilter
+    await loadPostComments(
+      postId,
+      article
     );
-  });
 
-  const preview = document.getElementById("createMediaPreview");
-  if (preview) {
-    preview.style.filter = filter ? filter.css : "none";
+  } catch (error) {
+    console.error(
+      "COMMENT ERROR:",
+      error
+    );
   }
 }
 
-function renderVidoraFilterChips() {
-  const box = document.getElementById("vidoraFilterChips");
-  if (!box) return;
+async function deletePostComment(
+  commentId,
+  postId,
+  article
+) {
+  try {
+    const { error } =
+      await supabaseClient
+        .from("post_comments")
+        .delete()
+        .eq(
+          "id",
+          commentId
+        );
 
-  box.innerHTML = "";
-  VIDORA_FILTERS.forEach(function (filter) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className =
-      "filterChip" + (filter.id === selectedVidoraFilter ? " active" : "");
-    btn.dataset.filter = filter.id;
-    btn.textContent = filter.name;
-    btn.onclick = function () {
-      selectVidoraFilter(filter.id);
-    };
-    box.appendChild(btn);
-  });
+    if (error) {
+      alert(
+        error.message
+      );
+
+      return;
+    }
+
+    await loadPostComments(
+      postId,
+      article
+    );
+
+  } catch (error) {
+    console.error(
+      "DELETE COMMENT ERROR:",
+      error
+    );
+  }
 }
+
 
 /* =========================================================
-   20. GLOBAL EXPORTS
+   23. DELETE OWN POST
    ========================================================= */
 
-window.login = login;
-window.signUp = signUp;
-window.logout = logout;
+async function deleteOwnPost(
+  postId
+) {
+  if (!currentUser) {
+    return;
+  }
 
-window.showLoginForm = showLoginForm;
-window.showCreateAccount = showCreateAccount;
-window.showAuthChoice = showAuthChoice;
-window.showAuthScreen = showAuthScreen;
-window.showProfileSetup = showProfileSetup;
-window.togglePassword = togglePassword;
+  const confirmed =
+    confirm(
+      "Delete this post?"
+    );
 
-window.showPage = showPage;
-window.showpage = showpage;
+  if (!confirmed) {
+    return;
+  }
 
-window.loadProfile = loadProfile;
-window.saveProfile = saveProfile;
+  try {
+    const {
+      data: post
+    } =
+      await supabaseClient
+        .from("posts")
+        .select(
+          "id,user_id,media_url"
+        )
+        .eq(
+          "id",
+          postId
+        )
+        .single();
 
-window.uploadPost = uploadPost;
-window.publishFromCreate = publishFromCreate;
-window.loadFeed = loadFeed;
-window.loadVidoraDiscover = loadVidoraDiscover;
+    if (!post) return;
 
-window.selectVidoraAvatar = selectVidoraAvatar;
-window.getSelectedVidoraAvatar = getSelectedVidoraAvatar;
-window.getVidoraAvatarImage = getVidoraAvatarImage;
-window.getVidoraAvatarInfo = getVidoraAvatarInfo;
-window.updateAvatarPreview = updateAvatarPreview;
-window.renderDefaultAvatar = renderDefaultAvatar;
-window.renderProfileAvatar = renderProfileAvatar;
+    if (
+      post.user_id !==
+      currentUser.id
+    ) {
+      alert(
+        "You can only delete your own posts."
+      );
 
-window.showInteractiveAvatar = showInteractiveAvatar;
-window.closeInteractiveAvatar = closeInteractiveAvatar;
-window.toggleInteractiveAvatar = toggleInteractiveAvatar;
-window.avatarReact = avatarReact;
-window.openAvatarChat = openAvatarChat;
-window.closeAvatarChat = closeAvatarChat;
-window.sendAvatarMessage = sendAvatarMessage;
-window.initializeVidoraAvatarSystem = initializeVidoraAvatarSystem;
+      return;
+    }
 
-window.setVidoraTheme = setVidoraTheme;
-window.loadVidoraTheme = loadVidoraTheme;
-window.playVidoraSound = playVidoraSound;
-window.stopVidoraSound = stopVidoraSound;
-console.log("VIDORA AUTH FUNCTIONS READY");
+    const { error } =
+      await supabaseClient
+        .from("posts")
+        .delete()
+        .eq(
+          "id",
+          postId
+        );
+
+    if (error) {
+      alert(
+        error.message
+      );
+
+      return;
+    }
+
+    await loadFeed();
+
+  } catch (error) {
+    console.error(
+      "DELETE POST ERROR:",
+      error
+    );
+  }
+}
+
+
 /* =========================================================
-   VIDORA STORIES - SAFE ADDITION
-   This section does not modify login/auth functions.
-========================================================= */
+   24. FOLLOW SYSTEM
+   ========================================================= */
 
-let vidoraStories = [];
-let currentStoryIndex = 0;
-let currentStory = null;
-let selectedStoryFile = null;
-let storyTimer = null;
+async function updateFollowButton(
+  userId,
+  button
+) {
+  if (
+    !button ||
+    !currentUser ||
+    userId ===
+      currentUser.id
+  ) {
+    if (
+      button &&
+      userId ===
+        currentUser?.id
+    ) {
+      button.classList.add(
+        "hidden"
+      );
+    }
 
-const VIDORA_STORY_DURATION = 5000;
+    return;
+  }
+
+  try {
+    const { data } =
+      await supabaseClient
+        .from("follows")
+        .select("id")
+        .eq(
+          "follower_id",
+          currentUser.id
+        )
+        .eq(
+          "following_id",
+          userId
+        )
+        .maybeSingle();
+
+    button.textContent =
+      data
+        ? "✓ Following"
+        : "👤 Follow";
+
+  } catch (error) {}
+}
+
+async function toggleFollowUser(
+  userId,
+  button
+) {
+  if (!currentUser) {
+    alert(
+      "Please log in first."
+    );
+
+    return;
+  }
+
+  if (
+    userId ===
+    currentUser.id
+  ) {
+    return;
+  }
+
+  try {
+    const { data } =
+      await supabaseClient
+        .from("follows")
+        .select("id")
+        .eq(
+          "follower_id",
+          currentUser.id
+        )
+        .eq(
+          "following_id",
+          userId
+        )
+        .maybeSingle();
+
+    if (data) {
+      await supabaseClient
+        .from("follows")
+        .delete()
+        .eq(
+          "id",
+          data.id
+        );
+    } else {
+      await supabaseClient
+        .from("follows")
+        .insert({
+          follower_id:
+            currentUser.id,
+          following_id:
+            userId
+        });
+    }
+
+    await updateFollowButton(
+      userId,
+      button
+    );
+
+  } catch (error) {
+    console.error(
+      "FOLLOW ERROR:",
+      error
+    );
+  }
+}
 
 
-/* =========================
-   STORY CREATOR
-========================= */
+/* =========================================================
+   25. BLOCK USERS
+   ========================================================= */
+
+async function blockVidoraUser(
+  userId
+) {
+  if (!currentUser) return;
+
+  if (
+    userId ===
+    currentUser.id
+  ) {
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      "Block this Vidora user?"
+    );
+
+  if (!confirmed) return;
+
+  try {
+    const { error } =
+      await supabaseClient
+        .from("blocked_users")
+        .upsert({
+          blocker_id:
+            currentUser.id,
+          blocked_id:
+            userId
+        });
+
+    if (error) {
+      alert(
+        error.message
+      );
+
+      return;
+    }
+
+    alert(
+      "User blocked."
+    );
+
+    await loadFeed();
+
+  } catch (error) {
+    console.error(
+      "BLOCK ERROR:",
+      error
+    );
+  }
+}
+
+async function unblockVidoraUser(
+  userId
+) {
+  if (!currentUser) return;
+
+  try {
+    await supabaseClient
+      .from("blocked_users")
+      .delete()
+      .eq(
+        "blocker_id",
+        currentUser.id
+      )
+      .eq(
+        "blocked_id",
+        userId
+      );
+  } catch (error) {
+    console.error(
+      "UNBLOCK ERROR:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   26. CHAT
+   ========================================================= */
+
+function createChatPanel() {
+  if (
+    getElement(
+      "vidoraChatPanel"
+    )
+  ) {
+    return;
+  }
+
+  const panel =
+    document.createElement(
+      "div"
+    );
+
+  panel.id =
+    "vidoraChatPanel";
+
+  panel.className =
+    "vidoraFloatingPanel hidden";
+
+  panel.innerHTML =
+    '<div class="vidoraChatHeader">' +
+    '<strong id="vidoraChatTitle">Chat</strong>' +
+    '<button type="button" id="closeVidoraChat">✕</button>' +
+    "</div>" +
+
+    '<div id="vidoraChatMessages" class="vidoraChatMessages"></div>' +
+
+    '<div class="vidoraChatInputRow">' +
+    '<input id="vidoraChatInput" type="text" maxlength="1000" placeholder="Message...">' +
+    '<button type="button" id="sendVidoraChat">Send</button>' +
+    '<button type="button" id="recordVoiceNote">🎤</button>' +
+    "</div>";
+
+  document.body.appendChild(
+    panel
+  );
+
+  getElement(
+    "closeVidoraChat"
+  ).onclick =
+    closeChat;
+
+  getElement(
+    "sendVidoraChat"
+  ).onclick =
+    sendChatMessage;
+
+  getElement(
+    "recordVoiceNote"
+  ).onclick =
+    toggleVoiceRecording;
+}
+
+async function openChat(
+  userId,
+  displayName
+) {
+  if (!currentUser) {
+    alert(
+      "Please log in first."
+    );
+
+    return;
+  }
+
+  if (
+    userId ===
+    currentUser.id
+  ) {
+    return;
+  }
+
+  createChatPanel();
+
+  currentChatUser = {
+    id: userId,
+    name:
+      displayName ||
+      "Vidora User"
+  };
+
+  const panel =
+    getElement(
+      "vidoraChatPanel"
+    );
+
+  const title =
+    getElement(
+      "vidoraChatTitle"
+    );
+
+  if (title) {
+    title.textContent =
+      "Chat with " +
+      currentChatUser.name;
+  }
+
+  panel.classList.remove(
+    "hidden"
+  );
+
+  await loadChatMessages();
+}
+
+function closeChat() {
+  const panel =
+    getElement(
+      "vidoraChatPanel"
+    );
+
+  if (panel) {
+    panel.classList.add(
+      "hidden"
+    );
+  }
+
+  currentChatUser =
+    null;
+}
+
+async function loadChatMessages() {
+  if (
+    !currentUser ||
+    !currentChatUser
+  ) {
+    return;
+  }
+
+  const box =
+    getElement(
+      "vidoraChatMessages"
+    );
+
+  if (!box) return;
+
+  try {
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("messages")
+        .select(
+          "id,sender_id,receiver_id,content,voice_url,created_at"
+        )
+        .or(
+          "and(sender_id.eq." +
+            currentUser.id +
+            ",receiver_id.eq." +
+            currentChatUser.id +
+            "),and(sender_id.eq." +
+            currentChatUser.id +
+            ",receiver_id.eq." +
+            currentUser.id +
+            ")"
+        )
+        .order(
+          "created_at",
+          {
+            ascending: true
+          }
+        );
+
+    if (error) {
+      box.innerHTML =
+        "<div>" +
+        escapeHTML(
+          error.message
+        ) +
+        "</div>";
+
+      return;
+    }
+
+    box.innerHTML = "";
+
+    (data || []).forEach(
+      function (message) {
+        const row =
+          document.createElement(
+            "div"
+          );
+
+        row.className =
+          message.sender_id ===
+          currentUser.id
+            ? "vidoraMessage mine"
+            : "vidoraMessage";
+
+        if (
+          message.voice_url
+        ) {
+          row.innerHTML =
+            '<audio controls src="' +
+            escapeHTML(
+              message.voice_url
+            ) +
+            '"></audio>';
+        } else {
+          row.textContent =
+            message.content ||
+            "";
+        }
+
+        box.appendChild(
+          row
+        );
+      }
+    );
+
+    box.scrollTop =
+      box.scrollHeight;
+
+  } catch (error) {
+    console.error(
+      "LOAD CHAT ERROR:",
+      error
+    );
+  }
+}
+
+async function sendChatMessage() {
+  if (
+    !currentUser ||
+    !currentChatUser
+  ) {
+    return;
+  }
+
+  const input =
+    getElement(
+      "vidoraChatInput"
+    );
+
+  const content =
+    input?.value.trim();
+
+  if (!content) return;
+
+  try {
+    const { error } =
+      await supabaseClient
+        .from("messages")
+        .insert({
+          sender_id:
+            currentUser.id,
+          receiver_id:
+            currentChatUser.id,
+          content:
+            content
+        });
+
+    if (error) {
+      alert(
+        error.message
+      );
+
+      return;
+    }
+
+    input.value = "";
+
+    await loadChatMessages();
+
+  } catch (error) {
+    console.error(
+      "SEND CHAT ERROR:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   27. VOICE NOTES
+   ========================================================= */
+
+let voiceRecorder = null;
+let voiceChunks = [];
+let voiceRecording = false;
+
+async function toggleVoiceRecording() {
+  if (voiceRecording) {
+    stopVoiceRecording();
+    return;
+  }
+
+  if (
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia
+  ) {
+    alert(
+      "Voice recording is not supported here."
+    );
+
+    return;
+  }
+
+  try {
+    const stream =
+      await navigator.mediaDevices.getUserMedia(
+        {
+          audio: true
+        }
+      );
+
+    voiceChunks = [];
+
+    voiceRecorder =
+      new MediaRecorder(
+        stream
+      );
+
+    voiceRecorder.ondataavailable =
+      function (event) {
+        if (
+          event.data.size >
+          0
+        ) {
+          voiceChunks.push(
+            event.data
+          );
+        }
+      };
+
+    voiceRecorder.onstop =
+      async function () {
+        stream
+          .getTracks()
+          .forEach(
+            function (track) {
+              track.stop();
+            }
+          );
+
+        const blob =
+          new Blob(
+            voiceChunks,
+            {
+              type:
+                "audio/webm"
+            }
+          );
+
+        await sendVoiceNote(
+          blob
+        );
+      };
+
+    voiceRecorder.start();
+
+    voiceRecording =
+      true;
+
+    const button =
+      getElement(
+        "recordVoiceNote"
+      );
+
+    if (button) {
+      button.textContent =
+        "⏹️";
+    }
+
+  } catch (error) {
+    console.error(
+      "VOICE RECORD ERROR:",
+      error
+    );
+
+    alert(
+      "Microphone permission is required."
+    );
+  }
+}
+
+function stopVoiceRecording() {
+  if (
+    voiceRecorder &&
+    voiceRecorder.state !==
+      "inactive"
+  ) {
+    voiceRecorder.stop();
+  }
+
+  voiceRecording =
+    false;
+
+  const button =
+    getElement(
+      "recordVoiceNote"
+    );
+
+  if (button) {
+    button.textContent =
+      "🎤";
+  }
+}
+
+async function sendVoiceNote(
+  blob
+) {
+  if (
+    !currentUser ||
+    !currentChatUser
+  ) {
+    return;
+  }
+
+  try {
+    const path =
+      "voice/" +
+      currentUser.id +
+      "/" +
+      Date.now() +
+      ".webm";
+
+    const {
+      error: uploadError
+    } =
+      await supabaseClient.storage
+        .from("media")
+        .upload(
+          path,
+          blob,
+          {
+            contentType:
+              "audio/webm",
+            upsert: false
+          }
+        );
+
+    if (uploadError) {
+      alert(
+        uploadError.message
+      );
+
+      return;
+    }
+
+    const { data } =
+      supabaseClient.storage
+        .from("media")
+        .getPublicUrl(
+          path
+        );
+
+    const voiceUrl =
+      data?.publicUrl;
+
+    if (!voiceUrl) {
+      return;
+    }
+
+    const { error } =
+      await supabaseClient
+        .from("messages")
+        .insert({
+          sender_id:
+            currentUser.id,
+          receiver_id:
+            currentChatUser.id,
+          content: "",
+          voice_url:
+            voiceUrl
+        });
+
+    if (error) {
+      alert(
+        error.message
+      );
+
+      return;
+    }
+
+    await loadChatMessages();
+
+  } catch (error) {
+    console.error(
+      "VOICE NOTE ERROR:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   28. VOICE EFFECTS
+   ========================================================= */
+
+async function applyVoiceEffect(
+  blob,
+  effect
+) {
+  /*
+    Browser voice effects are basic effects,
+    not AI voice cloning.
+  */
+
+  if (!blob) {
+    return null;
+  }
+
+  return blob;
+}
+
+
+/* =========================================================
+   29. VIDEO / VOICE CALL UI
+   ========================================================= */
+
+function createCallUI() {
+  if (
+    getElement(
+      "vidoraCallOverlay"
+    )
+  ) {
+    return;
+  }
+
+  const overlay =
+    document.createElement(
+      "div"
+    );
+
+  overlay.id =
+    "vidoraCallOverlay";
+
+  overlay.className =
+    "vidoraCallOverlay hidden";
+
+  overlay.innerHTML =
+    '<div class="vidoraCallBox">' +
+
+    '<div class="vidoraCallHeader">' +
+    '<strong id="vidoraCallName">Vidora Call</strong>' +
+    "</div>" +
+
+    '<div class="vidoraRemoteWrap">' +
+    '<video id="vidoraRemoteVideo" autoplay playsinline></video>' +
+    '<div id="vidoraHologramGlow"></div>' +
+    "</div>" +
+
+    '<video id="vidoraLocalVideo" autoplay muted playsinline></video>' +
+
+    '<div class="vidoraCallButtons">' +
+    '<button type="button" id="toggleCallMute">🎤</button>' +
+    '<button type="button" id="toggleCallCamera">📹</button>' +
+    '<button type="button" id="toggleHologram">✨</button>' +
+    '<button type="button" id="endVidoraCall">🔴</button>' +
+    "</div>" +
+
+    "</div>";
+
+  document.body.appendChild(
+    overlay
+  );
+
+  getElement(
+    "endVidoraCall"
+  ).onclick =
+    endVidoraCall;
+
+  getElement(
+    "toggleCallMute"
+  ).onclick =
+    toggleCallMute;
+
+  getElement(
+    "toggleCallCamera"
+  ).onclick =
+    toggleCallCamera;
+
+  getElement(
+    "toggleHologram"
+  ).onclick =
+    toggleHologramEffect;
+}
+
+async function startVoiceCall(
+  userId,
+  name
+) {
+  return startVidoraCall(
+    userId,
+    name,
+    false
+  );
+}
+
+async function startVideoCall(
+  userId,
+  name
+) {
+  return startVidoraCall(
+    userId,
+    name,
+    true
+  );
+}
+
+async function startVidoraCall(
+  userId,
+  name,
+  videoEnabled
+) {
+  if (!currentUser) {
+    alert(
+      "Please log in first."
+    );
+
+    return;
+  }
+
+  if (
+    userId ===
+    currentUser.id
+  ) {
+    return;
+  }
+
+  createCallUI();
+
+  const overlay =
+    getElement(
+      "vidoraCallOverlay"
+    );
+
+  const title =
+    getElement(
+      "vidoraCallName"
+    );
+
+  if (title) {
+    title.textContent =
+      name ||
+      "Vidora User";
+  }
+
+  overlay.classList.remove(
+    "hidden"
+  );
+
+  try {
+    localStream =
+      await navigator.mediaDevices.getUserMedia(
+        {
+          audio: true,
+          video:
+            !!videoEnabled
+        }
+      );
+
+    const localVideo =
+      getElement(
+        "vidoraLocalVideo"
+      );
+
+    if (localVideo) {
+      localVideo.srcObject =
+        localStream;
+
+      if (!videoEnabled) {
+        localVideo.classList.add(
+          "hidden"
+        );
+      }
+    }
+
+    peerConnection =
+      new RTCPeerConnection(
+        {
+          iceServers: [
+            {
+              urls:
+                "stun:stun.l.google.com:19302"
+            }
+          ]
+        }
+      );
+
+    localStream
+      .getTracks()
+      .forEach(
+        function (track) {
+          peerConnection.addTrack(
+            track,
+            localStream
+          );
+        }
+      );
+
+    peerConnection.ontrack =
+      function (event) {
+        remoteStream =
+          event.streams[0];
+
+        const remoteVideo =
+          getElement(
+            "vidoraRemoteVideo"
+          );
+
+        if (remoteVideo) {
+          remoteVideo.srcObject =
+            remoteStream;
+        }
+      };
+
+    peerConnection.onicecandidate =
+      async function (event) {
+        if (
+          event.candidate
+        ) {
+          await sendCallSignal({
+            type:
+              "candidate",
+            target:
+              userId,
+            candidate:
+              event.candidate
+          });
+        }
+      };
+
+    const offer =
+      await peerConnection.createOffer();
+
+    await peerConnection.setLocalDescription(
+      offer
+    );
+
+    await sendCallSignal({
+      type:
+        "offer",
+      target:
+        userId,
+      offer:
+        offer,
+      video:
+        videoEnabled
+    });
+
+    currentCall = {
+      userId:
+        userId,
+      video:
+        videoEnabled
+    };
+
+  } catch (error) {
+    console.error(
+      "CALL ERROR:",
+      error
+    );
+
+    alert(
+      "Camera/microphone permission is required."
+    );
+
+    stopCurrentCall();
+  }
+}
+
+
+/* =========================================================
+   30. WEBRTC SIGNALING
+   ========================================================= */
+
+let callChannel = null;
+
+function initializeCallSignaling() {
+  if (
+    !currentUser ||
+    callChannel
+  ) {
+    return;
+  }
+
+  callChannel =
+    supabaseClient
+      .channel(
+        "vidora-call-" +
+        currentUser.id
+      )
+      .on(
+        "broadcast",
+        {
+          event:
+            "call-signal"
+        },
+        function (payload) {
+          handleCallSignal(
+            payload.payload
+          );
+        }
+      )
+      .subscribe();
+}
+
+async function sendCallSignal(
+  signal
+) {
+  if (
+    !currentUser
+  ) {
+    return;
+  }
+
+  initializeCallSignaling();
+
+  if (!callChannel) {
+    return;
+  }
+
+  await callChannel.send({
+    type:
+      "broadcast",
+    event:
+      "call-signal",
+    payload: {
+      sender:
+        currentUser.id,
+      target:
+        signal.target,
+      data:
+        signal
+    }
+  });
+}
+
+async function handleCallSignal(
+  payload
+) {
+  if (
+    !payload ||
+    !currentUser
+  ) {
+    return;
+  }
+
+  if (
+    payload.target !==
+    currentUser.id
+  ) {
+    return;
+  }
+
+  const signal =
+    payload.data;
+
+  if (!signal) {
+    return;
+  }
+
+  createCallUI();
+
+  if (
+    signal.type ===
+    "offer"
+  ) {
+    const accepted =
+      confirm(
+        "Incoming Vidora call. Accept?"
+      );
+
+    if (!accepted) {
+      return;
+    }
+
+    try {
+      localStream =
+        await navigator.mediaDevices.getUserMedia(
+          {
+            audio: true,
+            video:
+              !!signal.video
+          }
+        );
+
+      peerConnection =
+        new RTCPeerConnection({
+          iceServers: [
+            {
+              urls:
+                "stun:stun.l.google.com:19302"
+            }
+          ]
+        });
+
+      localStream
+        .getTracks()
+        .forEach(
+          function (track) {
+            peerConnection.addTrack(
+              track,
+              localStream
+            );
+          }
+        );
+
+      peerConnection.ontrack =
+        function (event) {
+          remoteStream =
+            event.streams[0];
+
+          const video =
+            getElement(
+              "vidoraRemoteVideo"
+            );
+
+          if (video) {
+            video.srcObject =
+              remoteStream;
+          }
+        };
+
+      peerConnection.onicecandidate =
+        function (event) {
+          if (
+            event.candidate
+          ) {
+            sendCallSignal({
+              type:
+                "candidate",
+              target:
+                payload.sender,
+              candidate:
+                event.candidate
+            });
+          }
+        };
+
+      await peerConnection.setRemoteDescription(
+        new RTCSessionDescription(
+          signal.offer
+        )
+      );
+
+      const answer =
+        await peerConnection.createAnswer();
+
+      await peerConnection.setLocalDescription(
+        answer
+      );
+
+      await sendCallSignal({
+        type:
+          "answer",
+        target:
+          payload.sender,
+        answer:
+          answer
+      });
+
+      const overlay =
+        getElement(
+          "vidoraCallOverlay"
+        );
+
+      if (overlay) {
+        overlay.classList.remove(
+          "hidden"
+        );
+      }
+
+    } catch (error) {
+      console.error(
+        "ACCEPT CALL ERROR:",
+        error
+      );
+    }
+
+  } else if (
+    signal.type ===
+    "answer"
+  ) {
+    if (!peerConnection) {
+      return;
+    }
+
+    await peerConnection.setRemoteDescription(
+      new RTCSessionDescription(
+        signal.answer
+      )
+    );
+
+  } else if (
+    signal.type ===
+    "candidate"
+  ) {
+    if (
+      peerConnection &&
+      signal.candidate
+    ) {
+      try {
+        await peerConnection.addIceCandidate(
+          new RTCIceCandidate(
+            signal.candidate
+          )
+        );
+      } catch (error) {
+        console.error(
+          "ICE ERROR:",
+          error
+        );
+      }
+    }
+  }
+}
+
+
+/* =========================================================
+   31. CALL CONTROLS
+   ========================================================= */
+
+function toggleCallMute() {
+  if (!localStream) return;
+
+  localStream
+    .getAudioTracks()
+    .forEach(
+      function (track) {
+        track.enabled =
+          !track.enabled;
+      }
+    );
+}
+
+function toggleCallCamera() {
+  if (!localStream) return;
+
+  localStream
+    .getVideoTracks()
+    .forEach(
+      function (track) {
+        track.enabled =
+          !track.enabled;
+      }
+    );
+}
+
+function toggleHologramEffect() {
+  const glow =
+    getElement(
+      "vidoraHologramGlow"
+    );
+
+  const video =
+    getElement(
+      "vidoraRemoteVideo"
+    );
+
+  if (!glow || !video) {
+    return;
+  }
+
+  glow.classList.toggle(
+    "active"
+  );
+
+  video.classList.toggle(
+    "hologramVideo"
+  );
+}
+
+function endVidoraCall() {
+  stopCurrentCall();
+}
+
+function stopCurrentCall() {
+  if (localStream) {
+    localStream
+      .getTracks()
+      .forEach(
+        function (track) {
+          track.stop();
+        }
+      );
+
+    localStream = null;
+  }
+
+  if (peerConnection) {
+    peerConnection.close();
+    peerConnection = null;
+  }
+
+  remoteStream = null;
+  currentCall = null;
+
+  const overlay =
+    getElement(
+      "vidoraCallOverlay"
+    );
+
+  if (overlay) {
+    overlay.classList.add(
+      "hidden"
+    );
+  }
+}
+
+
+/* =========================================================
+   32. STORIES
+   ========================================================= */
 
 function openStoryCreator() {
-
   const creator =
-    document.getElementById("storyCreator");
+    getElement(
+      "storyCreator"
+    );
 
   if (!creator) return;
 
-  creator.classList.remove("hidden");
+  creator.classList.remove(
+    "hidden"
+  );
 
   const input =
-    document.getElementById("storyFileInput");
+    getElement(
+      "storyFileInput"
+    );
 
   const preview =
-    document.getElementById("storyPreview");
+    getElement(
+      "storyPreview"
+    );
 
   const publishButton =
-    document.getElementById(
+    getElement(
       "publishStoryButton"
     );
 
@@ -1523,77 +4323,60 @@ function openStoryCreator() {
   }
 
   if (publishButton) {
-    publishButton.classList.add("hidden");
+    publishButton.classList.add(
+      "hidden"
+    );
   }
 
-  selectedStoryFile = null;
+  selectedStoryFile =
+    null;
 }
-
-
-/* =========================
-   CLOSE STORY CREATOR
-========================= */
 
 function closeStoryCreator() {
-
   const creator =
-    document.getElementById("storyCreator");
+    getElement(
+      "storyCreator"
+    );
 
   if (creator) {
-    creator.classList.add("hidden");
+    creator.classList.add(
+      "hidden"
+    );
   }
 
-  selectedStoryFile = null;
+  selectedStoryFile =
+    null;
 }
 
-
-/* =========================
-   SELECT STORY FILE
-========================= */
-
-function handleStoryFile(event) {
-
+function handleStoryFile(
+  event
+) {
   const file =
     event.target.files?.[0];
 
   if (!file) return;
 
-  const isImage =
-    file.type.startsWith("image/");
+  const validation =
+    validateMediaFile(file);
 
-  const isVideo =
-    file.type.startsWith("video/");
-
-  if (!isImage && !isVideo) {
-
+  if (!validation.valid) {
     showStoryMessage(
-      "Please select an image or video."
+      validation.message
     );
 
     return;
   }
 
-  if (
-    file.size >
-    50 * 1024 * 1024
-  ) {
-
-    showStoryMessage(
-      "Story file must be 50 MB or smaller."
-    );
-
-    return;
-  }
-
-  selectedStoryFile = file;
+  selectedStoryFile =
+    file;
 
   const preview =
-    document.getElementById(
+    getElement(
       "storyPreview"
     );
 
   const publishButton =
-    document.getElementById(
+    getElement(
       "publishStoryButton"
     );
 
@@ -1602,32 +4385,41 @@ function handleStoryFile(event) {
   preview.innerHTML = "";
 
   const url =
-    URL.createObjectURL(file);
+    URL.createObjectURL(
+      file
+    );
 
-  if (isVideo) {
-
+  if (
+    file.type.startsWith(
+      "video/"
+    )
+  ) {
     const video =
-      document.createElement("video");
+      document.createElement(
+        "video"
+      );
 
     video.src = url;
-
     video.controls = true;
     video.muted = true;
     video.playsInline = true;
 
-    preview.appendChild(video);
-
+    preview.appendChild(
+      video
+    );
   } else {
-
     const image =
-      document.createElement("img");
+      document.createElement(
+        "img"
+      );
 
     image.src = url;
-
     image.alt =
       "Story preview";
 
-    preview.appendChild(image);
+    preview.appendChild(
+      image
+    );
   }
 
   if (publishButton) {
@@ -1639,15 +4431,8 @@ function handleStoryFile(event) {
   showStoryMessage("");
 }
 
-
-/* =========================
-   PUBLISH STORY
-========================= */
-
 async function publishStory() {
-
   if (!currentUser) {
-
     showStoryMessage(
       "Please log in first."
     );
@@ -1656,7 +4441,6 @@ async function publishStory() {
   }
 
   if (!selectedStoryFile) {
-
     showStoryMessage(
       "Choose a photo or video first."
     );
@@ -1665,51 +4449,41 @@ async function publishStory() {
   }
 
   const button =
-    document.getElementById(
+    getElement(
       "publishStoryButton"
     );
 
   try {
-
     if (button) {
-
       button.disabled = true;
-
       button.textContent =
         "Uploading...";
     }
 
-    const fileExtension =
-      selectedStoryFile.name
-        .split(".")
-        .pop();
-
-    const fileName =
-      currentUser.id +
-      "_" +
-      Date.now() +
-      "." +
-      fileExtension;
+    const extension =
+      getFileExtension(
+        selectedStoryFile
+      );
 
     const filePath =
       "stories/" +
       currentUser.id +
       "/" +
-      fileName;
-
-    /* Upload to existing media bucket */
+      Date.now() +
+      "." +
+      extension;
 
     const {
       error: uploadError
     } =
-      await supabaseClient
-        .storage
+      await supabaseClient.storage
         .from("media")
         .upload(
           filePath,
           selectedStoryFile,
           {
-            cacheControl: "3600",
+            cacheControl:
+              "3600",
             upsert: false,
             contentType:
               selectedStoryFile.type
@@ -1720,35 +4494,28 @@ async function publishStory() {
       throw uploadError;
     }
 
-    /* Get public URL */
-
-    const {
-      data: publicData
-    } =
-      supabaseClient
-        .storage
+    const { data } =
+      supabaseClient.storage
         .from("media")
         .getPublicUrl(
           filePath
         );
 
     const mediaUrl =
-      publicData?.publicUrl;
+      data?.publicUrl;
 
     if (!mediaUrl) {
-
       throw new Error(
         "Could not create media URL."
       );
     }
 
     const mediaType =
-      selectedStoryFile.type
-        .startsWith("video/")
+      selectedStoryFile.type.startsWith(
+        "video/"
+      )
         ? "video"
         : "image";
-
-    /* Save story */
 
     const {
       error: storyError
@@ -1758,10 +4525,8 @@ async function publishStory() {
         .insert({
           user_id:
             currentUser.id,
-
           media_url:
             mediaUrl,
-
           media_type:
             mediaType
         });
@@ -1774,21 +4539,18 @@ async function publishStory() {
       "Story shared successfully! 🎉"
     );
 
-    selectedStoryFile = null;
+    selectedStoryFile =
+      null;
 
     setTimeout(
-      function () {
-
+      async function () {
         closeStoryCreator();
-
-        loadStories();
-
+        await loadStories();
       },
       700
     );
 
   } catch (error) {
-
     console.error(
       "STORY UPLOAD ERROR:",
       error
@@ -1803,27 +4565,19 @@ async function publishStory() {
     );
 
   } finally {
-
     if (button) {
-
       button.disabled = false;
-
       button.textContent =
         "🚀 Share to Story";
     }
-
   }
 }
 
-
-/* =========================
-   STORY MESSAGE
-========================= */
-
-function showStoryMessage(message) {
-
+function showStoryMessage(
+  message
+) {
   const element =
-    document.getElementById(
+    getElement(
       "storyMessage"
     );
 
@@ -1833,26 +4587,22 @@ function showStoryMessage(message) {
   }
 }
 
-
-/* =========================
-   LOAD STORIES
-========================= */
-
 async function loadStories() {
-
   const container =
-    document.getElementById(
+    getElement(
       "otherStories"
     );
 
   if (!container) return;
 
   try {
-
-    const twentyFourHoursAgo =
+    const cutoff =
       new Date(
         Date.now() -
-        24 * 60 * 60 * 1000
+        24 *
+          60 *
+          60 *
+          1000
       ).toISOString();
 
     const {
@@ -1861,7 +4611,8 @@ async function loadStories() {
     } =
       await supabaseClient
         .from("stories")
-        .select(`
+        .select(
+          `
           id,
           user_id,
           media_url,
@@ -1872,10 +4623,11 @@ async function loadStories() {
             display_name,
             avatar_url
           )
-        `)
+          `
+        )
         .gte(
           "created_at",
-          twentyFourHoursAgo
+          cutoff
         )
         .order(
           "created_at",
@@ -1894,24 +4646,16 @@ async function loadStories() {
     renderStories();
 
   } catch (error) {
-
     console.error(
       "LOAD STORIES ERROR:",
       error
     );
-
   }
 }
 
-
-/* =========================
-   RENDER STORY CIRCLES
-========================= */
-
 function renderStories() {
-
   const container =
-    document.getElementById(
+    getElement(
       "otherStories"
     );
 
@@ -1923,140 +4667,126 @@ function renderStories() {
 
   vidoraStories.forEach(
     function (story) {
-
-      if (!users[story.user_id]) {
-        users[story.user_id] = [];
+      if (
+        !users[
+          story.user_id
+        ]
+      ) {
+        users[
+          story.user_id
+        ] = [];
       }
 
-      users[story.user_id].push(
+      users[
+        story.user_id
+      ].push(
         story
       );
-
     }
   );
 
-  Object.keys(users).forEach(
-    function (userId) {
+  Object.keys(users)
+    .forEach(
+      function (userId) {
+        const stories =
+          users[userId];
 
-      const stories =
-        users[userId];
+        const firstStory =
+          stories[0];
 
-      const firstStory =
-        stories[0];
+        const profile =
+          firstStory.profiles ||
+          {};
 
-      const profile =
-        firstStory.profiles || {};
+        const name =
+          profile.display_name ||
+          profile.username ||
+          "Vidora User";
 
-      const name =
-        profile.display_name ||
-        profile.username ||
-        "Vidora User";
-
-      const button =
-        document.createElement(
-          "button"
-        );
-
-      button.type =
-        "button";
-
-      button.className =
-        "storyItem hasStory";
-
-      button.onclick =
-        function () {
-
-          const index =
-            vidoraStories.indexOf(
-              firstStory
-            );
-
-          openStory(index);
-        };
-
-      const avatarWrap =
-        document.createElement(
-          "div"
-        );
-
-      avatarWrap.className =
-        "storyAvatarWrap";
-
-      const avatar =
-        document.createElement(
-          "div"
-        );
-
-      avatar.className =
-        "storyAvatar";
-
-      if (profile.avatar_url) {
-
-        const image =
+        const button =
           document.createElement(
-            "img"
+            "button"
           );
 
-        image.src =
-          profile.avatar_url;
+        button.type =
+          "button";
 
-        image.alt =
+        button.className =
+          "storyItem hasStory";
+
+        button.onclick =
+          function () {
+            const index =
+              vidoraStories.indexOf(
+                firstStory
+              );
+
+            openStory(index);
+          };
+
+        const avatar =
+          document.createElement(
+            "div"
+          );
+
+        avatar.className =
+          "storyAvatar";
+
+        if (
+          profile.avatar_url
+        ) {
+          const image =
+            document.createElement(
+              "img"
+            );
+
+          image.src =
+            profile.avatar_url;
+
+          image.alt =
+            name;
+
+          avatar.appendChild(
+            image
+          );
+        } else {
+          avatar.textContent =
+            name
+              .charAt(0)
+              .toUpperCase();
+        }
+
+        const nameElement =
+          document.createElement(
+            "span"
+          );
+
+        nameElement.className =
+          "storyName";
+
+        nameElement.textContent =
           name;
 
-        avatar.appendChild(
-          image
+        button.appendChild(
+          avatar
         );
 
-      } else {
+        button.appendChild(
+          nameElement
+        );
 
-        avatar.textContent =
-          name
-            .charAt(0)
-            .toUpperCase();
+        container.appendChild(
+          button
+        );
       }
-
-      avatarWrap.appendChild(
-        avatar
-      );
-
-      const nameElement =
-        document.createElement(
-          "span"
-        );
-
-      nameElement.className =
-        "storyName";
-
-      nameElement.textContent =
-        name;
-
-      button.appendChild(
-        avatarWrap
-      );
-
-      button.appendChild(
-        nameElement
-      );
-
-      container.appendChild(
-        button
-      );
-
-    }
-  );
+    );
 }
 
-
-/* =========================
-   OPEN STORY
-========================= */
-
 function openStory(index) {
-
   if (
     index < 0 ||
     index >=
-    vidoraStories.length
+      vidoraStories.length
   ) {
     return;
   }
@@ -2070,33 +4800,32 @@ function openStory(index) {
   showCurrentStory();
 }
 
-
-/* =========================
-   SHOW CURRENT STORY
-========================= */
-
 function showCurrentStory() {
-
-  if (!currentStory) return;
+  if (!currentStory) {
+    return;
+  }
 
   clearTimeout(
     storyTimer
   );
 
-  const content =
-    document.getElementById(
+  let content =
+    getElement(
       "storyViewerContent"
     );
 
   if (!content) {
-
     createStoryViewer();
-
-    return;
+    content =
+      getElement(
+        "storyViewerContent"
+      );
   }
 
+  if (!content) return;
+
   const viewer =
-    document.getElementById(
+    getElement(
       "storyViewer"
     );
 
@@ -2118,7 +4847,7 @@ function showCurrentStory() {
     "Vidora User";
 
   const nameElement =
-    document.getElementById(
+    getElement(
       "storyViewerName"
     );
 
@@ -2128,7 +4857,7 @@ function showCurrentStory() {
   }
 
   const timeElement =
-    document.getElementById(
+    getElement(
       "storyViewerTime"
     );
 
@@ -2143,7 +4872,6 @@ function showCurrentStory() {
     currentStory.media_type ===
     "video"
   ) {
-
     const video =
       document.createElement(
         "video"
@@ -2152,26 +4880,18 @@ function showCurrentStory() {
     video.src =
       currentStory.media_url;
 
-    video.autoplay =
-      true;
-
-    video.playsInline =
-      true;
-
-    video.controls =
-      false;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.controls = true;
 
     video.onended =
-      function () {
-        nextStory();
-      };
+      nextStory;
 
     content.appendChild(
       video
     );
 
   } else {
-
     const image =
       document.createElement(
         "img"
@@ -2199,22 +4919,68 @@ function showCurrentStory() {
   );
 }
 
+function createStoryViewer() {
+  if (
+    getElement(
+      "storyViewer"
+    )
+  ) {
+    return;
+  }
 
-/* =========================
-   NEXT STORY
-========================= */
+  const viewer =
+    document.createElement(
+      "div"
+    );
+
+  viewer.id =
+    "storyViewer";
+
+  viewer.className =
+    "storyViewer hidden";
+
+  viewer.innerHTML =
+    '<div class="storyViewerHeader">' +
+    '<strong id="storyViewerName">Story</strong>' +
+    '<span id="storyViewerTime"></span>' +
+    '<button id="closeStoryViewerBtn" type="button">✕</button>' +
+    "</div>" +
+
+    '<div id="storyViewerContent"></div>' +
+
+    '<button id="storyPreviousBtn" type="button">‹</button>' +
+    '<button id="storyNextBtn" type="button">›</button>';
+
+  document.body.appendChild(
+    viewer
+  );
+
+  getElement(
+    "closeStoryViewerBtn"
+  ).onclick =
+    closeStoryViewer;
+
+  getElement(
+    "storyPreviousBtn"
+  ).onclick =
+    previousStory;
+
+  getElement(
+    "storyNextBtn"
+  ).onclick =
+    nextStory;
+}
 
 function nextStory() {
-
   clearTimeout(
     storyTimer
   );
 
   if (
     currentStoryIndex <
-    vidoraStories.length - 1
+    vidoraStories.length -
+      1
   ) {
-
     currentStoryIndex++;
 
     currentStory =
@@ -2223,28 +4989,20 @@ function nextStory() {
       ];
 
     showCurrentStory();
-
   } else {
-
     closeStoryViewer();
   }
 }
 
-
-/* =========================
-   PREVIOUS STORY
-========================= */
-
 function previousStory() {
-
   clearTimeout(
     storyTimer
   );
 
   if (
-    currentStoryIndex > 0
+    currentStoryIndex >
+    0
   ) {
-
     currentStoryIndex--;
 
     currentStory =
@@ -2256,24 +5014,17 @@ function previousStory() {
   }
 }
 
-
-/* =========================
-   CLOSE STORY VIEWER
-========================= */
-
 function closeStoryViewer() {
-
   clearTimeout(
     storyTimer
   );
 
   const viewer =
-    document.getElementById(
+    getElement(
       "storyViewer"
     );
 
   if (viewer) {
-
     viewer.classList.add(
       "hidden"
     );
@@ -2283,15 +5034,9 @@ function closeStoryViewer() {
     null;
 }
 
-
-/* =========================
-   RECORD STORY VIEW
-========================= */
-
 async function recordStoryView(
   storyId
 ) {
-
   if (
     !currentUser ||
     !storyId
@@ -2302,20 +5047,18 @@ async function recordStoryView(
   if (
     currentStory &&
     currentStory.user_id ===
-    currentUser.id
+      currentUser.id
   ) {
     return;
   }
 
   try {
-
     await supabaseClient
       .from("story_views")
       .upsert(
         {
           story_id:
             storyId,
-
           viewer_id:
             currentUser.id
         },
@@ -2324,26 +5067,17 @@ async function recordStoryView(
             "story_id,viewer_id"
         }
       );
-
   } catch (error) {
-
     console.error(
       "STORY VIEW ERROR:",
       error
     );
-
   }
 }
-
-
-/* =========================
-   STORY AGE
-========================= */
 
 function getStoryAge(
   dateString
 ) {
-
   const seconds =
     Math.floor(
       (
@@ -2376,75 +5110,1061 @@ function getStoryAge(
 
 
 /* =========================================================
-   STORY BUTTON EVENTS
-========================================================= */
+   33. STORY LIKES
+   ========================================================= */
 
-document.addEventListener(
-  "DOMContentLoaded",
-  function () {
+async function likeStory(
+  storyId
+) {
+  if (!currentUser) return;
 
-    const chooseButton =
-      document.getElementById(
-        "chooseStoryFileBtn"
-      );
+  try {
+    const { data } =
+      await supabaseClient
+        .from("story_likes")
+        .select("id")
+        .eq(
+          "story_id",
+          storyId
+        )
+        .eq(
+          "user_id",
+          currentUser.id
+        )
+        .maybeSingle();
 
-    const fileInput =
-      document.getElementById(
-        "storyFileInput"
-      );
-
-    const closeButton =
-      document.getElementById(
-        "closeStoryCreatorBtn"
-      );
-
-    const publishButton =
-      document.getElementById(
-        "publishStoryButton"
-      );
-
-    if (chooseButton && fileInput) {
-
-  chooseButton.onclick = function () {
-    fileInput.click();
-  };
-
-}
-
-    if (fileInput) {
-
-      fileInput.addEventListener(
-        "change",
-        handleStoryFile
-      );
-
+    if (data) {
+      await supabaseClient
+        .from("story_likes")
+        .delete()
+        .eq(
+          "id",
+          data.id
+        );
+    } else {
+      await supabaseClient
+        .from("story_likes")
+        .insert({
+          story_id:
+            storyId,
+          user_id:
+            currentUser.id
+        });
     }
 
-    if (closeButton) {
-
-      closeButton.addEventListener(
-        "click",
-        closeStoryCreator
-      );
-
-    }
-
-    if (publishButton) {
-
-      publishButton.addEventListener(
-        "click",
-        publishStory
-      );
-
-    }
-
+  } catch (error) {
+    console.error(
+      "STORY LIKE ERROR:",
+      error
+    );
   }
-);
+}
 
 
 /* =========================================================
-   MAKE STORY FUNCTIONS AVAILABLE TO HTML
-========================================================= */
+   34. DELETE OWN STORY
+   ========================================================= */
+
+async function deleteOwnStory(
+  storyId
+) {
+  if (!currentUser) return;
+
+  const confirmed =
+    confirm(
+      "Delete this story?"
+    );
+
+  if (!confirmed) return;
+
+  try {
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("stories")
+        .select(
+          "id,user_id"
+        )
+        .eq(
+          "id",
+          storyId
+        )
+        .single();
+
+    if (error) {
+      alert(
+        error.message
+      );
+
+      return;
+    }
+
+    if (
+      data.user_id !==
+      currentUser.id
+    ) {
+      alert(
+        "You can only delete your own story."
+      );
+
+      return;
+    }
+
+    await supabaseClient
+      .from("stories")
+      .delete()
+      .eq(
+        "id",
+        storyId
+      );
+
+    closeStoryViewer();
+
+    await loadStories();
+
+  } catch (error) {
+    console.error(
+      "DELETE STORY ERROR:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   35. SOUNDS
+   ========================================================= */
+
+const VIDORA_SOUNDS = [
+  {
+    id:
+      "neon-drive",
+    name:
+      "Neon Drive",
+    artist:
+      "Vidora Beats",
+    type:
+      "trending",
+    audioUrl:
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  },
+
+  {
+    id:
+      "night-pulse",
+    name:
+      "Night Pulse",
+    artist:
+      "Aether",
+    type:
+      "trending",
+    audioUrl:
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  },
+
+  {
+    id:
+      "soft-glow",
+    name:
+      "Soft Glow",
+    artist:
+      "Luna Wave",
+    type:
+      "chill",
+    audioUrl:
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  },
+
+  {
+    id:
+      "bass-room",
+    name:
+      "Bass Room",
+    artist:
+      "Rex Audio",
+    type:
+      "beats",
+    audioUrl:
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  },
+
+  {
+    id:
+      "heat-check",
+    name:
+      "Heat Check",
+    artist:
+      "Pixel Lab",
+    type:
+      "beats",
+    audioUrl:
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  }
+];
+
+function stopVidoraSound() {
+  if (vidoraAudioPlayer) {
+    try {
+      vidoraAudioPlayer.pause();
+      vidoraAudioPlayer.src =
+        "";
+    } catch (e) {}
+
+    vidoraAudioPlayer =
+      null;
+  }
+}
+
+function playVidoraSound(
+  soundId
+) {
+  const sound =
+    VIDORA_SOUNDS.find(
+      function (s) {
+        return (
+          s.id === soundId
+        );
+      }
+    );
+
+  if (
+    !sound ||
+    !sound.audioUrl
+  ) {
+    return;
+  }
+
+  stopVidoraSound();
+
+  const audio =
+    new Audio(
+      sound.audioUrl
+    );
+
+  audio.volume = 1;
+
+  vidoraAudioPlayer =
+    audio;
+
+  audio.play().catch(
+    function (error) {
+      console.error(
+        "PLAY SOUND ERROR:",
+        error
+      );
+    }
+  );
+}
+
+function selectVidoraSound(
+  soundId
+) {
+  selectedVidoraSound =
+    VIDORA_SOUNDS.find(
+      function (s) {
+        return (
+          s.id ===
+          soundId
+        );
+      }
+    ) || null;
+
+  const wrap =
+    getElement(
+      "selectedVidoraSound"
+    );
+
+  const nameEl =
+    getElement(
+      "selectedSoundName"
+    );
+
+  const artistEl =
+    getElement(
+      "selectedSoundArtist"
+    );
+
+  if (
+    selectedVidoraSound &&
+    wrap &&
+    nameEl &&
+    artistEl
+  ) {
+    nameEl.textContent =
+      selectedVidoraSound.name;
+
+    artistEl.textContent =
+      selectedVidoraSound.artist +
+      " · " +
+      selectedVidoraSound.type;
+
+    wrap.classList.remove(
+      "hidden"
+    );
+  }
+}
+
+function removeVidoraSound() {
+  selectedVidoraSound =
+    null;
+
+  stopVidoraSound();
+
+  const wrap =
+    getElement(
+      "selectedVidoraSound"
+    );
+
+  if (wrap) {
+    wrap.classList.add(
+      "hidden"
+    );
+  }
+}
+
+function openVidoraSounds(
+  filterType
+) {
+  const panel =
+    getElement(
+      "vidoraSoundPanel"
+    );
+
+  const list =
+    getElement(
+      "vidoraSoundList"
+    );
+
+  if (!panel || !list) {
+    return;
+  }
+
+  const type =
+    filterType ||
+    "all";
+
+  const sounds =
+    type === "all"
+      ? VIDORA_SOUNDS
+      : VIDORA_SOUNDS.filter(
+          function (sound) {
+            return (
+              sound.type ===
+              type
+            );
+          }
+        );
+
+  list.innerHTML = "";
+
+  sounds.forEach(
+    function (sound) {
+      const row =
+        document.createElement(
+          "div"
+        );
+
+      row.className =
+        "soundItemRow";
+
+      row.innerHTML =
+        "<div>" +
+        "<strong>" +
+        escapeHTML(
+          sound.name
+        ) +
+        "</strong>" +
+        "<small>" +
+        escapeHTML(
+          sound.artist
+        ) +
+        "</small>" +
+        "</div>" +
+
+        '<div>' +
+        '<button type="button" class="soundPlayBtn">▶</button>' +
+        '<button type="button" class="soundUseBtn">Use</button>' +
+        "</div>";
+
+      row.querySelector(
+        ".soundPlayBtn"
+      ).onclick =
+        function () {
+          playVidoraSound(
+            sound.id
+          );
+        };
+
+      row.querySelector(
+        ".soundUseBtn"
+      ).onclick =
+        function () {
+          selectVidoraSound(
+            sound.id
+          );
+
+          closeVidoraSounds();
+        };
+
+      list.appendChild(
+        row
+      );
+    }
+  );
+
+  panel.classList.remove(
+    "hidden"
+  );
+}
+
+function closeVidoraSounds() {
+  const panel =
+    getElement(
+      "vidoraSoundPanel"
+    );
+
+  if (panel) {
+    panel.classList.add(
+      "hidden"
+    );
+  }
+}
+
+
+/* =========================================================
+   36. FILTERS
+   ========================================================= */
+
+const VIDORA_FILTERS = [
+  {
+    id:
+      "normal",
+    name:
+      "Normal",
+    css:
+      "none"
+  },
+
+  {
+    id:
+      "warm",
+    name:
+      "Warm",
+    css:
+      "sepia(.25) saturate(1.2)"
+  },
+
+  {
+    id:
+      "cool",
+    name:
+      "Cool",
+    css:
+      "hue-rotate(20deg) saturate(1.1)"
+  },
+
+  {
+    id:
+      "mono",
+    name:
+      "B&W",
+    css:
+      "grayscale(1)"
+  },
+
+  {
+    id:
+      "vivid",
+    name:
+      "Vivid",
+    css:
+      "contrast(1.15) saturate(1.35)"
+  }
+];
+
+function selectVidoraFilter(
+  filterId
+) {
+  selectedVidoraFilter =
+    filterId ||
+    "normal";
+
+  const filter =
+    VIDORA_FILTERS.find(
+      function (f) {
+        return (
+          f.id ===
+          selectedVidoraFilter
+        );
+      }
+    );
+
+  document
+    .querySelectorAll(
+      ".filterChip"
+    )
+    .forEach(
+      function (chip) {
+        chip.classList.toggle(
+          "active",
+          chip.dataset.filter ===
+            selectedVidoraFilter
+        );
+      }
+    );
+
+  const preview =
+    getElement(
+      "createMediaPreview"
+    );
+
+  if (preview) {
+    preview.style.filter =
+      filter
+        ? filter.css
+        : "none";
+  }
+}
+
+function renderVidoraFilterChips() {
+  const box =
+    getElement(
+      "vidoraFilterChips"
+    );
+
+  if (!box) return;
+
+  box.innerHTML = "";
+
+  VIDORA_FILTERS.forEach(
+    function (filter) {
+      const button =
+        document.createElement(
+          "button"
+        );
+
+      button.type =
+        "button";
+
+      button.className =
+        "filterChip" +
+        (
+          filter.id ===
+          selectedVidoraFilter
+            ? " active"
+            : ""
+        );
+
+      button.dataset.filter =
+        filter.id;
+
+      button.textContent =
+        filter.name;
+
+      button.onclick =
+        function () {
+          selectVidoraFilter(
+            filter.id
+          );
+        };
+
+      box.appendChild(
+        button
+      );
+    }
+  );
+}
+
+
+/* =========================================================
+   37. DISCOVER
+   ========================================================= */
+
+let vidoraDiscoverFilter =
+  "for-you";
+
+async function loadVidoraDiscover(
+  filter
+) {
+  filter =
+    filter ||
+    "for-you";
+
+  vidoraDiscoverFilter =
+    filter;
+
+  const results =
+    getElement(
+      "discoverResults"
+    );
+
+  if (!results) return;
+
+  results.innerHTML =
+    '<div class="loading">Loading Discover...</div>';
+
+  try {
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("posts")
+        .select(
+          "id,user_id,media_url,media_type,caption,created_at"
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        )
+        .limit(30);
+
+    if (error) {
+      results.innerHTML =
+        "<div>" +
+        escapeHTML(
+          error.message
+        ) +
+        "</div>";
+
+      return;
+    }
+
+    results.innerHTML = "";
+
+    if (
+      !data ||
+      data.length === 0
+    ) {
+      results.innerHTML =
+        "<div>Nothing to discover yet.</div>";
+
+      return;
+    }
+
+    const grid =
+      document.createElement(
+        "div"
+      );
+
+    grid.className =
+      "discoverGrid";
+
+    data.forEach(
+      function (post) {
+        const card =
+          document.createElement(
+            "div"
+          );
+
+        card.className =
+          "discoverCard";
+
+        if (
+          post.media_type ===
+          "video"
+        ) {
+          card.innerHTML =
+            '<video src="' +
+            escapeHTML(
+              post.media_url
+            ) +
+            '" muted playsinline controls></video>';
+        } else {
+          card.innerHTML =
+            '<img src="' +
+            escapeHTML(
+              post.media_url
+            ) +
+            '" alt="Discover">';
+        }
+
+        grid.appendChild(
+          card
+        );
+      }
+    );
+
+    results.appendChild(
+      grid
+    );
+
+  } catch (error) {
+    console.error(
+      "DISCOVER ERROR:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   38. NOTIFICATIONS
+   ========================================================= */
+
+async function loadNotifications() {
+  if (!currentUser) {
+    return;
+  }
+
+  const badge =
+    getElement(
+      "notificationBadge"
+    );
+
+  try {
+    const {
+      count
+    } =
+      await supabaseClient
+        .from("notifications")
+        .select(
+          "*",
+          {
+            count:
+              "exact",
+            head: true
+          }
+        )
+        .eq(
+          "user_id",
+          currentUser.id
+        )
+        .eq(
+          "read",
+          false
+        );
+
+    if (badge) {
+      badge.textContent =
+        count || 0;
+
+      badge.classList.toggle(
+        "hidden",
+        !count
+      );
+    }
+
+  } catch (error) {
+    console.warn(
+      "NOTIFICATION ERROR:",
+      error.message
+    );
+  }
+}
+
+async function markNotificationsRead() {
+  if (!currentUser) return;
+
+  try {
+    await supabaseClient
+      .from("notifications")
+      .update({
+        read: true
+      })
+      .eq(
+        "user_id",
+        currentUser.id
+      )
+      .eq(
+        "read",
+        false
+      );
+
+    await loadNotifications();
+
+  } catch (error) {
+    console.error(
+      "NOTIFICATION READ ERROR:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   39. ACCOUNT DELETION
+   ========================================================= */
+
+async function deleteVidoraAccount() {
+  if (!currentUser) {
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      "Are you sure you want to delete your Vidora account?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  /*
+    IMPORTANT:
+    Supabase does not allow safely deleting an Auth
+    user directly from browser code using the public key.
+
+    This function expects a secure Supabase Edge Function
+    named "delete-account".
+  */
+
+  try {
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.functions.invoke(
+        "delete-account",
+        {
+          body: {
+            user_id:
+              currentUser.id
+          }
+        }
+      );
+
+    if (error) {
+      alert(
+        "Account deletion requires the secure delete-account Edge Function."
+      );
+
+      console.error(
+        error
+      );
+
+      return;
+    }
+
+    console.log(
+      "ACCOUNT DELETE:",
+      data
+    );
+
+    await logout();
+
+  } catch (error) {
+    console.error(
+      "ACCOUNT DELETE ERROR:",
+      error
+    );
+
+    alert(
+      "Account could not be deleted."
+    );
+  }
+}
+
+
+/* =========================================================
+   40. NAVIGATION
+   ========================================================= */
+
+function showPage(page) {
+  const pages = {
+    home:
+      "homeScreen",
+
+    profile:
+      "profileScreen",
+
+    create:
+      "createScreen",
+
+    discover:
+      "discoverScreen",
+
+    friends:
+      "friendsScreen"
+  };
+
+  Object.keys(pages)
+    .forEach(
+      function (key) {
+        const element =
+          getElement(
+            pages[key]
+          );
+
+        if (element) {
+          element.classList.add(
+            "hidden"
+          );
+        }
+      }
+    );
+
+  const target =
+    getElement(
+      pages[page] ||
+      pages.home
+    );
+
+  if (target) {
+    target.classList.remove(
+      "hidden"
+    );
+  }
+
+  if (
+    page ===
+    "home"
+  ) {
+    loadFeed();
+  }
+
+  if (
+    page ===
+    "profile"
+  ) {
+    loadProfile();
+  }
+
+  if (
+    page ===
+    "discover"
+  ) {
+    loadVidoraDiscover(
+      "for-you"
+    );
+  }
+}
+
+function showpage(page) {
+  showPage(page);
+}
+
+
+/* =========================================================
+   41. GLOBAL EXPORTS
+   ========================================================= */
+
+window.login =
+  login;
+
+window.signUp =
+  signUp;
+
+window.logout =
+  logout;
+
+window.showLoginForm =
+  showLoginForm;
+
+window.showCreateAccount =
+  showCreateAccount;
+
+window.showAuthChoice =
+  showAuthChoice;
+
+window.showAuthScreen =
+  showAuthScreen;
+
+window.togglePassword =
+  togglePassword;
+
+window.showProfileSetup =
+  showProfileSetup;
+
+window.showPage =
+  showPage;
+
+window.showpage =
+  showpage;
+
+window.loadProfile =
+  loadProfile;
+
+window.saveProfile =
+  saveProfile;
+
+window.uploadPost =
+  uploadPost;
+
+window.publishFromCreate =
+  publishFromCreate;
+
+window.loadFeed =
+  loadFeed;
+
+window.loadVidoraDiscover =
+  loadVidoraDiscover;
+
+window.previewCreateMedia =
+  previewCreateMedia;
+
+window.selectVidoraAvatar =
+  selectVidoraAvatar;
+
+window.getSelectedVidoraAvatar =
+  getSelectedVidoraAvatar;
+
+window.getVidoraAvatarImage =
+  getVidoraAvatarImage;
+
+window.getVidoraAvatarInfo =
+  getVidoraAvatarInfo;
+
+window.updateAvatarPreview =
+  updateAvatarPreview;
+
+window.renderDefaultAvatar =
+  renderDefaultAvatar;
+
+window.renderProfileAvatar =
+  renderProfileAvatar;
+
+window.showInteractiveAvatar =
+  showInteractiveAvatar;
+
+window.closeInteractiveAvatar =
+  closeInteractiveAvatar;
+
+window.toggleInteractiveAvatar =
+  toggleInteractiveAvatar;
+
+window.avatarReact =
+  avatarReact;
+
+window.openAvatarChat =
+  openAvatarChat;
+
+window.closeAvatarChat =
+  closeAvatarChat;
+
+window.sendAvatarMessage =
+  sendAvatarMessage;
+
+window.setVidoraTheme =
+  setVidoraTheme;
+
+window.loadVidoraTheme =
+  loadVidoraTheme;
+
+window.openVidoraSounds =
+  openVidoraSounds;
+
+window.closeVidoraSounds =
+  closeVidoraSounds;
+
+window.selectVidoraSound =
+  selectVidoraSound;
+
+window.removeVidoraSound =
+  removeVidoraSound;
+
+window.playVidoraSound =
+  playVidoraSound;
+
+window.stopVidoraSound =
+  stopVidoraSound;
+
+window.selectVidoraFilter =
+  selectVidoraFilter;
 
 window.openStoryCreator =
   openStoryCreator;
@@ -2466,283 +6186,212 @@ window.previousStory =
 
 window.closeStoryViewer =
   closeStoryViewer;
+
+window.publishStory =
+  publishStory;
+
+window.handleStoryFile =
+  handleStoryFile;
+
+window.togglePostLike =
+  togglePostLike;
+
+window.addPostComment =
+  addPostComment;
+
+window.deletePostComment =
+  deletePostComment;
+
+window.deleteOwnPost =
+  deleteOwnPost;
+
+window.toggleFollowUser =
+  toggleFollowUser;
+
+window.blockVidoraUser =
+  blockVidoraUser;
+
+window.unblockVidoraUser =
+  unblockVidoraUser;
+
+window.openChat =
+  openChat;
+
+window.closeChat =
+  closeChat;
+
+window.sendChatMessage =
+  sendChatMessage;
+
+window.toggleVoiceRecording =
+  toggleVoiceRecording;
+
+window.stopVoiceRecording =
+  stopVoiceRecording;
+
+window.startVoiceCall =
+  startVoiceCall;
+
+window.startVideoCall =
+  startVideoCall;
+
+window.endVidoraCall =
+  endVidoraCall;
+
+window.toggleCallMute =
+  toggleCallMute;
+
+window.toggleCallCamera =
+  toggleCallCamera;
+
+window.toggleHologramEffect =
+  toggleHologramEffect;
+
+window.likeStory =
+  likeStory;
+
+window.deleteOwnStory =
+  deleteOwnStory;
+
+window.loadNotifications =
+  loadNotifications;
+
+window.markNotificationsRead =
+  markNotificationsRead;
+
+window.deleteVidoraAccount =
+  deleteVidoraAccount;
+
+
 /* =========================================================
-   STORY VIEWER BUTTONS
-========================================================= */
+   42. DOM EVENTS
+   ========================================================= */
 
 document.addEventListener(
   "DOMContentLoaded",
-  function () {
+  async function () {
 
-    const closeButton =
-      document.getElementById(
-        "closeStoryViewerBtn"
+    console.log(
+      "Vidora DOM ready"
+    );
+
+    initializeVidoraAvatarSystem();
+
+    renderVidoraFilterChips();
+
+    createStoryViewer();
+
+    createChatPanel();
+
+    createCallUI();
+
+    showPage("home");
+
+    const storyChoose =
+      getElement(
+        "chooseStoryFileBtn"
       );
 
-    const previousButton =
-      document.getElementById(
-        "storyPreviousBtn"
+    const storyInput =
+      getElement(
+        "storyFileInput"
       );
 
-    const nextButton =
-      document.getElementById(
-        "storyNextBtn"
-      );
+    if (
+      storyChoose &&
+      storyInput
+    ) {
+      storyChoose.onclick =
+        function () {
+          storyInput.click();
+        };
+    }
 
-    if (closeButton) {
-      closeButton.addEventListener(
-        "click",
-        closeStoryViewer
+    if (storyInput) {
+      storyInput.addEventListener(
+        "change",
+        handleStoryFile
       );
     }
 
-    if (previousButton) {
-      previousButton.addEventListener(
-        "click",
-        previousStory
+    const storyClose =
+      getElement(
+        "closeStoryCreatorBtn"
       );
+
+    if (storyClose) {
+      storyClose.onclick =
+        closeStoryCreator;
     }
 
-    if (nextButton) {
-      nextButton.addEventListener(
-        "click",
-        nextStory
+    const storyPublish =
+      getElement(
+        "publishStoryButton"
       );
+
+    if (storyPublish) {
+      storyPublish.onclick =
+        publishStory;
     }
+
+    await checkSession();
+
+    initializeCallSignaling();
 
   }
 );
+
+
 /* =========================================================
-   VIDORA CREATE SOUND SYSTEM (CLEAN)
+   43. SUPABASE AUTH STATE
    ========================================================= */
 
-let vidoraAudioPlayer = null;
+supabaseClient.auth.onAuthStateChange(
+  async function (
+    event,
+    session
+  ) {
+    console.log(
+      "AUTH EVENT:",
+      event
+    );
 
-// Keep selected sound/filter if already declared
-if (typeof selectedVidoraSound === "undefined") {
-  var selectedVidoraSound = null;
-}
-if (typeof selectedVidoraFilter === "undefined") {
-  var selectedVidoraFilter = "normal";
-}
+    if (
+      session?.user
+    ) {
+      currentUser =
+        session.user;
 
-const VIDORA_SOUNDS_CLEAN = [
-  {
-    id: "neon-drive",
-    name: "Neon Drive",
-    artist: "Vidora Beats",
-    type: "trending",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: "night-pulse",
-    name: "Night Pulse",
-    artist: "Aether",
-    type: "trending",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: "soft-glow",
-    name: "Soft Glow",
-    artist: "Luna Wave",
-    type: "chill",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: "bass-room",
-    name: "Bass Room",
-    artist: "Rex Audio",
-    type: "beats",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: "heat-check",
-    name: "Heat Check",
-    artist: "Pixel Lab",
-    type: "beats",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+      initializeCallSignaling();
+
+      if (
+        !appInitialized
+      ) {
+        await showApp();
+      }
+
+    } else {
+      currentUser =
+        null;
+
+      callChannel =
+        null;
+
+      if (
+        event ===
+        "SIGNED_OUT"
+      ) {
+        showAuthScreen();
+      }
+    }
   }
-];
+);
 
-function stopVidoraSound() {
-  if (vidoraAudioPlayer) {
-    try {
-      vidoraAudioPlayer.pause();
-      vidoraAudioPlayer.src = "";
-    } catch (e) {}
-    vidoraAudioPlayer = null;
-  }
-}
 
-function playVidoraSound(soundId) {
-  const list = (typeof VIDORA_SOUNDS !== "undefined" && VIDORA_SOUNDS.length)
-    ? VIDORA_SOUNDS
-    : VIDORA_SOUNDS_CLEAN;
+console.log(
+  "VIDORA AUTH FUNCTIONS READY"
+);
 
-  const sound = list.find(function (s) {
-    return s.id === soundId;
-  });
-
-  if (!sound || !sound.audioUrl) {
-    alert("No audio found for this sound.");
-    return;
-  }
-
-  stopVidoraSound();
-
-  const audio = new Audio(sound.audioUrl);
-  audio.volume = 1;
-  vidoraAudioPlayer = audio;
-
-  audio.play().catch(function (err) {
-    console.error("Play failed:", err);
-    alert("Play failed: " + (err.message || "unknown error"));
-  });
-}
-
-function selectVidoraSound(soundId) {
-  const list = (typeof VIDORA_SOUNDS !== "undefined" && VIDORA_SOUNDS.length)
-    ? VIDORA_SOUNDS
-    : VIDORA_SOUNDS_CLEAN;
-
-  selectedVidoraSound =
-    list.find(function (s) {
-      return s.id === soundId;
-    }) || null;
-
-  const wrap = document.getElementById("selectedVidoraSound");
-  const nameEl = document.getElementById("selectedSoundName");
-  const artistEl = document.getElementById("selectedSoundArtist");
-
-  if (selectedVidoraSound && wrap && nameEl && artistEl) {
-    nameEl.textContent = selectedVidoraSound.name;
-    artistEl.textContent =
-      selectedVidoraSound.artist + " · " + selectedVidoraSound.type;
-    wrap.classList.remove("hidden");
-  }
-}
-
-function removeVidoraSound() {
-  selectedVidoraSound = null;
-  stopVidoraSound();
-
-  const wrap = document.getElementById("selectedVidoraSound");
-  if (wrap) wrap.classList.add("hidden");
-}
-
-function openVidoraSounds(filterType) {
-  const panel = document.getElementById("vidoraSoundPanel");
-  const listBox = document.getElementById("vidoraSoundList");
-  if (!panel || !listBox) return;
-
-  const list = (typeof VIDORA_SOUNDS !== "undefined" && VIDORA_SOUNDS.length)
-    ? VIDORA_SOUNDS
-    : VIDORA_SOUNDS_CLEAN;
-
-  const type = filterType || "all";
-  const sounds =
-    type === "all"
-      ? list
-      : list.filter(function (s) {
-          return s.type === type;
-        });
-
-  listBox.innerHTML = "";
-
-  sounds.forEach(function (sound) {
-    const row = document.createElement("div");
-    row.className = "soundItemRow";
-
-    row.innerHTML =
-      "<div class='soundMeta'>" +
-      "<strong>" + escapeHTML(sound.name) + "</strong>" +
-      "<small>" + escapeHTML(sound.artist) + " · " + escapeHTML(sound.type) + "</small>" +
-      "</div>" +
-      "<div class='soundActions'>" +
-      "<button type='button' class='secondary soundPlayBtn'>▶</button>" +
-      "<button type='button' class='soundUseBtn'>Use</button>" +
-      "</div>";
-
-    row.querySelector(".soundPlayBtn").onclick = function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      playVidoraSound(sound.id);
-    };
-
-    row.querySelector(".soundUseBtn").onclick = function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      selectVidoraSound(sound.id);
-    };
-
-    listBox.appendChild(row);
-  });
-
-  panel.classList.remove("hidden");
-}
-
-function closeVidoraSounds() {
-  const panel = document.getElementById("vidoraSoundPanel");
-  if (panel) panel.classList.add("hidden");
-}
-
-function handleCustomSoundUpload(event) {
-  const file = event?.target?.files?.[0];
-  if (!file) return;
-
-  if (!file.type.startsWith("audio/")) {
-    alert("Please choose an audio file.");
-    return;
-  }
-
-  stopVidoraSound();
-
-  const audioUrl = URL.createObjectURL(file);
-
-  selectedVidoraSound = {
-    id: "custom-upload",
-    name: file.name || "My Sound",
-    artist: "Uploaded by you",
-    type: "custom",
-    audioUrl: audioUrl,
-    file: file
-  };
-
-  const wrap = document.getElementById("selectedVidoraSound");
-  const nameEl = document.getElementById("selectedSoundName");
-  const artistEl = document.getElementById("selectedSoundArtist");
-
-  if (wrap && nameEl && artistEl) {
-    nameEl.textContent = selectedVidoraSound.name;
-    artistEl.textContent = selectedVidoraSound.artist;
-    wrap.classList.remove("hidden");
-  }
-}
-
-function playSelectedCustomSound() {
-  if (!selectedVidoraSound || !selectedVidoraSound.audioUrl) {
-    alert("Please choose or upload a sound first.");
-    return;
-  }
-
-  stopVidoraSound();
-
-  const audio = new Audio(selectedVidoraSound.audioUrl);
-  audio.volume = 1;
-  vidoraAudioPlayer = audio;
-
-  audio.play().catch(function (err) {
-    console.error(err);
-    alert("Play failed: " + (err.message || "unknown error"));
-  });
-}
-
-window.openVidoraSounds = openVidoraSounds;
-window.closeVidoraSounds = closeVidoraSounds;
-window.selectVidoraSound = selectVidoraSound;
-window.removeVidoraSound = removeVidoraSound;
-window.playVidoraSound = playVidoraSound;
-window.stopVidoraSound = stopVidoraSound;
-window.handleCustomSoundUpload = handleCustomSoundUpload;
-window.playSelectedCustomSound = playSelectedCustomSound;
-window.publishFromCreate = publishFromCreate;
+console.log(
+  "VIDORA ADVANCED FEATURES READY"
+);
