@@ -1075,7 +1075,6 @@ function playVidoraSound(soundId) {
     console.error("Audio load error", audio.error);
     alert("Could not load this sound.");
 
-async function publishFromCreate() {
   const fileInput = getElement("createFile");
   const captionInput = getElement("createCaption");
   const button = document.querySelector(
