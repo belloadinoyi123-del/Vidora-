@@ -6395,3 +6395,92 @@ console.log(
 console.log(
   "VIDORA ADVANCED FEATURES READY"
 );
+// =========================================================
+// VIDORA VOICE + VIDEO CALLS
+// =========================================================
+
+let vidoraCallType = null;
+let vidoraLocalStream = null;
+let vidoraPeerConnection = null;
+
+const vidoraIceServers = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" }
+  ]
+};
+
+async function startVidoraCall(type) {
+  try {
+    vidoraCallType = type;
+
+    const constraints = {
+      audio: true,
+      video: type === "video"
+    };
+
+    vidoraLocalStream =
+      await navigator.mediaDevices.getUserMedia(constraints);
+
+    console.log("Vidora call started:", type);
+
+    alert(
+      type === "video"
+        ? "Video call started. Camera and microphone are ready."
+        : "Voice call started. Microphone is ready."
+    );
+
+  } catch (error) {
+    console.error("Call error:", error);
+
+    alert(
+      "Vidora could not access your " +
+      (type === "video"
+        ? "camera and microphone."
+        : "microphone.")
+    );
+  }
+}
+
+function endVidoraCall() {
+  if (vidoraLocalStream) {
+    vidoraLocalStream.getTracks().forEach(track => {
+      track.stop();
+    });
+
+    vidoraLocalStream = null;
+  }
+
+  if (vidoraPeerConnection) {
+    vidoraPeerConnection.close();
+    vidoraPeerConnection = null;
+  }
+
+  vidoraCallType = null;
+
+  console.log("Vidora call ended.");
+}
+
+
+// Connect buttons after the page loads
+document.addEventListener("DOMContentLoaded", () => {
+
+  const voiceCallButton =
+    document.getElementById("startVoiceCallBtn");
+
+  const videoCallButton =
+    document.getElementById("startVideoCallBtn");
+
+  if (voiceCallButton) {
+    voiceCallButton.addEventListener("click", () => {
+      startVidoraCall("voice");
+    });
+  }
+
+  if (videoCallButton) {
+    videoCallButton.addEventListener("click", () => {
+      startVidoraCall("video");
+    });
+  }
+
+});
