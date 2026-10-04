@@ -1359,3 +1359,531 @@ body.lightMode .bottomNav {
     border-radius: 14px;
   }
 }
+/* =========================================================
+   VIDORA APP.JS COMPATIBILITY STYLES
+   Added for Chat, Calls, Post Actions, Notifications
+   ========================================================= */
+
+/* =========================================================
+   POST ACTIONS
+   ========================================================= */
+
+.vidoraPostActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0 16px 14px;
+}
+
+.vidoraPostActions button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--vidora-border);
+  color: var(--vidora-text);
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+}
+
+.vidoraPostActions button:hover {
+  background: rgba(124, 92, 255, 0.15);
+}
+
+.vidoraLikeBtn.liked {
+  background: rgba(255, 92, 122, 0.16);
+  border-color: rgba(255, 92, 122, 0.4);
+  color: #ff6f8c;
+}
+
+.vidoraCommentBox {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+
+.vidoraCommentInput {
+  flex: 1;
+  margin: 0;
+  min-width: 0;
+}
+
+.vidoraCommentBox button {
+  padding: 10px 14px;
+  white-space: nowrap;
+}
+
+.vidoraCommentsList {
+  padding: 0 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.vidoraCommentItem {
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: 12px;
+  padding: 9px 11px;
+  font-size: 0.88rem;
+}
+
+.vidoraCommentItem strong {
+  margin-right: 5px;
+}
+
+
+/* =========================================================
+   NOTIFICATION BADGE
+   ========================================================= */
+
+.notificationBadge {
+  position: absolute;
+  top: 5px;
+  right: 4px;
+
+  min-width: 18px;
+  height: 18px;
+
+  padding: 0 5px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: var(--vidora-danger);
+  color: white;
+
+  font-size: 0.65rem;
+  font-weight: 800;
+
+  border: 2px solid var(--vidora-bg);
+}
+
+.headerButtons button {
+  position: relative;
+}
+
+
+/* =========================================================
+   FLOATING CHAT PANEL
+   ========================================================= */
+
+.vidoraFloatingPanel {
+  position: fixed;
+
+  right: 16px;
+  bottom: 90px;
+
+  width: min(390px, calc(100vw - 32px));
+  height: min(600px, calc(100vh - 120px));
+
+  background: var(--vidora-card);
+
+  border: 1px solid var(--vidora-border);
+  border-radius: 20px;
+
+  box-shadow: var(--shadow);
+
+  backdrop-filter: blur(18px);
+
+  overflow: hidden;
+
+  z-index: 200;
+}
+
+.vidoraChatPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.vidoraChatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px 16px;
+
+  border-bottom: 1px solid var(--vidora-border);
+}
+
+.vidoraChatHeader strong {
+  font-size: 1rem;
+}
+
+.vidoraChatHeader button {
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.vidoraChatMessages {
+  flex: 1;
+
+  overflow-y: auto;
+
+  padding: 14px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.vidoraMessage {
+  max-width: 82%;
+
+  padding: 10px 13px;
+
+  border-radius: 15px;
+
+  background: rgba(255, 255, 255, 0.06);
+
+  border: 1px solid var(--vidora-border);
+
+  font-size: 0.9rem;
+
+  align-self: flex-start;
+}
+
+.vidoraMessage.mine {
+  align-self: flex-end;
+
+  background: rgba(124, 92, 255, 0.2);
+
+  border-color: rgba(124, 92, 255, 0.3);
+}
+
+.vidoraChatInputRow {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 10px;
+
+  border-top: 1px solid var(--vidora-border);
+}
+
+.vidoraChatInputRow input {
+  flex: 1;
+  margin: 0;
+  min-width: 0;
+}
+
+.vidoraChatInputRow button {
+  flex-shrink: 0;
+  padding: 11px 13px;
+}
+
+
+/* =========================================================
+   CALL OVERLAY
+   ========================================================= */
+
+.vidoraCallOverlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 500;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 16px;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(124, 92, 255, 0.15),
+      rgba(0, 0, 0, 0.96) 65%
+    );
+}
+
+.vidoraCallBox {
+  position: relative;
+
+  width: min(900px, 100%);
+  height: min(720px, 92vh);
+
+  background: #050509;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  border-radius: 22px;
+
+  overflow: hidden;
+
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.7);
+}
+
+.vidoraCallHeader {
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 15px 18px;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,.75),
+    transparent
+  );
+}
+
+.vidoraRemoteWrap {
+  width: 100%;
+  height: 100%;
+
+  position: relative;
+
+  background: #000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vidoraRemoteVideo {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  background: #000;
+}
+
+.vidoraLocalVideo {
+  position: absolute;
+
+  right: 16px;
+  bottom: 90px;
+
+  width: 130px;
+  height: 180px;
+
+  object-fit: cover;
+
+  background: #111;
+
+  border-radius: 14px;
+
+  border: 2px solid rgba(255, 255, 255, 0.25);
+
+  z-index: 6;
+}
+
+.vidoraCallButtons {
+  position: absolute;
+
+  left: 50%;
+  bottom: 20px;
+
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  z-index: 8;
+}
+
+.vidoraCallButtons button {
+  width: 48px;
+  height: 48px;
+
+  padding: 0;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.1);
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.vidoraCallButtons button.endCall {
+  background: var(--vidora-danger);
+}
+
+
+/* =========================================================
+   HOLOGRAM VISUAL EFFECT
+   ========================================================= */
+
+.hologramVideo {
+  filter:
+    saturate(1.35)
+    contrast(1.1)
+    brightness(1.08);
+
+  box-shadow:
+    inset 0 0 30px rgba(0, 212, 255, 0.18);
+}
+
+.vidoraHologramGlow {
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  opacity: 0;
+
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 212, 255, 0.08) 0px,
+      rgba(0, 212, 255, 0.08) 1px,
+      transparent 2px,
+      transparent 5px
+    );
+
+  mix-blend-mode: screen;
+
+  transition: opacity 0.25s ease;
+
+  z-index: 4;
+}
+
+.vidoraHologramGlow.active {
+  opacity: 1;
+
+  animation: hologramScan 2s linear infinite;
+}
+
+@keyframes hologramScan {
+  0% {
+    transform: translateY(-8px);
+  }
+
+  50% {
+    transform: translateY(8px);
+  }
+
+  100% {
+    transform: translateY(-8px);
+  }
+}
+
+
+/* =========================================================
+   STORY VIEWER EXTRA CONTROLS
+   ========================================================= */
+
+.storyViewer {
+  z-index: 9999;
+}
+
+.storyViewerContent {
+  position: relative;
+}
+
+
+/* =========================================================
+   MESSAGE / STATUS HELPERS
+   ========================================================= */
+
+.successMessage {
+  color: var(--vidora-success);
+}
+
+.errorMessage {
+  color: var(--vidora-danger);
+}
+
+.mutedText {
+  color: var(--vidora-muted);
+}
+
+
+/* =========================================================
+   CHAT / CALL MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .vidoraFloatingPanel {
+    right: 8px;
+    bottom: 78px;
+
+    width: calc(100vw - 16px);
+
+    height: calc(100vh - 95px);
+
+    border-radius: 18px;
+  }
+
+  .vidoraCallOverlay {
+    padding: 0;
+  }
+
+  .vidoraCallBox {
+    width: 100%;
+    height: 100vh;
+
+    border-radius: 0;
+    border: none;
+  }
+
+  .vidoraLocalVideo {
+    width: 100px;
+    height: 145px;
+
+    right: 10px;
+    bottom: 85px;
+  }
+
+  .vidoraCallButtons {
+    bottom: 15px;
+  }
+
+  .vidoraCallButtons button {
+    width: 44px;
+    height: 44px;
+  }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--vidora-accent-2);
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   SAFE AREA
+   ========================================================= */
+
+@supports (padding: max(0px)) {
+
+  .bottomNav {
+    padding-bottom:
+      max(10px, env(safe-area-inset-bottom));
+  }
+
+}
+
+
+/* =========================================================
+   END OF APP.JS COMPATIBILITY STYLES
+   ========================================================= */
