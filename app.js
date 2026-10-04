@@ -5979,7 +5979,10 @@ function showPage(page) {
       "discoverScreen",
 
     friends:
-      "friendsScreen"
+  "friendsScreen",
+
+calls:
+  "callsScreen"
   };
 
   Object.keys(pages)
