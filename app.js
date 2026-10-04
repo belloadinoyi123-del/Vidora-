@@ -1613,3 +1613,996 @@ window.loadVidoraTheme = loadVidoraTheme;
 window.playVidoraSound = playVidoraSound;
 window.stopVidoraSound = stopVidoraSound;
 console.log("VIDORA AUTH FUNCTIONS READY");
+/* =========================================================
+   VIDORA STORIES - SAFE ADDITION
+   This section does not modify login/auth functions.
+========================================================= */
+
+let vidoraStories = [];
+let currentStoryIndex = 0;
+let currentStory = null;
+let selectedStoryFile = null;
+let storyTimer = null;
+
+const VIDORA_STORY_DURATION = 5000;
+
+
+/* =========================
+   STORY CREATOR
+========================= */
+
+function openStoryCreator() {
+
+  const creator =
+    document.getElementById("storyCreator");
+
+  if (!creator) return;
+
+  creator.classList.remove("hidden");
+
+  const input =
+    document.getElementById("storyFileInput");
+
+  const preview =
+    document.getElementById("storyPreview");
+
+  const publishButton =
+    document.getElementById(
+      "publishStoryButton"
+    );
+
+  if (input) {
+    input.value = "";
+  }
+
+  if (preview) {
+    preview.innerHTML = "";
+  }
+
+  if (publishButton) {
+    publishButton.classList.add("hidden");
+  }
+
+  selectedStoryFile = null;
+}
+
+
+/* =========================
+   CLOSE STORY CREATOR
+========================= */
+
+function closeStoryCreator() {
+
+  const creator =
+    document.getElementById("storyCreator");
+
+  if (creator) {
+    creator.classList.add("hidden");
+  }
+
+  selectedStoryFile = null;
+}
+
+
+/* =========================
+   SELECT STORY FILE
+========================= */
+
+function handleStoryFile(event) {
+
+  const file =
+    event.target.files?.[0];
+
+  if (!file) return;
+
+  const isImage =
+    file.type.startsWith("image/");
+
+  const isVideo =
+    file.type.startsWith("video/");
+
+  if (!isImage && !isVideo) {
+
+    showStoryMessage(
+      "Please select an image or video."
+    );
+
+    return;
+  }
+
+  if (
+    file.size >
+    50 * 1024 * 1024
+  ) {
+
+    showStoryMessage(
+      "Story file must be 50 MB or smaller."
+    );
+
+    return;
+  }
+
+  selectedStoryFile = file;
+
+  const preview =
+    document.getElementById(
+      "storyPreview"
+    );
+
+  const publishButton =
+    document.getElementById(
+      "publishStoryButton"
+    );
+
+  if (!preview) return;
+
+  preview.innerHTML = "";
+
+  const url =
+    URL.createObjectURL(file);
+
+  if (isVideo) {
+
+    const video =
+      document.createElement("video");
+
+    video.src = url;
+
+    video.controls = true;
+    video.muted = true;
+    video.playsInline = true;
+
+    preview.appendChild(video);
+
+  } else {
+
+    const image =
+      document.createElement("img");
+
+    image.src = url;
+
+    image.alt =
+      "Story preview";
+
+    preview.appendChild(image);
+  }
+
+  if (publishButton) {
+    publishButton.classList.remove(
+      "hidden"
+    );
+  }
+
+  showStoryMessage("");
+}
+
+
+/* =========================
+   PUBLISH STORY
+========================= */
+
+async function publishStory() {
+
+  if (!currentUser) {
+
+    showStoryMessage(
+      "Please log in first."
+    );
+
+    return;
+  }
+
+  if (!selectedStoryFile) {
+
+    showStoryMessage(
+      "Choose a photo or video first."
+    );
+
+    return;
+  }
+
+  const button =
+    document.getElementById(
+      "publishStoryButton"
+    );
+
+  try {
+
+    if (button) {
+
+      button.disabled = true;
+
+      button.textContent =
+        "Uploading...";
+    }
+
+    const fileExtension =
+      selectedStoryFile.name
+        .split(".")
+        .pop();
+
+    const fileName =
+      currentUser.id +
+      "_" +
+      Date.now() +
+      "." +
+      fileExtension;
+
+    const filePath =
+      "stories/" +
+      currentUser.id +
+      "/" +
+      fileName;
+
+    /* Upload to existing media bucket */
+
+    const {
+      error: uploadError
+    } =
+      await supabaseClient
+        .storage
+        .from("media")
+        .upload(
+          filePath,
+          selectedStoryFile,
+          {
+            cacheControl: "3600",
+            upsert: false,
+            contentType:
+              selectedStoryFile.type
+          }
+        );
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    /* Get public URL */
+
+    const {
+      data: publicData
+    } =
+      supabaseClient
+        .storage
+        .from("media")
+        .getPublicUrl(
+          filePath
+        );
+
+    const mediaUrl =
+      publicData?.publicUrl;
+
+    if (!mediaUrl) {
+
+      throw new Error(
+        "Could not create media URL."
+      );
+    }
+
+    const mediaType =
+      selectedStoryFile.type
+        .startsWith("video/")
+        ? "video"
+        : "image";
+
+    /* Save story */
+
+    const {
+      error: storyError
+    } =
+      await supabaseClient
+        .from("stories")
+        .insert({
+          user_id:
+            currentUser.id,
+
+          media_url:
+            mediaUrl,
+
+          media_type:
+            mediaType
+        });
+
+    if (storyError) {
+      throw storyError;
+    }
+
+    showStoryMessage(
+      "Story shared successfully! 🎉"
+    );
+
+    selectedStoryFile = null;
+
+    setTimeout(
+      function () {
+
+        closeStoryCreator();
+
+        loadStories();
+
+      },
+      700
+    );
+
+  } catch (error) {
+
+    console.error(
+      "STORY UPLOAD ERROR:",
+      error
+    );
+
+    showStoryMessage(
+      "Story could not be uploaded: " +
+      (
+        error.message ||
+        "Unknown error"
+      )
+    );
+
+  } finally {
+
+    if (button) {
+
+      button.disabled = false;
+
+      button.textContent =
+        "🚀 Share to Story";
+    }
+
+  }
+}
+
+
+/* =========================
+   STORY MESSAGE
+========================= */
+
+function showStoryMessage(message) {
+
+  const element =
+    document.getElementById(
+      "storyMessage"
+    );
+
+  if (element) {
+    element.textContent =
+      message || "";
+  }
+}
+
+
+/* =========================
+   LOAD STORIES
+========================= */
+
+async function loadStories() {
+
+  const container =
+    document.getElementById(
+      "otherStories"
+    );
+
+  if (!container) return;
+
+  try {
+
+    const twentyFourHoursAgo =
+      new Date(
+        Date.now() -
+        24 * 60 * 60 * 1000
+      ).toISOString();
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("stories")
+        .select(`
+          id,
+          user_id,
+          media_url,
+          media_type,
+          created_at,
+          profiles:user_id (
+            username,
+            display_name,
+            avatar_url
+          )
+        `)
+        .gte(
+          "created_at",
+          twentyFourHoursAgo
+        )
+        .order(
+          "created_at",
+          {
+            ascending: true
+          }
+        );
+
+    if (error) {
+      throw error;
+    }
+
+    vidoraStories =
+      data || [];
+
+    renderStories();
+
+  } catch (error) {
+
+    console.error(
+      "LOAD STORIES ERROR:",
+      error
+    );
+
+  }
+}
+
+
+/* =========================
+   RENDER STORY CIRCLES
+========================= */
+
+function renderStories() {
+
+  const container =
+    document.getElementById(
+      "otherStories"
+    );
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const users = {};
+
+  vidoraStories.forEach(
+    function (story) {
+
+      if (!users[story.user_id]) {
+        users[story.user_id] = [];
+      }
+
+      users[story.user_id].push(
+        story
+      );
+
+    }
+  );
+
+  Object.keys(users).forEach(
+    function (userId) {
+
+      const stories =
+        users[userId];
+
+      const firstStory =
+        stories[0];
+
+      const profile =
+        firstStory.profiles || {};
+
+      const name =
+        profile.display_name ||
+        profile.username ||
+        "Vidora User";
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+      button.type =
+        "button";
+
+      button.className =
+        "storyItem hasStory";
+
+      button.onclick =
+        function () {
+
+          const index =
+            vidoraStories.indexOf(
+              firstStory
+            );
+
+          openStory(index);
+        };
+
+      const avatarWrap =
+        document.createElement(
+          "div"
+        );
+
+      avatarWrap.className =
+        "storyAvatarWrap";
+
+      const avatar =
+        document.createElement(
+          "div"
+        );
+
+      avatar.className =
+        "storyAvatar";
+
+      if (profile.avatar_url) {
+
+        const image =
+          document.createElement(
+            "img"
+          );
+
+        image.src =
+          profile.avatar_url;
+
+        image.alt =
+          name;
+
+        avatar.appendChild(
+          image
+        );
+
+      } else {
+
+        avatar.textContent =
+          name
+            .charAt(0)
+            .toUpperCase();
+      }
+
+      avatarWrap.appendChild(
+        avatar
+      );
+
+      const nameElement =
+        document.createElement(
+          "span"
+        );
+
+      nameElement.className =
+        "storyName";
+
+      nameElement.textContent =
+        name;
+
+      button.appendChild(
+        avatarWrap
+      );
+
+      button.appendChild(
+        nameElement
+      );
+
+      container.appendChild(
+        button
+      );
+
+    }
+  );
+}
+
+
+/* =========================
+   OPEN STORY
+========================= */
+
+function openStory(index) {
+
+  if (
+    index < 0 ||
+    index >=
+    vidoraStories.length
+  ) {
+    return;
+  }
+
+  currentStoryIndex =
+    index;
+
+  currentStory =
+    vidoraStories[index];
+
+  showCurrentStory();
+}
+
+
+/* =========================
+   SHOW CURRENT STORY
+========================= */
+
+function showCurrentStory() {
+
+  if (!currentStory) return;
+
+  clearTimeout(
+    storyTimer
+  );
+
+  const content =
+    document.getElementById(
+      "storyViewerContent"
+    );
+
+  if (!content) {
+
+    createStoryViewer();
+
+    return;
+  }
+
+  const viewer =
+    document.getElementById(
+      "storyViewer"
+    );
+
+  if (viewer) {
+    viewer.classList.remove(
+      "hidden"
+    );
+  }
+
+  content.innerHTML = "";
+
+  const profile =
+    currentStory.profiles ||
+    {};
+
+  const name =
+    profile.display_name ||
+    profile.username ||
+    "Vidora User";
+
+  const nameElement =
+    document.getElementById(
+      "storyViewerName"
+    );
+
+  if (nameElement) {
+    nameElement.textContent =
+      name;
+  }
+
+  const timeElement =
+    document.getElementById(
+      "storyViewerTime"
+    );
+
+  if (timeElement) {
+    timeElement.textContent =
+      getStoryAge(
+        currentStory.created_at
+      );
+  }
+
+  if (
+    currentStory.media_type ===
+    "video"
+  ) {
+
+    const video =
+      document.createElement(
+        "video"
+      );
+
+    video.src =
+      currentStory.media_url;
+
+    video.autoplay =
+      true;
+
+    video.playsInline =
+      true;
+
+    video.controls =
+      false;
+
+    video.onended =
+      function () {
+        nextStory();
+      };
+
+    content.appendChild(
+      video
+    );
+
+  } else {
+
+    const image =
+      document.createElement(
+        "img"
+      );
+
+    image.src =
+      currentStory.media_url;
+
+    image.alt =
+      "Vidora Story";
+
+    content.appendChild(
+      image
+    );
+
+    storyTimer =
+      setTimeout(
+        nextStory,
+        VIDORA_STORY_DURATION
+      );
+  }
+
+  recordStoryView(
+    currentStory.id
+  );
+}
+
+
+/* =========================
+   NEXT STORY
+========================= */
+
+function nextStory() {
+
+  clearTimeout(
+    storyTimer
+  );
+
+  if (
+    currentStoryIndex <
+    vidoraStories.length - 1
+  ) {
+
+    currentStoryIndex++;
+
+    currentStory =
+      vidoraStories[
+        currentStoryIndex
+      ];
+
+    showCurrentStory();
+
+  } else {
+
+    closeStoryViewer();
+  }
+}
+
+
+/* =========================
+   PREVIOUS STORY
+========================= */
+
+function previousStory() {
+
+  clearTimeout(
+    storyTimer
+  );
+
+  if (
+    currentStoryIndex > 0
+  ) {
+
+    currentStoryIndex--;
+
+    currentStory =
+      vidoraStories[
+        currentStoryIndex
+      ];
+
+    showCurrentStory();
+  }
+}
+
+
+/* =========================
+   CLOSE STORY VIEWER
+========================= */
+
+function closeStoryViewer() {
+
+  clearTimeout(
+    storyTimer
+  );
+
+  const viewer =
+    document.getElementById(
+      "storyViewer"
+    );
+
+  if (viewer) {
+
+    viewer.classList.add(
+      "hidden"
+    );
+  }
+
+  currentStory =
+    null;
+}
+
+
+/* =========================
+   RECORD STORY VIEW
+========================= */
+
+async function recordStoryView(
+  storyId
+) {
+
+  if (
+    !currentUser ||
+    !storyId
+  ) {
+    return;
+  }
+
+  if (
+    currentStory &&
+    currentStory.user_id ===
+    currentUser.id
+  ) {
+    return;
+  }
+
+  try {
+
+    await supabaseClient
+      .from("story_views")
+      .upsert(
+        {
+          story_id:
+            storyId,
+
+          viewer_id:
+            currentUser.id
+        },
+        {
+          onConflict:
+            "story_id,viewer_id"
+        }
+      );
+
+  } catch (error) {
+
+    console.error(
+      "STORY VIEW ERROR:",
+      error
+    );
+
+  }
+}
+
+
+/* =========================
+   STORY AGE
+========================= */
+
+function getStoryAge(
+  dateString
+) {
+
+  const seconds =
+    Math.floor(
+      (
+        Date.now() -
+        new Date(
+          dateString
+        ).getTime()
+      ) / 1000
+    );
+
+  if (seconds < 60) {
+    return "Just now";
+  }
+
+  const minutes =
+    Math.floor(
+      seconds / 60
+    );
+
+  if (minutes < 60) {
+    return minutes + "m";
+  }
+
+  return (
+    Math.floor(
+      minutes / 60
+    ) + "h"
+  );
+}
+
+
+/* =========================================================
+   STORY BUTTON EVENTS
+========================================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
+
+    const chooseButton =
+      document.getElementById(
+        "chooseStoryFileBtn"
+      );
+
+    const fileInput =
+      document.getElementById(
+        "storyFileInput"
+      );
+
+    const closeButton =
+      document.getElementById(
+        "closeStoryCreatorBtn"
+      );
+
+    const publishButton =
+      document.getElementById(
+        "publishStoryButton"
+      );
+
+    if (chooseButton && fileInput) {
+
+      chooseButton.addEventListener(
+        "click",
+        function () {
+          fileInput.click();
+        }
+      );
+
+    }
+
+    if (fileInput) {
+
+      fileInput.addEventListener(
+        "change",
+        handleStoryFile
+      );
+
+    }
+
+    if (closeButton) {
+
+      closeButton.addEventListener(
+        "click",
+        closeStoryCreator
+      );
+
+    }
+
+    if (publishButton) {
+
+      publishButton.addEventListener(
+        "click",
+        publishStory
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   MAKE STORY FUNCTIONS AVAILABLE TO HTML
+========================================================= */
+
+window.openStoryCreator =
+  openStoryCreator;
+
+window.closeStoryCreator =
+  closeStoryCreator;
+
+window.loadStories =
+  loadStories;
+
+window.openStory =
+  openStory;
+
+window.nextStory =
+  nextStory;
+
+window.previousStory =
+  previousStory;
+
+window.closeStoryViewer =
+  closeStoryViewer;
