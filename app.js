@@ -991,7 +991,7 @@ async function publishFromCreate() {
     setMessage("createMessage", validation.message);
     return;
   }
-  alert("Play button clicked: " + soundId); 
+  
 function playVidoraSound(soundId) {
   const sound = VIDORA_SOUNDS.find(function (s) {
     return s.id === soundId;
