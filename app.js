@@ -921,6 +921,30 @@ function stopLocalCamera() {
 }
 function startVoiceCall(name) { activeCallType = "voice"; openCallUI("Voice Call", name, false); }
 function startVideoCall(name) { activeCallType = "video"; openCallUI("Video Call", name, false); startLocalCamera(false); }
+/* START WEBRTC CALL */
+
+async function startWebRTCCall(callId, isCaller) {
+  activeCallId = callId;
+  isCallInitiator = isCaller;
+
+  await createCallChannel(callId);
+
+  createWebRTCPeer();
+
+  if (isCaller) {
+    const offer =
+      await peerConnection.createOffer();
+
+    await peerConnection.setLocalDescription(
+      offer
+    );
+
+    await sendWebRTCSignal(
+      "offer",
+      peerConnection.localDescription
+    );
+  }
+}
 function startHologramCall(name) { activeCallType = "hologram"; openCallUI("Hologram Call", name, true); startLocalCamera(true); }
 function endCall() { stopLocalCamera(); activeCallType = null; $("callPanel")?.classList.add("hidden"); }
 
