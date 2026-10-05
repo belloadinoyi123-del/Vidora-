@@ -1091,37 +1091,219 @@ body.lightMode .bottomNav {
     height: 380px;
   }
 }
-        animation: vidoraProjectionPulse 2s ease-in-out infinite;
+        
+/* =========================================================
+   VIDORA — HENRY DANGER STYLE HOLOGRAM CALL
+   CSS ONLY — JavaScript unchanged
+   ========================================================= */
 
+.callPanel.hologramMode {
+    background: rgba(0, 0, 0, 0.88) !important;
+    overflow: hidden !important;
+}
 
-/* Projection rings */
-.callPanel.hologramMode .callVideoWrap::after {
+/* Main hologram window */
+.callPanel.hologramMode .callCard {
+    position: relative !important;
+    width: min(440px, 94vw) !important;
+    min-height: 620px !important;
+    padding: 18px !important;
+    overflow: hidden !important;
+
+    background:
+        radial-gradient(
+            ellipse at 50% 75%,
+            rgba(0, 220, 255, 0.13),
+            transparent 48%
+        ),
+        linear-gradient(
+            180deg,
+            rgba(5, 10, 25, 0.98),
+            rgba(2, 5, 15, 0.98)
+        ) !important;
+
+    border: 1px solid rgba(0, 220, 255, 0.28) !important;
+
+    box-shadow:
+        0 0 18px rgba(0, 220, 255, 0.20),
+        0 0 55px rgba(80, 80, 255, 0.12),
+        inset 0 0 35px rgba(0, 220, 255, 0.05) !important;
+}
+
+/* Title stays above hologram */
+.callPanel.hologramMode .callCard h2,
+.callPanel.hologramMode .callCard p {
+    position: relative !important;
+    z-index: 30 !important;
+}
+
+/* =========================================================
+   HOLOGRAM PROJECTION AREA
+   ========================================================= */
+
+.callPanel.hologramMode .callVideoWrap {
+    position: relative !important;
+
+    height: 470px !important;
+    margin-top: 5px !important;
+
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+
+    overflow: visible !important;
+
+    background: transparent !important;
+}
+
+/* Remove the normal rectangular-video appearance */
+.callPanel.hologramMode #localCallVideo {
+    position: relative !important;
+    z-index: 8 !important;
+
+    width: 92% !important;
+    height: 450px !important;
+
+    object-fit: cover !important;
+
+    border: none !important;
+    border-radius: 0 !important;
+
+    background: transparent !important;
+
+    /*
+       Fade the video into the hologram base.
+    */
+    -webkit-mask-image:
+        linear-gradient(
+            to bottom,
+            black 0%,
+            black 60%,
+            rgba(0,0,0,.88) 72%,
+            rgba(0,0,0,.55) 84%,
+            transparent 100%
+        );
+
+    mask-image:
+        linear-gradient(
+            to bottom,
+            black 0%,
+            black 60%,
+            rgba(0,0,0,.88) 72%,
+            rgba(0,0,0,.55) 84%,
+            transparent 100%
+        );
+
+    filter:
+        saturate(1.45)
+        contrast(1.25)
+        brightness(1.08)
+        drop-shadow(0 0 5px rgba(0,220,255,.95))
+        drop-shadow(0 0 18px rgba(0,220,255,.65))
+        drop-shadow(0 0 35px rgba(120,70,255,.55));
+
+    mix-blend-mode: screen;
+
+    transform:
+        translateY(-25px)
+        scale(1.04);
+
+    animation:
+        vidoraHologramFloat 3.5s ease-in-out infinite;
+}
+
+/* =========================================================
+   GLOW BEHIND THE PERSON
+   ========================================================= */
+
+.callPanel.hologramMode .callVideoWrap::before {
     content: "";
+
     position: absolute;
     z-index: 2;
 
     left: 50%;
-    bottom: 20px;
+    bottom: 35px;
 
-    width: 230px;
-    height: 45px;
+    width: 310px;
+    height: 360px;
+
+    transform: translateX(-50%);
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            rgba(0,220,255,.18) 0%,
+            rgba(100,70,255,.13) 35%,
+            transparent 72%
+        );
+
+    filter: blur(18px);
+
+    pointer-events: none;
+
+    animation:
+        vidoraHologramGlow 2.5s ease-in-out infinite;
+}
+
+/* =========================================================
+   HOLOGRAM BASE — THE "WATCH" PROJECTION POINT
+   ========================================================= */
+
+.callPanel.hologramMode .callVideoWrap::after {
+    content: "";
+
+    position: absolute;
+    z-index: 15;
+
+    left: 50%;
+    bottom: 18px;
+
+    width: 245px;
+    height: 52px;
 
     transform: translateX(-50%);
 
     border-radius: 50%;
 
-    border:
-        2px solid rgba(0,212,255,.7);
+    background:
+        radial-gradient(
+            ellipse,
+            rgba(0,220,255,.42),
+            rgba(90,60,255,.18) 45%,
+            transparent 72%
+        );
+
+    border: 2px solid rgba(0,220,255,.78);
 
     box-shadow:
-        0 0 10px rgba(0,212,255,.8),
-        0 0 30px rgba(124,92,255,.55),
-        inset 0 0 15px rgba(0,212,255,.45);
+        0 0 8px rgba(0,220,255,.95),
+        0 0 20px rgba(0,220,255,.75),
+        0 0 45px rgba(100,60,255,.65),
+        inset 0 0 18px rgba(0,220,255,.55);
 
-    animation: vidoraProjectionRing 2.5s linear infinite;
+    pointer-events: none;
+
+    animation:
+        vidoraProjectionRing 2.2s ease-in-out infinite;
 }
 
-/* Hologram scan lines */
+/* =========================================================
+   EXTRA HOLOGRAM FLOOR
+   ========================================================= */
+
+.callPanel.hologramMode .callVideoWrap {
+    isolation: isolate;
+}
+
+.callPanel.hologramMode .callVideoWrap > * {
+    isolation: auto;
+}
+
+/* =========================================================
+   SCANLINES
+   ========================================================= */
+
 .callPanel.hologramMode .callCard {
     isolation: isolate;
 }
@@ -1130,133 +1312,147 @@ body.lightMode .bottomNav {
     content: "";
 
     position: absolute;
-    z-index: 5;
+    z-index: 20;
 
-    inset: 70px 12px 85px;
+    left: 12px;
+    right: 12px;
+    top: 70px;
+    bottom: 90px;
 
     pointer-events: none;
 
-    background: repeating-linear-gradient(
-        to bottom,
-        transparent 0px,
-        transparent 5px,
-        rgba(0,212,255,.07) 6px,
-        transparent 7px
-    );
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 6px,
+            rgba(0,220,255,.055) 7px,
+            transparent 8px
+        );
 
     mix-blend-mode: screen;
 
-    animation: vidoraScanlines 1.8s linear infinite;
+    animation:
+        vidoraScanMove 1.5s linear infinite;
 }
 
-/* Floating hologram particles */
+/* =========================================================
+   FLOATING HOLOGRAM PARTICLES
+   ========================================================= */
+
 .callPanel.hologramMode .callCard::after {
-    content: "✦  ·  ✧  ·  ✦  ·  ·  ✧  ·  ✦";
+    content:
+        "✦   ·   ✧   ·   ✦   ·   ·   ✧   ·   ✦";
 
     position: absolute;
-    z-index: 6;
+    z-index: 21;
 
     left: 0;
     right: 0;
-    bottom: 105px;
+    bottom: 110px;
 
     text-align: center;
 
-    color: rgba(0,212,255,.55);
-    font-size: 13px;
-    letter-spacing: 8px;
+    color: rgba(0,220,255,.55);
+
+    font-size: 12px;
+    letter-spacing: 6px;
 
     pointer-events: none;
 
-    animation: vidoraParticles 2.8s ease-in-out infinite;
+    animation:
+        vidoraParticles 2.8s ease-in-out infinite;
 }
 
-/* Make title feel futu
-.callPanel.hologramMode .callCard h2 {
-    position: relative;
-    z-index: 10;
+/* =========================================================
+   CALL BUTTON
+   ========================================================= */
 
-    text-align: center;
-
-    color: #ffffff;
-
-    text-shadow:
-        0 0 8px rgba(0,212,255,.8),
-        0 0 20px rgba(124,92,255,.6);
-}
-
-.callPanel.hologramMode .callCard p {
-    position: relative;
-    z-index: 10;
-
-    text-align: center;
-
-    color: rgba(170,235,255,.8);
-}
-
-/* Keep End Call safely above effects */
 .callPanel.hologramMode .callActions {
-    position: relative;
-    z-index: 20;
-    text-align: center;
+    position: relative !important;
+    z-index: 40 !important;
+
+    margin-top: -5px !important;
 }
 
-/* Floating movement */
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
 @keyframes vidoraHologramFloat {
-    0%, 100% {
-        transform: translateY(0) scale(1);
+
+    0%,
+    100% {
+        transform:
+            translateY(-25px)
+            scale(1.04);
     }
 
     50% {
-        transform: translateY(-8px) scale(1.015);
+        transform:
+            translateY(-39px)
+            scale(1.06);
     }
 }
 
-/* Projection glow */
-@keyframes vidoraProjectionPulse {
-    0%, 100% {
+@keyframes vidoraHologramGlow {
+
+    0%,
+    100% {
         opacity: .55;
-        transform: translateX(-50%) scaleX(.9);
+        transform:
+            translateX(-50%)
+            scale(.92);
     }
 
     50% {
         opacity: 1;
-        transform: translateX(-50%) scaleX(1.08);
+        transform:
+            translateX(-50%)
+            scale(1.08);
     }
 }
 
-/* Projection ring */
 @keyframes vidoraProjectionRing {
+
     0% {
-        opacity: .35;
-        transform: translateX(-50%) scale(.85);
+        opacity: .45;
+        transform:
+            translateX(-50%)
+            scale(.88);
     }
 
     50% {
         opacity: 1;
+        transform:
+            translateX(-50%)
+            scale(1.05);
     }
 
     100% {
-        opacity: .2;
-        transform: translateX(-50%) scale(1.15);
+        opacity: .35;
+        transform:
+            translateX(-50%)
+            scale(1.16);
     }
 }
 
-/* Moving scanlines */
-@keyframes vidoraScanlines {
+@keyframes vidoraScanMove {
+
     from {
         background-position: 0 0;
     }
 
     to {
-        background-position: 0 24px;
+        background-position: 0 30px;
     }
 }
 
-/* Floating particles */
 @keyframes vidoraParticles {
-    0%, 100% {
-        opacity: .25;
+
+    0%,
+    100% {
+        opacity: .15;
         transform: translateY(5px);
     }
 
@@ -1266,8 +1462,31 @@ body.lightMode .bottomNav {
     }
 }
 
-/* Small-screen adjustment */
+/* =========================================================
+   PHONE SCREEN
+   ========================================================= */
+
 @media (max-width: 480px) {
 
     .callPanel.hologramMode .callCard {
-        widt
+        width: 94vw !important;
+        min-height: 600px !important;
+    }
+
+    .callPanel.hologramMode .callVideoWrap {
+        height: 455px !important;
+    }
+
+    .callPanel.hologramMode #localCallVideo {
+        width: 96% !important;
+        height: 440px !important;
+    }
+
+    .callPanel.hologramMode .callVideoWrap::after {
+        width: 215px;
+        height: 46px;
+    }
+}
+    
+
+
