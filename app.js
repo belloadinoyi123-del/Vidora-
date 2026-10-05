@@ -12,13 +12,13 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, 
 });
 
 /* 2) STATE */
+/* 2) STATE */
 let currentUser = null;
 let feedLoading = false;
 let selectedVidoraSound = null;
 let selectedVidoraFilter = "normal";
 let vidoraAudioPlayer = null;
 let activeChatUser = null;
-let localStream = null;
 let activeCallType = null;
 let localStream = null;
 let muteOriginalAudio = false;
