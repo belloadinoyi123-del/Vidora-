@@ -920,7 +920,18 @@ function stopLocalCamera() {
   const video = $("localCallVideo"); if (video) video.srcObject = null;
 }
 function startVoiceCall(name) { activeCallType = "voice"; openCallUI("Voice Call", name, false); }
-function startVideoCall(name) { activeCallType = "video"; openCallUI("Video Call", name, false); startLocalCamera(false); }
+async function startVideoCall(name) {
+  activeCallType = "video";
+
+  openCallUI("Video Call", name, false);
+
+  await startLocalCamera(false);
+
+  if (currentUser) {
+    const callId = "call-" + currentUser.id;
+    await startWebRTCCall(callId, true);
+  }
+}
 /* START WEBRTC CALL */
 
 async function startWebRTCCall(callId, isCaller) {
