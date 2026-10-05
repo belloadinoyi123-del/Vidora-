@@ -18,10 +18,25 @@ let selectedVidoraSound = null;
 let selectedVidoraFilter = "normal";
 let vidoraAudioPlayer = null;
 let activeChatUser = null;
+let localStream = null;
 let activeCallType = null;
 let localStream = null;
 let muteOriginalAudio = false;
-let interactiveAvatarEnabled = localStorage.getItem("vidoraInteractiveAvatar") === "true";
+
+/* WEBRTC CALL STATE */
+let peerConnection = null;
+let callChannel = null;
+let remoteStream = null;
+let activeCallUserId = null;
+let activeCallId = null;
+let pendingIceCandidates = [];
+let isCallInitiator = false;
+
+const WEBRTC_CONFIG = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" }
+  ]
+};
 
 const localChats = JSON.parse(localStorage.getItem("vidoraLocalChats") || "{}");
 const localNotifications = JSON.parse(localStorage.getItem("vidoraNotifications") || "[]");
