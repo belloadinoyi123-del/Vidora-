@@ -473,6 +473,10 @@ async function showApp() {
   renderNotifications();
   showPage("home");
   if (interactiveAvatarEnabled) showInteractiveAvatar();
+
+     if (currentUser) {
+    setupIncomingCallListener();
+  }
 }
 
 /* 7) PROFILE + PHOTO UPLOAD */
