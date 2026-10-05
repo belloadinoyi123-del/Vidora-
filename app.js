@@ -944,8 +944,7 @@ async function startVideoCall(name) {
   activeCallId = callId;
   activeCallUserId = activeChatUser.id;
 
-  await startWebRTCCall(callId, true);
-
+  // Notify the receiver first
   const receiverChannel = supabaseClient.channel(
     "vidora-user-" + activeChatUser.id
   );
@@ -966,7 +965,16 @@ async function startVideoCall(name) {
     }
   });
 
-  console.log("Incoming call signal sent.");
+  console.log("Incoming call invitation sent.");
+
+  // Wait briefly so the receiver can join the call channel
+  await new Promise(function (resolve) {
+    setTimeout(resolve, 1500);
+  });
+
+  await startWebRTCCall(callId, true);
+
+  console.log("WebRTC video call started.");
 }
 
    
