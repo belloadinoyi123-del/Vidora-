@@ -1119,6 +1119,13 @@ async function receiveWebRTCCall(callId) {
 
   console.log("Receiving Vidora WebRTC call:", callId);
 }
+async function listenForIncomingCall(callId) {
+  if (!callId) return;
+
+  await receiveWebRTCCall(callId);
+
+  console.log("Vidora is listening for call:", callId);
+}
 
 /* 14) NOTIFICATIONS */
 function renderNotifications() {
