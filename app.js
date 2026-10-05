@@ -1126,6 +1126,54 @@ async function listenForIncomingCall(callId) {
 
   console.log("Vidora is listening for call:", callId);
 }
+async function setupIncomingCallListener() {
+  if (!currentUser) return;
+
+  const userChannel = supabaseClient.channel(
+    "vidora-user-" + currentUser.id
+  );
+
+  userChannel
+    .on(
+      "broadcast",
+      { event: "incoming-call" },
+      async function (payload) {
+        const call = payload.payload;
+
+        if (!call || !call.callId) return;
+
+        const accepted = confirm(
+          "Incoming video call from " +
+          (call.callerName || "Vidora User") +
+          ". Accept?"
+        );
+
+        if (!accepted) return;
+
+        activeCallType = "video";
+        activeCallUserId = call.callerId;
+        activeCallId = call.callId;
+
+        openCallUI(
+          "Video Call",
+          call.callerName || "Vidora User",
+          false
+        );
+
+        await startLocalCamera(false);
+
+        await receiveWebRTCCall(call.callId);
+      }
+    )
+    .subscribe(function (status) {
+      console.log(
+        "Incoming call listener:",
+        status
+      );
+    });
+
+  console.log("Vidora incoming-call listener ready.");
+}
 
 /* 14) NOTIFICATIONS */
 function renderNotifications() {
