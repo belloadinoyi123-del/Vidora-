@@ -927,10 +927,19 @@ async function startVideoCall(name) {
 
   await startLocalCamera(false);
 
-  if (currentUser) {
-    const callId = "call-" + currentUser.id;
-    await startWebRTCCall(callId, true);
+  if (!activeChatUser || !activeChatUser.id) {
+    console.log("No chat user selected.");
+    return;
   }
+
+  const callId = [
+    currentUser.id,
+    activeChatUser.id
+  ].sort().join("-");
+
+  activeCallUserId = activeChatUser.id;
+
+  await startWebRTCCall(callId, true);
 }
 
    
