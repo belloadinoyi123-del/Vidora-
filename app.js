@@ -924,6 +924,55 @@ function startVideoCall(name) { activeCallType = "video"; openCallUI("Video Call
 function startHologramCall(name) { activeCallType = "hologram"; openCallUI("Hologram Call", name, true); startLocalCamera(true); }
 function endCall() { stopLocalCamera(); activeCallType = null; $("callPanel")?.classList.add("hidden"); }
 
+/* WEBRTC SIGNALING */
+
+async function createCallChannel(callId) {
+  if (callChannel) {
+    try {
+      await supabaseClient.removeChannel(callChannel);
+    } catch (e) {
+      console.log("Previous call channel cleanup:", e);
+    }
+  }
+
+  callChannel = supabaseClient.channel(
+    "vidora-call-" + callId
+  );
+
+  callChannel
+    .on(
+      "broadcast",
+      { event: "webrtc-signal" },
+      function (payload) {
+        if (typeof handleWebRTCSignal === "function") {
+          handleWebRTCSignal(payload.payload);
+        }
+      }
+    )
+    .subscribe(function (status) {
+      console.log(
+        "Vidora WebRTC channel:",
+        status
+      );
+    });
+
+  return callChannel;
+}
+
+async function sendWebRTCSignal(type, data) {
+  if (!callChannel) return;
+
+  await callChannel.send({
+    type: "broadcast",
+    event: "webrtc-signal",
+    payload: {
+      type: type,
+      from: currentUser ? currentUser.id : null,
+      data: data || null
+    }
+  });
+}
+
 /* 14) NOTIFICATIONS */
 function renderNotifications() {
   const box = $("notificationList"); if (!box) return;
