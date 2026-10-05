@@ -973,6 +973,49 @@ async function sendWebRTCSignal(type, data) {
   });
 }
 
+/* WEBRTC PEER CONNECTION */
+
+function createWebRTCPeer() {
+  peerConnection = new RTCPeerConnection(WEBRTC_CONFIG);
+
+  if (localStream) {
+    localStream.getTracks().forEach(function (track) {
+      peerConnection.addTrack(track, localStream);
+    });
+  }
+
+  remoteStream = new MediaStream();
+
+  const remoteVideo = $("remoteCallVideo");
+
+  if (remoteVideo) {
+    remoteVideo.srcObject = remoteStream;
+  }
+
+  peerConnection.ontrack = function (event) {
+    event.streams[0].getTracks().forEach(function (track) {
+      remoteStream.addTrack(track);
+    });
+  };
+
+  peerConnection.onicecandidate = function (event) {
+    if (event.candidate) {
+      sendWebRTCSignal(
+        "ice-candidate",
+        event.candidate
+      );
+    }
+  };
+
+  peerConnection.onconnectionstatechange = function () {
+    console.log(
+      "WebRTC connection:",
+      peerConnection.connectionState
+    );
+  };
+
+  return peerConnection;
+}
 /* 14) NOTIFICATIONS */
 function renderNotifications() {
   const box = $("notificationList"); if (!box) return;
