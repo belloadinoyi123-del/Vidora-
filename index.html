@@ -301,23 +301,29 @@
   </div>
 
   <script src="app.js"></script>
-  <!-- VIDORA HOLOGRAM PERSON SEPARATION -->
+                              
 <script>
 (function () {
-
-    let segmentationLoaded = false;
-    let segmenter = null;
+    let selfieSegmentation = null;
     let hologramCanvas = null;
     let hologramCtx = null;
-    let animationFrame = null;
-    let processing = false;
+    let hologramRunning = false;
+    let mediaPipeLoading = false;
 
-    function loadHologramEngine() {
-
-        if (segmentationLoaded) {
-            startHologramSeparation();
+    function loadMediaPipe(callback) {
+        if (window.SelfieSegmentation) {
+            callback();
             return;
         }
+
+        if (mediaPipeLoading) {
+            setTimeout(function () {
+                loadMediaPipe(callback);
+            }, 200);
+            return;
+        }
+
+        mediaPipeLoading = true;
 
         const script = document.createElement("script");
 
@@ -325,272 +331,325 @@
             "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js";
 
         script.onload = function () {
-
-            try {
-
-                segmenter = new SelfieSegmentation({
-                    locateFile: function (file) {
-                        return "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/" + file;
-                    }
-                });
-
-                segmenter.setOptions({
-                    modelSelection: 1
-                });
-
-                segmenter.onResults(drawHologram);
-
-                segmentationLoaded = true;
-
-                startHologramSeparation();
-
-            } catch (error) {
-
-                console.error(
-                    "Vidora hologram engine error:",
-                    error
-                );
-
-            }
-
+            mediaPipeLoading = false;
+            callback();
         };
 
         script.onerror = function () {
-
-            console.error(
-                "Vidora hologram engine could not load."
-            );
-
+            mediaPipeLoading = false;
+            console.error("Vidora hologram engine failed to load.");
         };
 
         document.head.appendChild(script);
     }
 
+    function createHologramCanvas() {
+        const wrap = document.querySelector(".callVideoWrap");
 
-    function startHologramSeparation() {
+        if (!wrap) return null;
 
-        const video =
-            document.getElementById("localCallVideo");
+        let canvas = document.getElementById("vidoraHologramCanvas");
 
-        const wrap =
-            document.querySelector(
-                ".callPanel.hologramMode .callVideoWrap"
-            );
+        if (!canvas) {
+            canvas = document.createElement("canvas");
+            canvas.id = "vidoraHologramCanvas";
+            canvas.className = "vidoraHologramCanvas";
 
-        if (!video || !wrap || !segmenter) return;
-
-        if (hologramCanvas) return;
-
-        hologramCanvas =
-            document.createElement("canvas");
-
-        hologramCanvas.className =
-            "vidoraHologramCanvas";
-
-        hologramCanvas.width = 480;
-        hologramCanvas.height = 640;
-
-        hologramCtx =
-            hologramCanvas.getContext("2d");
-
-        wrap.appendChild(hologramCanvas);
-
-        video.style.opacity = "0";
-
-        processHologramFrame();
-
-    }
-
-
-    async function processHologramFrame() {
-
-        const video =
-            document.getElementById("localCallVideo");
-
-        if (!video ||
-            !hologramCanvas ||
-            !segmenter) {
-
-            animationFrame =
-                requestAnimationFrame(
-                    processHologramFrame
-                );
-
-            return;
+            wrap.appendChild(canvas);
         }
 
-        if (
-            video.readyState >= 2 &&
-            video.videoWidth > 0 &&
-            !processing
-        ) {
+        hologramCanvas = canvas;
+        hologramCtx = canvas.getContext("2d", {
+            alpha: true
+        });
 
-            processing = true;
+        return canvas;
+    }
 
-            try {
+    function setupSegmentation() {
+        if (selfieSegmentation) return;
 
-                await segmenter.send({
-                    image: video
-                });
+        selfieSegmentation = new SelfieSegmentation({
+            locateFile: function (file) {
+                return "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/" + file;
+            }
+        });
 
-            } catch (error) {
+        selfieSegmentation.setOptions({
+            modelSelection: 0,
+            selfieMode: false
+        });
 
-                console.error(
-                    "Hologram processing error:",
-                    error
-                );
+        selfieSegmentation.onResults(function (results) {
+            if (!hologramRunning) return;
 
+            const video = document.getElementById("localCallVideo");
+            const canvas = hologramCanvas;
+            const ctx = hologramCtx;
+
+            if (!video || !canvas || !ctx) return;
+
+            if (!video.videoWidth || !video.videoHeight) return;
+
+            /*
+             * Use a portrait canvas.
+             * This prevents the original rectangular camera frame
+             * from appearing around the person.
+             */
+            const outputWidth = 720;
+            const outputHeight = 900;
+
+            if (
+                canvas.width !== outputWidth ||
+                canvas.height !== outputHeight
+            ) {
+                canvas.width = outputWidth;
+                canvas.height = outputHeight;
             }
 
-            processing = false;
-        }
+            ctx.clearRect(0, 0, outputWidth, outputHeight);
 
-        animationFrame =
-            requestAnimationFrame(
-                processHologramFrame
+            /*
+             * Center-crop the camera image into a portrait frame.
+             */
+            const sourceRatio =
+                video.videoWidth / video.videoHeight;
+
+            const targetRatio =
+                outputWidth / outputHeight;
+
+            let sx = 0;
+            let sy = 0;
+            let sw = video.videoWidth;
+            let sh = video.videoHeight;
+
+            if (sourceRatio > targetRatio) {
+                sw = video.videoHeight * targetRatio;
+                sx = (video.videoWidth - sw) / 2;
+            } else {
+                sh = video.videoWidth / targetRatio;
+                sy = (video.videoHeight - sh) / 2;
+            }
+
+            /*
+             * Draw the camera image first.
+             */
+            ctx.drawImage(
+                video,
+                sx,
+                sy,
+                sw,
+                sh,
+                0,
+                0,
+                outputWidth,
+                outputHeight
             );
-    }
 
+            /*
+             * Keep ONLY the person.
+             */
+            ctx.globalCompositeOperation = "destination-in";
 
-    function drawHologram(results) {
+            ctx.drawImage(
+                results.segmentationMask,
+                0,
+                0,
+                outputWidth,
+                outputHeight
+            );
 
-        if (!hologramCanvas || !hologramCtx) {
-            return;
-        }
+            /*
+             * Now the camera background is transparent.
+             */
 
-        const canvas = hologramCanvas;
-        const ctx = hologramCtx;
+            /*
+             * Cyan hologram tint.
+             */
+            ctx.globalCompositeOperation = "source-atop";
 
-        const width = canvas.width;
-        const height = canvas.height;
+            ctx.fillStyle = "rgba(0, 210, 255, 0.42)";
+            ctx.fillRect(
+                0,
+                0,
+                outputWidth,
+                outputHeight
+            );
 
-        ctx.clearRect(
-            0,
-            0,
-            width,
-            height
-        );
+            /*
+             * Bright holographic layer.
+             */
+            ctx.globalAlpha = 0.45;
 
-        /*
-         * Draw the camera image.
-         */
-        ctx.save();
+            ctx.drawImage(
+                video,
+                sx,
+                sy,
+                sw,
+                sh,
+                0,
+                0,
+                outputWidth,
+                outputHeight
+            );
 
-        ctx.drawImage(
-            results.image,
-            0,
-            0,
-            width,
-            height
-        );
+            ctx.globalAlpha = 1;
 
-        /*
-         * Keep ONLY the person.
-         */
-        ctx.globalCompositeOperation =
-            "destination-in";
+            /*
+             * Scanlines only inside the person.
+             */
+            ctx.globalAlpha = 0.22;
+            ctx.fillStyle = "#00eaff";
 
-        ctx.drawImage(
-            results.segmentationMask,
-            0,
-            0,
-            width,
-            height
-        );
+            for (let y = 0; y < outputHeight; y += 7) {
+                ctx.fillRect(
+                    0,
+                    y,
+                    outputWidth,
+                    2
+                );
+            }
 
-        ctx.restore();
+            ctx.globalAlpha = 1;
 
+            /*
+             * Fade the lower part into the projection ring.
+             */
+            const fade = ctx.createLinearGradient(
+                0,
+                outputHeight * 0.55,
+                0,
+                outputHeight
+            );
 
-        /*
-         * Turn the person into a hologram.
-         */
-        ctx.globalCompositeOperation =
-            "source-in";
+            fade.addColorStop(
+                0,
+                "rgba(0,0,0,0)"
+            );
 
-        ctx.fillStyle =
-            "rgba(70, 220, 255, 0.72)";
+            fade.addColorStop(
+                0.72,
+                "rgba(0,220,255,0.08)"
+            );
 
-        ctx.fillRect(
-            0,
-            0,
-            width,
-            height
-        );
+            fade.addColorStop(
+                1,
+                "rgba(0,220,255,0.75)"
+            );
 
-
-        /*
-         * Add a bright hologram layer.
-         */
-        ctx.globalCompositeOperation =
-            "lighter";
-
-        ctx.globalAlpha = 0.42;
-
-        ctx.drawImage(
-            results.image,
-            0,
-            0,
-            width,
-            height
-        );
-
-        ctx.globalAlpha = 1;
-
-
-        /*
-         * Scanlines.
-         */
-        ctx.globalCompositeOperation =
-            "source-atop";
-
-        ctx.fillStyle =
-            "rgba(0, 220, 255, 0.08)";
-
-        for (
-            let y = 0;
-            y < height;
-            y += 7
-        ) {
+            ctx.globalCompositeOperation = "source-atop";
+            ctx.fillStyle = fade;
 
             ctx.fillRect(
                 0,
-                y,
-                width,
-                2
+                0,
+                outputWidth,
+                outputHeight
             );
-        }
 
-        ctx.globalCompositeOperation =
-            "source-over";
+            ctx.globalCompositeOperation = "source-over";
+        });
     }
 
+    async function processHologramFrame() {
+        if (!hologramRunning) return;
+
+        const video = document.getElementById("localCallVideo");
+
+        if (
+            video &&
+            video.readyState >= 2 &&
+            selfieSegmentation
+        ) {
+            try {
+                await selfieSegmentation.send({
+                    image: video
+                });
+            } catch (error) {
+                console.error(
+                    "Vidora hologram frame error:",
+                    error
+                );
+            }
+        }
+
+        if (hologramRunning) {
+            setTimeout(processHologramFrame, 60);
+        }
+    }
+
+    function startHologramEngine() {
+        const panel = document.getElementById("callPanel");
+
+        if (
+            !panel ||
+            panel.classList.contains("hidden") ||
+            !panel.classList.contains("hologramMode")
+        ) {
+            return;
+        }
+
+        hologramRunning = true;
+
+        createHologramCanvas();
+
+        loadMediaPipe(function () {
+            if (!hologramRunning) return;
+
+            setupSegmentation();
+
+            processHologramFrame();
+        });
+    }
+
+    function stopHologramEngine() {
+        hologramRunning = false;
+
+        const canvas =
+            document.getElementById("vidoraHologramCanvas");
+
+        if (canvas) {
+            canvas.remove();
+        }
+
+        hologramCanvas = null;
+        hologramCtx = null;
+    }
 
     /*
-     * Watch for the hologram call.
+     * Connect to the existing Vidora hologram button.
+     * The original function still runs first.
      */
-    const originalHologramCall =
+    const originalStartHologram =
         window.startHologramCall;
 
-    if (originalHologramCall) {
+    if (originalStartHologram) {
+        window.startHologramCall = function (name) {
 
-        window.startHologramCall =
-            function (name) {
+            originalStartHologram(name);
 
-                originalHologramCall(name);
+            setTimeout(function () {
+                startHologramEngine();
+            }, 500);
+        };
+    }
 
-                setTimeout(
-                    function () {
+    /*
+     * Clean up only when the hologram call ends.
+     */
+    const originalEndCall = window.endCall;
 
-                        loadHologramEngine();
+    if (originalEndCall) {
+        window.endCall = function () {
 
-                    },
-                    700
-                );
+            stopHologramEngine();
 
-            };
+            originalEndCall();
+        };
     }
 
 })();
 </script>
+    
 </body>
 </html>
