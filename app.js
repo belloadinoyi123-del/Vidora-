@@ -5,7 +5,7 @@ console.log("VIDORA PROFESSIONAL APP LOADED");
 
 /* 1) SUPABASE */
 const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
-const SUPABASE_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
+const SUPABASE_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h"
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
