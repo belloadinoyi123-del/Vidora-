@@ -1015,6 +1015,50 @@ function createWebRTCPeer() {
   };
 
   return peerConnection;
+   /* HANDLE WEBRTC SIGNALS */
+
+async function handleWebRTCSignal(signal) {
+  if (!signal || !signal.type) return;
+
+  if (!peerConnection) {
+    createWebRTCPeer();
+  }
+
+  if (signal.type === "offer") {
+    await peerConnection.setRemoteDescription(
+      new RTCSessionDescription(signal.data)
+    );
+
+    const answer =
+      await peerConnection.createAnswer();
+
+    await peerConnection.setLocalDescription(answer);
+
+    await sendWebRTCSignal(
+      "answer",
+      peerConnection.localDescription
+    );
+  }
+
+  else if (signal.type === "answer") {
+    await peerConnection.setRemoteDescription(
+      new RTCSessionDescription(signal.data)
+    );
+  }
+
+  else if (signal.type === "ice-candidate") {
+    try {
+      await peerConnection.addIceCandidate(
+        new RTCIceCandidate(signal.data)
+      );
+    } catch (error) {
+      console.log(
+        "ICE candidate error:",
+        error
+      );
+    }
+  }
+}
 }
 /* 14) NOTIFICATIONS */
 function renderNotifications() {
