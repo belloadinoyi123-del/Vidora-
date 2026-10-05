@@ -932,70 +932,15 @@ async function startVideoCall(name) {
     await startWebRTCCall(callId, true);
   }
 }
-/* START WEBRTC CALL */
 
-async function startWebRTCCall(callId, isCaller) {
-  activeCallId = callId;
-  isCallInitiator = isCaller;
+   
 
-  await createCallChannel(callId);
 
-  createWebRTCPeer();
-
-  if (isCaller) {
-    const offer =
-      await peerConnection.createOffer();
-
-    await peerConnection.setLocalDescription(
-      offer
-    );
-
-    await sendWebRTCSignal(
-      "offer",
-      peerConnection.localDescription
-    );
-  }
-}
-async function startHologramCall(name) {
-  activeCallType = "hologram";
-
-  openCallUI("Hologram Call", name, true);
-
-  await startLocalCamera(true);
-
-  if (currentUser) {
-    const callId = "call-" + currentUser.id;
-    await startWebRTCCall(callId, true);
-  }
-}
-function endCall() { stopLocalCamera(); activeCallType = null; $("callPanel")?.classList.add("hidden"); }
-
-/* WEBRTC SIGNALING */
+    /* WEBRTC SIGNALING */
 
 async function createCallChannel(callId) {
-async function joinWebRTCCall(callId) {
-  activeCallId = callId;
-  isCallInitiator = false;
+  if (!callId) return null;
 
-  await createCallChannel(callId);
-
-  createWebRTCPeer();
-
-  console.log("Joined Vidora WebRTC call:", callId);
-}
-   /* RECEIVE VIDORA WEBRTC CALL */
-
-async function receiveWebRTCCall(callId) {
-  if (!callId) return;
-
-  activeCallId = callId;
-  isCallInitiator = false;
-
-  await joinWebRTCCall(callId);
-
-  console.log("Receiving Vidora WebRTC call:", callId);
-}
-   
   if (callChannel) {
     try {
       await supabaseClient.removeChannel(callChannel);
@@ -1004,9 +949,7 @@ async function receiveWebRTCCall(callId) {
     }
   }
 
-  callChannel = supabaseClient.channel(
-    "vidora-call-" + callId
-  );
+  callChannel = supabaseClient.channel("vidora-call-" + callId);
 
   callChannel
     .on(
@@ -1019,10 +962,7 @@ async function receiveWebRTCCall(callId) {
       }
     )
     .subscribe(function (status) {
-      console.log(
-        "Vidora WebRTC channel:",
-        status
-      );
+      console.log("Vidora WebRTC channel:", status);
     });
 
   return callChannel;
@@ -1069,10 +1009,7 @@ function createWebRTCPeer() {
 
   peerConnection.onicecandidate = function (event) {
     if (event.candidate) {
-      sendWebRTCSignal(
-        "ice-candidate",
-        event.candidate
-      );
+      sendWebRTCSignal("ice-candidate", event.candidate);
     }
   };
 
@@ -1084,7 +1021,9 @@ function createWebRTCPeer() {
   };
 
   return peerConnection;
-   /* HANDLE WEBRTC SIGNALS */
+}
+
+/* HANDLE WEBRTC SIGNALS */
 
 async function handleWebRTCSignal(signal) {
   if (!signal || !signal.type) return;
@@ -1098,8 +1037,7 @@ async function handleWebRTCSignal(signal) {
       new RTCSessionDescription(signal.data)
     );
 
-    const answer =
-      await peerConnection.createAnswer();
+    const answer = await peerConnection.createAnswer();
 
     await peerConnection.setLocalDescription(answer);
 
@@ -1117,18 +1055,62 @@ async function handleWebRTCSignal(signal) {
 
   else if (signal.type === "ice-candidate") {
     try {
-      await peerConnection.addIceCandidate(
-        new RTCIceCandidate(signal.data)
-      );
+      if (peerConnection.remoteDescription) {
+        await peerConnection.addIceCandidate(
+          new RTCIceCandidate(signal.data)
+        );
+      } else {
+        pendingIceCandidates.push(signal.data);
+      }
     } catch (error) {
-      console.log(
-        "ICE candidate error:",
-        error
-      );
+      console.log("ICE candidate error:", error);
     }
   }
 }
+
+async function startWebRTCCall(callId, isCaller) {
+  if (!callId) return;
+
+  activeCallId = callId;
+  isCallInitiator = isCaller;
+
+  await createCallChannel(callId);
+
+  createWebRTCPeer();
+
+  if (isCaller) {
+    const offer = await peerConnection.createOffer();
+
+    await peerConnection.setLocalDescription(offer);
+
+    await sendWebRTCSignal(
+      "offer",
+      peerConnection.localDescription
+    );
+  }
 }
+
+async function joinWebRTCCall(callId) {
+  if (!callId) return;
+
+  activeCallId = callId;
+  isCallInitiator = false;
+
+  await createCallChannel(callId);
+
+  createWebRTCPeer();
+
+  console.log("Joined Vidora WebRTC call:", callId);
+}
+
+async function receiveWebRTCCall(callId) {
+  if (!callId) return;
+
+  await joinWebRTCCall(callId);
+
+  console.log("Receiving Vidora WebRTC call:", callId);
+}
+
 /* 14) NOTIFICATIONS */
 function renderNotifications() {
   const box = $("notificationList"); if (!box) return;
