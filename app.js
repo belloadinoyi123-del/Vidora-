@@ -983,6 +983,18 @@ async function joinWebRTCCall(callId) {
 
   console.log("Joined Vidora WebRTC call:", callId);
 }
+   /* RECEIVE VIDORA WEBRTC CALL */
+
+async function receiveWebRTCCall(callId) {
+  if (!callId) return;
+
+  activeCallId = callId;
+  isCallInitiator = false;
+
+  await joinWebRTCCall(callId);
+
+  console.log("Receiving Vidora WebRTC call:", callId);
+}
    
   if (callChannel) {
     try {
