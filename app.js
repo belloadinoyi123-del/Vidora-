@@ -927,23 +927,46 @@ function startVoiceCall(name) { activeCallType = "voice"; openCallUI("Voice Call
 async function startVideoCall(name) {
   activeCallType = "video";
 
+  if (!activeChatUser || !activeChatUser.id) {
+    alert("Open a chat with the person you want to call first.");
+    return;
+  }
+
   openCallUI("Video Call", name, false);
 
   await startLocalCamera(false);
-
-  if (!activeChatUser || !activeChatUser.id) {
-    console.log("No chat user selected.");
-    return;
-  }
 
   const callId = [
     currentUser.id,
     activeChatUser.id
   ].sort().join("-");
 
+  activeCallId = callId;
   activeCallUserId = activeChatUser.id;
 
   await startWebRTCCall(callId, true);
+
+  const receiverChannel = supabaseClient.channel(
+    "vidora-user-" + activeChatUser.id
+  );
+
+  await receiverChannel.subscribe();
+
+  await receiverChannel.send({
+    type: "broadcast",
+    event: "incoming-call",
+    payload: {
+      callId: callId,
+      callerId: currentUser.id,
+      callerName:
+        currentUser.username ||
+        currentUser.display_name ||
+        "Vidora User",
+      callType: "video"
+    }
+  });
+
+  console.log("Incoming call signal sent.");
 }
 
    
