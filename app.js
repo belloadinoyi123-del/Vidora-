@@ -973,6 +973,17 @@ function endCall() { stopLocalCamera(); activeCallType = null; $("callPanel")?.c
 /* WEBRTC SIGNALING */
 
 async function createCallChannel(callId) {
+async function joinWebRTCCall(callId) {
+  activeCallId = callId;
+  isCallInitiator = false;
+
+  await createCallChannel(callId);
+
+  createWebRTCPeer();
+
+  console.log("Joined Vidora WebRTC call:", callId);
+}
+   
   if (callChannel) {
     try {
       await supabaseClient.removeChannel(callChannel);
