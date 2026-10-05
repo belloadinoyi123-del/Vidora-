@@ -956,7 +956,18 @@ async function startWebRTCCall(callId, isCaller) {
     );
   }
 }
-function startHologramCall(name) { activeCallType = "hologram"; openCallUI("Hologram Call", name, true); startLocalCamera(true); }
+async function startHologramCall(name) {
+  activeCallType = "hologram";
+
+  openCallUI("Hologram Call", name, true);
+
+  await startLocalCamera(true);
+
+  if (currentUser) {
+    const callId = "call-" + currentUser.id;
+    await startWebRTCCall(callId, true);
+  }
+}
 function endCall() { stopLocalCamera(); activeCallType = null; $("callPanel")?.classList.add("hidden"); }
 
 /* WEBRTC SIGNALING */
