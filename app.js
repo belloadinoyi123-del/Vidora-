@@ -167,6 +167,82 @@ function showStatus(el,msg,ok=false){
 
 
 /* =========================
+   UPLOAD MEDIA
+========================= */
+
+async function uploadMedia(file, folder="posts"){
+
+  if(!user){
+    throw new Error("You must be logged in to upload.");
+  }
+
+  if(!file){
+    throw new Error("No file provided.");
+  }
+
+  const ext =
+    (file.name && file.name.includes("."))
+    ?
+    file.name.split(".").pop().toLowerCase()
+    :
+    (
+      file.type.startsWith("video/")
+      ?
+      "mp4"
+      :
+      file.type.startsWith("audio/")
+      ?
+      "webm"
+      :
+      "jpg"
+    );
+
+  const path =
+    folder +
+    "/" +
+    user.id +
+    "/" +
+    Date.now() +
+    "-" +
+    Math.random().toString(36).slice(2,8) +
+    "." +
+    ext;
+
+  const {
+    data,
+    error
+  } = await sb.storage
+    .from("media")
+    .upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type || undefined
+    });
+
+  if(error){
+    throw new Error(
+      error.message ||
+      "Upload failed."
+    );
+  }
+
+  const {
+    data: pub
+  } = sb.storage
+    .from("media")
+    .getPublicUrl(data?.path || path);
+
+  if(!pub?.publicUrl){
+    throw new Error(
+      "Could not get public URL for uploaded file."
+    );
+  }
+
+  return pub.publicUrl;
+}
+
+
+/* =========================
    AUTH
 ========================= */
 
@@ -614,7 +690,8 @@ async function renderPost(p){
     {data:author},
     {count:likes},
     {count:comments},
-    {data:liked}
+    {data:liked},
+    trackResult
   ] = await Promise.all([
 
     sb
@@ -646,9 +723,21 @@ async function renderPost(p){
       .select("id")
       .eq("post_id",p.id)
       .eq("user_id",user.id)
+      .maybeSingle(),
+
+    p.music_id
+    ?
+    sb
+      .from("tracks")
+      .select("id,title,artist,audio_url")
+      .eq("id",p.music_id)
       .maybeSingle()
+    :
+    Promise.resolve({data:null})
 
   ]);
+
+  const track = trackResult?.data || null;
 
 
   const media =
@@ -669,6 +758,43 @@ async function renderPost(p){
         src="${esc(p.media_url)}"
         alt="Vidora post">
     `;
+
+
+  const musicHtml =
+    track
+    ?
+    `
+      <div class="panel" style="margin-top:8px;padding:8px 10px">
+        <div class="row" style="gap:8px;align-items:center">
+          <span>🎵</span>
+          <div style="flex:1;min-width:0">
+            <b>${esc(track.title || "Track")}</b>
+            ${
+              track.artist
+              ?
+              `<div class="muted">${esc(track.artist)}</div>`
+              :
+              ""
+            }
+          </div>
+        </div>
+        ${
+          track.audio_url
+          ?
+          `
+            <audio
+              controls
+              style="width:100%;margin-top:6px"
+              src="${esc(track.audio_url)}">
+            </audio>
+          `
+          :
+          ""
+        }
+      </div>
+    `
+    :
+    "";
 
 
   return `
@@ -719,6 +845,8 @@ async function renderPost(p){
       </div>
 
       ${media}
+
+      ${musicHtml}
 
       ${
         p.caption
@@ -1705,6 +1833,20 @@ async function renderCreate(){
           Select music for your post.
         </div>
 
+        <input
+          id="musicSearch"
+          class="field"
+          placeholder="Filter songs..."
+          oninput="filterMusic(this.value)"
+          style="margin-top:8px">
+
+        <div
+          id="selectedMusicLabel"
+          class="muted"
+          style="margin-top:6px">
+          No song selected.
+        </div>
+
         <div
           id="musicList"
           class="wrap"
@@ -1747,11 +1889,16 @@ async function renderCreate(){
   `;
 
 
+  selectedMusic = null;
+  window._musicTracks = [];
   await loadMusic();
 }
 
 
 async function loadMusic(){
+
+  const box = $("musicList");
+  if(!box) return;
 
   const {
     data,
@@ -1770,23 +1917,40 @@ async function loadMusic(){
 
   if(error){
 
-    $("musicList").innerHTML =
+    box.innerHTML =
       `
         <span class="muted">
-          Music library unavailable.
+          Music library unavailable: ${esc(error.message)}
         </span>
       `;
 
     return;
   }
 
+  window._musicTracks = data || [];
 
-  $("musicList").innerHTML =
-    (data||[])
-      .map(t=>`
+  renderMusicList(window._musicTracks);
+}
+
+
+function renderMusicList(list){
+
+  const box = $("musicList");
+  if(!box) return;
+
+  box.innerHTML =
+    (list||[])
+      .map(t=>{
+
+        const isSelected =
+          selectedMusic &&
+          selectedMusic.id === t.id;
+
+        return `
 
         <button
-          class="btn"
+          class="btn ${isSelected ? "primary" : ""}"
+          data-music-id="${esc(t.id)}"
           onclick="selectMusic('${t.id}')">
 
           🎵 ${esc(t.title)}
@@ -1801,16 +1965,46 @@ async function loadMusic(){
 
         </button>
 
-      `)
+      `;
+      })
       .join("")
 
     ||
 
     `
       <span class="muted">
-        No tracks added yet.
+        No tracks found.
       </span>
     `;
+}
+
+
+function filterMusic(q){
+
+  const term =
+    (q || "")
+      .trim()
+      .toLowerCase();
+
+  const all =
+    window._musicTracks || [];
+
+  if(!term){
+    renderMusicList(all);
+    return;
+  }
+
+  const filtered =
+    all.filter(t=>
+      (t.title || "")
+        .toLowerCase()
+        .includes(term) ||
+      (t.artist || "")
+        .toLowerCase()
+        .includes(term)
+    );
+
+  renderMusicList(filtered);
 }
 
 
@@ -1828,6 +2022,21 @@ async function selectMusic(id){
   selectedMusic =
     data||null;
 
+
+  const label = $("selectedMusicLabel");
+
+  if(label){
+    label.textContent =
+      selectedMusic
+      ?
+      `Selected: ${selectedMusic.title}${selectedMusic.artist ? " — " + selectedMusic.artist : ""}`
+      :
+      "No song selected.";
+  }
+
+  renderMusicList(
+    window._musicTracks || []
+  );
 
   toast(
     selectedMusic
@@ -4123,6 +4332,12 @@ window.publishStory =
 
 window.selectMusic =
   selectMusic;
+
+window.filterMusic =
+  filterMusic;
+
+window.renderMusicList =
+  renderMusicList;
 
 window.deletePost =
   deletePost;
