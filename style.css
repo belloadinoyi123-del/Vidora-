@@ -193,6 +193,24 @@ textarea.field{
   color:var(--success);
 }
 
+.toast{
+  position:fixed;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:9999;
+  max-width:min(420px,calc(100vw - 24px));
+  padding:12px 18px;
+  border-radius:14px;
+  background:rgba(17,17,26,.96);
+  border:1px solid var(--border);
+  color:var(--text);
+  box-shadow:var(--shadow);
+  text-align:center;
+  font-size:14px;
+  font-weight:600;
+}
+
 
 /* =========================
    AUTH
