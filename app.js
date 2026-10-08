@@ -1,1259 +1,2818 @@
-/* =========================================================
-   VIDORA - PROFESSIONAL SOCIAL APP.JS
-   ========================================================= */
-console.log("VIDORA PROFESSIONAL APP LOADED");
+const SUPABASE_URL="https://htnrqgzxkfktwoioscjr.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="YOUR_SUPABASE_PUBLISHABLE_KEY";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 
-/* 1) SUPABASE */
-const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
-const SUPABASE_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h"
-
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-});
-
-/* 2) STATE */
-/* 2) STATE */
-let currentUser = null;
-let feedLoading = false;
-let selectedVidoraSound = null;
-let selectedVidoraFilter = "normal";
-let vidoraAudioPlayer = null;
-let activeChatUser = null;
-let activeCallType = null;
-let localStream = null;
-let muteOriginalAudio = false;
-
-/* WEBRTC CALL STATE */
-let peerConnection = null;
-let callChannel = null;
-let remoteStream = null;
-let activeCallUserId = null;
-let activeCallId = null;
-let pendingIceCandidates = [];
-let isCallInitiator = false;
-
-const WEBRTC_CONFIG = {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" }
-  ]
-};
-
-const localChats = JSON.parse(localStorage.getItem("vidoraLocalChats") || "{}");
-const localNotifications = JSON.parse(localStorage.getItem("vidoraNotifications") || "[]");
-
-/* 3) HELPERS */
-function $(id) { return document.getElementById(id); }
-function setMessage(id, msg, ok) {
-  const el = $(id); if (!el) return;
-  el.textContent = msg || "";
-  el.style.color = ok ? "#4ade80" : "#ff6b6b";
-}
-function clearMessage(id) { const el = $(id); if (el) el.textContent = ""; }
-function escapeHTML(v) {
-  const d = document.createElement("div");
-  d.textContent = v == null ? "" : String(v);
-  return d.innerHTML;
-}
-function fileExt(file) {
-  if (!file?.name) return "bin";
-  const p = file.name.split(".");
-  return p.length < 2 ? "bin" : p.pop().toLowerCase();
-}
-function safeName(file) {
-  const id = (crypto.randomUUID && crypto.randomUUID()) || (Date.now() + "-" + Math.random().toString(36).slice(2));
-  return id + "." + fileExt(file);
-}
-function formatDate(s) {
-  const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? "" : d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
-}
-function saveChats() { localStorage.setItem("vidoraLocalChats", JSON.stringify(localChats)); }
-function saveNotes() { localStorage.setItem("vidoraNotifications", JSON.stringify(localNotifications)); }
-
-function pushNotification(type, text, fromUser) {
-  localNotifications.unshift({
-    id: Date.now() + Math.random(),
-    type, text, fromUser: fromUser || "Someone",
-    at: new Date().toISOString(),
-    read: false
-  });
-  if (localNotifications.length > 100) localNotifications.length = 100;
-  saveNotes();
-  renderNotifications();
-}
-
-/* 4) AVATARS (unchanged set) */
-const VIDORA_AVATARS = {
-  nova:  { id: "nova",  name: "Nova",  image: "./nova.png" },
-  kai:   { id: "kai",   name: "Kai",   image: "./kai.png" },
-  luna:  { id: "luna",  name: "Luna",  image: "./luna.png" },
-  ivy:   { id: "ivy",   name: "Ivy",   image: "./ivy.png" },
-  orion: { id: "orion", name: "Orion", image: "./orion.png" },
-  zeno:  { id: "zeno",  name: "Zeno",  image: "./zeno.png" },
-  sage:  { id: "sage",  name: "Sage",  image: "./sage.png" },
-  rex:   { id: "rex",   name: "Rex",   image: "./rex.png" },
-  pixel: { id: "pixel", name: "Pixel", image: "./pixel.png" },
-  vexa:  { id: "vexa",  name: "Vexa",  image: "./vexa.png" }
-};
-
-function getSelectedVidoraAvatar() {
-  const s = localStorage.getItem("vidoraSelectedAvatar");
-  return s && VIDORA_AVATARS[s] ? s : "nova";
-}
-function getVidoraAvatarInfo(name) {
-  const key = String(name || "").toLowerCase().trim();
-  return VIDORA_AVATARS[key] || VIDORA_AVATARS.nova;
-}
-function selectVidoraAvatar(name) {
-  const key = String(name || "").toLowerCase().trim();
-  if (!VIDORA_AVATARS[key]) return;
-  localStorage.setItem("vidoraSelectedAvatar", key);
-  document.querySelectorAll(".vidoraAvatar").forEach(function (b) {
-    b.classList.toggle("selected", (b.dataset.avatar || "").toLowerCase() === key);
-  });
-  const info = getVidoraAvatarInfo(key);
-  const preview = $("profileAvatarPreview");
-  if (preview) preview.innerHTML = '<img class="profileAvatarImage" src="' + info.image + '" alt="' + info.name + '">';
-  const profileAvatar = $("profileAvatar");
-  if (profileAvatar) renderDefaultAvatar(profileAvatar, info.name);
-}
-function renderDefaultAvatar(container, displayName) {
-  if (!container) return;
-  const info = getVidoraAvatarInfo(getSelectedVidoraAvatar());
-  container.innerHTML = "";
-  const img = document.createElement("img");
-  img.className = "profileAvatarImage";
-  img.src = info.image;
-  img.alt = displayName || info.name;
-  img.onerror = function () {
-    container.innerHTML = "<span>" + (displayName || "V").charAt(0).toUpperCase() + "</span>";
-  };
-  container.appendChild(img);
-}
-function initializeVidoraAvatarSystem() {
-  const selected = getSelectedVidoraAvatar();
-  const box = $("vidoraAvatarChoices");
-  if (!box) return;
-  box.innerHTML = "";
-  Object.keys(VIDORA_AVATARS).forEach(function (key) {
-    const a = VIDORA_AVATARS[key];
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "vidoraAvatar" + (key === selected ? " selected" : "");
-    btn.dataset.avatar = key;
-    btn.innerHTML = '<img src="' + a.image + '" alt="' + a.name + '"><span>' + a.name + "</span>";
-    btn.onclick = function () { selectVidoraAvatar(key); };
-    box.appendChild(btn);
-  });
-}
-
-/* Interactive avatar - broader answers */
-function getAvatarReply(text) {
-  const msg = String(text || "").toLowerCase().trim();
-
-  if (!msg) return "Ask me anything about Vidora, or life in general.";
-  if (/(home|feed)/.test(msg)) { showPage("home"); return "Opening Home."; }
-  if (/profile/.test(msg)) { showPage("profile"); return "Opening your profile."; }
-  if (/(create|post|upload)/.test(msg)) { showPage("create"); return "Let's create a post."; }
-  if (/(chat|message)/.test(msg)) { showPage("chat"); return "Opening chat."; }
-  if (/(discover|explore|search)/.test(msg)) { showPage("discover"); return "Opening Discover."; }
-  if (/(story|stories)/.test(msg)) { showPage("home"); return "Stories are on Home. Add one from the story row."; }
-  if (/(follow|followers)/.test(msg)) return "Open any user post and use Follow / Unfollow.";
-  if (/(block)/.test(msg)) return "Use Block on a user profile/post actions to stop seeing them.";
-  if (/(like|comment)/.test(msg)) return "On each post you can like, unlike, comment, or delete your own comment.";
-  if (/(call|video|hologram|voice)/.test(msg)) return "Open chat with a user, then use Voice, Video, or Hologram Call.";
-  if (/(filter)/.test(msg)) return "In Create Post, pick a filter before publishing.";
-  if (/(song|beat|funk|music|sound)/.test(msg)) return "In Create, choose Funk/Beats/Trending or upload your own song.";
-  if (/(hello|hi|hey)\b/.test(msg)) return "Hey! I'm your Vidora assistant. Ask me anything.";
-  if (/help/.test(msg)) return "I can guide you around Vidora, explain features, or answer general questions.";
-  if (/who are you|what are you/.test(msg)) return "I'm Vidora's interactive avatar assistant — here to guide and answer questions.";
-  if (/how are you/.test(msg)) return "All good and ready to help.";
-  if (/thank/.test(msg)) return "You're welcome.";
-  if (/love|life|motivation|sad|happy/.test(msg)) return "Whatever you're feeling, take one small step today. I'm here if you need guidance on Vidora too.";
-  if (/weather/.test(msg)) return "I can't read live weather here, but I can help you post, chat, or call on Vidora.";
-  if (/time/.test(msg)) return "Local time is about " + new Date().toLocaleTimeString() + ".";
-  if (/date/.test(msg)) return "Today is " + new Date().toLocaleDateString() + ".";
-  if (/delete account/.test(msg)) return "In Profile, use Delete Account. This permanently removes your Vidora account.";
-
-  return "Interesting question. On Vidora you can post, story, chat, call, follow, and more. Ask me how to do any of that — or ask a general question and I'll help as best I can.";
-}
-
-function showInteractiveAvatar() {
-  if (!interactiveAvatarEnabled) return;
-  const box = $("interactiveAvatar");
-  const img = $("interactiveAvatarImage");
-  if (!box || !img) return;
-  const info = getVidoraAvatarInfo(getSelectedVidoraAvatar());
-  img.src = info.image;
-  img.onerror = function () { img.src = "./nova.png"; };
-  box.classList.remove("hidden");
-}
-function closeInteractiveAvatar() { const b = $("interactiveAvatar"); if (b) b.classList.add("hidden"); }
-function toggleInteractiveAvatar(on) {
-  interactiveAvatarEnabled = !!on;
-  localStorage.setItem("vidoraInteractiveAvatar", on ? "true" : "false");
-  if (on) showInteractiveAvatar(); else closeInteractiveAvatar();
-}
-function openAvatarChat() { $("avatarChatPanel")?.classList.remove("hidden"); }
-function closeAvatarChat() { $("avatarChatPanel")?.classList.add("hidden"); }
-function sendAvatarMessage() {
-  const input = $("avatarChatInput");
-  const box = $("avatarChatMessages");
-  if (!input || !box) return;
-  const text = input.value.trim();
-  if (!text) return;
-  const u = document.createElement("div");
-  u.className = "avatarChatMessage avatarUser";
-  u.textContent = text;
-  box.appendChild(u);
-  input.value = "";
-  setTimeout(function () {
-    const b = document.createElement("div");
-    b.className = "avatarChatMessage avatarBot";
-    b.textContent = getAvatarReply(text);
-    box.appendChild(b);
-    box.scrollTop = box.scrollHeight;
-  }, 350);
-}
-
-/* 5) FILTERS + SONGS */
-const VIDORA_FILTERS = [
-  { id: "normal", name: "Normal", css: "none" },
-  { id: "vivid", name: "Vivid", css: "contrast(1.2) saturate(1.45)" },
-  { id: "warm", name: "Warm", css: "sepia(0.28) saturate(1.25)" },
-  { id: "cool", name: "Cool", css: "hue-rotate(18deg) saturate(1.15)" },
-  { id: "mono", name: "Mono", css: "grayscale(1)" },
-  { id: "fade", name: "Fade", css: "contrast(0.9) brightness(1.12) saturate(0.8)" },
-  { id: "cinema", name: "Cinema", css: "contrast(1.28) saturate(0.88) brightness(0.94)" },
-  { id: "glow", name: "Glow", css: "brightness(1.16) saturate(1.3)" },
-  { id: "sunset", name: "Sunset", css: "sepia(0.4) saturate(1.45) hue-rotate(-12deg)" },
-  { id: "arctic", name: "Arctic", css: "hue-rotate(175deg) saturate(0.75) brightness(1.06)" },
-  { id: "pink", name: "Pink", css: "hue-rotate(-20deg) saturate(1.4)" },
-  { id: "sharp", name: "Sharp", css: "contrast(1.35) saturate(1.1)" }
+const OLD_AVATARS=[
+ {name:"Nova",file:"./nova.png",cat:"Original"},
+ {name:"Kai",file:"./kai.png",cat:"Original"},
+ {name:"Luna",file:"./luna.png",cat:"Original"},
+ {name:"Ivy",file:"./ivy.png",cat:"Original"},
+ {name:"Orion",file:"./orion.png",cat:"Original"},
+ {name:"Zeno",file:"./zeno.png",cat:"Original"},
+ {name:"Sage",file:"./sage.png",cat:"Original"},
+ {name:"Rex",file:"./rex.png",cat:"Original"},
+ {name:"Pixel",file:"./pixel.png",cat:"Original"},
+ {name:"Vexa",file:"./vexa.png",cat:"Original"}
 ];
 
-const VIDORA_SONGS = [
-  { id: "night-funk", name: "Night Funk", artist: "Vidora Mix", type: "funk", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-  { id: "city-groove", name: "City Groove", artist: "Pulse Lab", type: "funk", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-  { id: "heavy-room", name: "Heavy Room", artist: "Beat Foundry", type: "beats", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
-  { id: "bounce-check", name: "Bounce Check", artist: "Drumline", type: "beats", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
-  { id: "viral-wave", name: "Viral Wave", artist: "Trend Audio", type: "trending", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
-  { id: "soft-scroll", name: "Soft Scroll", artist: "Feed Tunes", type: "trending", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" }
-];
+const NEW_AVATARS=[
+ "Aero","Mika","Juno","Kairo","Nia","Zara","Axel","Riven","Sora","Nyx",
+ "Aria","Dax","Milo","Zuri","NovaX","Kira","Echo","Tari","Vio","Onyx",
+ "Cleo","Ryo","Asha","Zenith","Kairos","Mira","Jett","Niko","Lumi","Vega"
+].map((name,i)=>({
+ name,
+ file:"./avatars/"+name.toLowerCase()+".png",
+ cat:i<10?"New":"Expanded"
+}));
 
-function renderVidoraFilterChips() {
-  const box = $("vidoraFilterChips"); if (!box) return;
-  box.innerHTML = "";
-  VIDORA_FILTERS.forEach(function (f) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "filterChip" + (f.id === selectedVidoraFilter ? " active" : "");
-    b.textContent = f.name;
-    b.onclick = function () { selectVidoraFilter(f.id); };
-    box.appendChild(b);
-  });
-}
-function selectVidoraFilter(id) {
-  selectedVidoraFilter = id || "normal";
-  const f = VIDORA_FILTERS.find(x => x.id === selectedVidoraFilter);
-  document.querySelectorAll(".filterChip").forEach(function (chip) {
-    chip.classList.toggle("active", chip.textContent === (f?.name || ""));
-  });
-  const preview = $("createMediaPreview");
-  if (preview) preview.style.filter = f ? f.css : "none";
-}
-function stopVidoraSound() {
-  if (vidoraAudioPlayer) {
-    try { vidoraAudioPlayer.pause(); vidoraAudioPlayer.src = ""; } catch (e) {}
-    vidoraAudioPlayer = null;
-  }
-}
-function playSong(songId) {
-  const song = VIDORA_SONGS.find(s => s.id === songId) || (selectedVidoraSound && selectedVidoraSound.id === songId ? selectedVidoraSound : null);
-  if (!song?.audioUrl) return alert("No song found.");
-  stopVidoraSound();
-  const a = new Audio(song.audioUrl);
-  a.volume = 1;
-  vidoraAudioPlayer = a;
-  a.play().catch(err => alert("Play failed: " + (err.message || "error")));
-}
-function openVidoraSongs(type) {
-  const panel = $("vidoraSoundPanel");
-  const list = $("vidoraSoundList");
-  if (!panel || !list) return;
-  const songs = !type || type === "all" ? VIDORA_SONGS : VIDORA_SONGS.filter(s => s.type === type);
-  list.innerHTML = "";
-  songs.forEach(function (song) {
-    const row = document.createElement("div");
-    row.className = "soundItemRow";
-    row.innerHTML = "<div class='soundMeta'><strong>" + escapeHTML(song.name) + "</strong><small>" +
-      escapeHTML(song.artist) + " · " + escapeHTML(song.type) +
-      "</small></div><div class='soundActions'><button type='button' class='secondary'>▶</button><button type='button'>Use</button></div>";
-    row.querySelectorAll("button")[0].onclick = function (e) { e.preventDefault(); playSong(song.id); };
-    row.querySelectorAll("button")[1].onclick = function (e) {
-      e.preventDefault();
-      selectedVidoraSound = song;
-      $("selectedSoundName").textContent = song.name;
-      $("selectedSoundArtist").textContent = song.artist + " · " + song.type;
-      $("selectedVidoraSound")?.classList.remove("hidden");
-    };
-    list.appendChild(row);
-  });
-  panel.classList.remove("hidden");
-}
-function closeVidoraSounds() { $("vidoraSoundPanel")?.classList.add("hidden"); }
-function removeVidoraSound() {
-  selectedVidoraSound = null;
-  stopVidoraSound();
-  $("selectedVidoraSound")?.classList.add("hidden");
-}
-function handleCustomSoundUpload(e) {
-  const file = e?.target?.files?.[0];
-  if (!file) return;
-  if (!file.type.startsWith("audio/")) return alert("Choose an audio file.");
-  selectedVidoraSound = {
-    id: "custom-" + Date.now(),
-    name: file.name || "My Song",
-    artist: "Uploaded by you",
-    type: "upload",
-    audioUrl: URL.createObjectURL(file),
-    file
-  };
-  $("selectedSoundName").textContent = selectedVidoraSound.name;
-  $("selectedSoundArtist").textContent = selectedVidoraSound.artist;
-  $("selectedVidoraSound")?.classList.remove("hidden");
-}
-function playSelectedCustomSound() {
-  if (!selectedVidoraSound?.audioUrl) return alert("Choose or upload a song first.");
-  stopVidoraSound();
-  const a = new Audio(selectedVidoraSound.audioUrl);
-  vidoraAudioPlayer = a;
-  a.play().catch(err => alert("Play failed: " + (err.message || "error")));
-}
-function toggleMuteOriginalAudio() {
-  muteOriginalAudio = !muteOriginalAudio;
-  const btn = $("muteOriginalBtn");
-  if (btn) btn.textContent = muteOriginalAudio ? "🔇 Original muted" : "🔊 Original audio";
+const AVATARS=[...OLD_AVATARS,...NEW_AVATARS];
+
+let user=null;
+let profile=null;
+let currentView="home";
+let selectedAvatar=null;
+let uploadedAvatarUrl=null;
+let storyItems=[];
+let storyIndex=0;
+let commentsPost=null;
+let chatUser=null;
+let selectedMusic=null;
+let assistantHistory=[];
+let realtimeChannel=null;
+
+const $=id=>document.getElementById(id);
+
+function toast(msg){
+ const el=$("toast");
+ if(!el)return;
+ el.textContent=msg;
+ el.classList.remove("hidden");
+ setTimeout(()=>el.classList.add("hidden"),2500);
 }
 
-/* 6) AUTH */
-function showAuthScreen() {
+function esc(v=""){
+ return String(v).replace(/[&<>"']/g,m=>({
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#039;"
+ }[m]));
+}
+
+function fallbackAvatar(name="V"){
+ return "data:image/svg+xml;charset=UTF-8,"+
+ encodeURIComponent(`
+ <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160">
+ <defs>
+ <linearGradient id="g">
+ <stop stop-color="#8b5cf6"/>
+ <stop offset="1" stop-color="#ff2d75"/>
+ </linearGradient>
+ </defs>
+ <rect width="100%" height="100%" rx="80" fill="#181824"/>
+ <circle cx="80" cy="62" r="30" fill="url(#g)"/>
+ <path d="M30 145c8-43 92-43 100 0" fill="url(#g)"/>
+ <text x="80" y="153" text-anchor="middle"
+ fill="white" font-size="14" font-family="Arial">
+ ${esc(name).slice(0,1)}
+ </text>
+ </svg>
+ `);
+}
+
+function avatarSrc(a){
+ if(!a)return fallbackAvatar("V");
+ if(a.startsWith("http")||a.startsWith("data:"))return a;
+ return a;
+}
+
+function showStatus(el,msg,ok=false){
+ if(!el)return;
+ el.textContent=msg;
+ el.className="status "+(ok?"ok":"err");
+}
+
+/* =========================
+   AUTHENTICATION
+========================= */
+
+async function init(){
+ const {data:{session}}=await sb.auth.getSession();
+
+ if(session){
+  await enterApp(session.user);
+ }else{
   $("authScreen")?.classList.remove("hidden");
-  $("app")?.classList.add("hidden");
-}
-function showAppScreen() {
-  $("authScreen")?.classList.add("hidden");
-  $("app")?.classList.remove("hidden");
-}
-function showAuthChoice() {
-  $("authChoice")?.classList.remove("hidden");
-  $("loginForm")?.classList.add("hidden");
-  $("signupForm")?.classList.add("hidden");
-  clearMessage("authMessage");
-}
-function showLoginForm() {
-  $("authChoice")?.classList.add("hidden");
-  $("loginForm")?.classList.remove("hidden");
-  $("signupForm")?.classList.add("hidden");
-  clearMessage("authMessage");
-}
-function showCreateAccount() {
-  $("authChoice")?.classList.add("hidden");
-  $("loginForm")?.classList.add("hidden");
-  $("signupForm")?.classList.remove("hidden");
-  clearMessage("authMessage");
-}
-function togglePassword(id, btn) {
-  const input = $(id); if (!input) return;
-  input.type = input.type === "password" ? "text" : "password";
-  if (btn) btn.textContent = input.type === "password" ? "👁" : "🙈";
-}
+ }
 
-async function signUp() {
-  const email = $("signupEmail")?.value.trim();
-  const password = $("signupPassword")?.value || "";
-  const confirm = $("signupPasswordConfirm")?.value || "";
-  const username = $("signupUsername")?.value.trim().toLowerCase();
-  const displayName = $("signupDisplayName")?.value.trim();
-  const age = Number($("signupAge")?.value);
-  const msg = $("authMessage");
-  const btn = $("signUpBtn");
-
-  if (!email || !password || !confirm || !username || !displayName || !$("signupAge")?.value) {
-    if (msg) msg.textContent = "Please complete all fields."; return;
+ sb.auth.onAuthStateChange(async(event,session)=>{
+  if(
+   (event==="SIGNED_IN"||
+    event==="TOKEN_REFRESHED")&&
+   session
+  ){
+   await enterApp(session.user);
   }
-  if (password.length < 6) { if (msg) msg.textContent = "Password must be 6+ characters."; return; }
-  if (password !== confirm) { if (msg) msg.textContent = "Passwords do not match."; return; }
-  if (!Number.isFinite(age) || age < 13) { if (msg) msg.textContent = "You must be at least 13."; return; }
-  if (!/^[a-z0-9_]{3,20}$/.test(username)) { if (msg) msg.textContent = "Username: 3-20 letters/numbers/_"; return; }
 
-  if (btn) { btn.disabled = true; btn.textContent = "Creating..."; }
-  try {
-    const { data, error } = await supabaseClient.auth.signUp({ email, password });
-    if (error) { if (msg) msg.textContent = error.message; return; }
-    const user = data?.user;
-    if (!user) { if (msg) msg.textContent = "Check your email to confirm your account."; return; }
+  if(event==="SIGNED_OUT"){
+   user=null;
+   profile=null;
+   $("app")?.classList.add("hidden");
+   $("authScreen")?.classList.remove("hidden");
+  }
+ });
+}
 
-    const { error: pErr } = await supabaseClient.from("profiles").upsert({
-      id: user.id, username, display_name: displayName, age, bio: "", avatar_url: null
+async function enterApp(u){
+ user=u;
+
+ $("authScreen")?.classList.add("hidden");
+ $("app")?.classList.remove("hidden");
+
+ await loadProfile();
+ await loadNotifications();
+ await renderView("home");
+ subscribeRealtime();
+}
+
+async function loadProfile(){
+ const {data,error}=await sb
+  .from("profiles")
+  .select("*")
+  .eq("id",user.id)
+  .maybeSingle();
+
+ if(error){
+  toast(error.message);
+  return;
+ }
+
+ profile=data;
+}
+
+async function login(){
+ const email=$("authEmail")?.value.trim();
+ const password=$("authPassword")?.value;
+
+ if(!email||!password){
+  return showStatus(
+   $("authStatus"),
+   "Enter your email and password."
+  );
+ }
+
+ const {error}=await sb.auth.signInWithPassword({
+  email,
+  password
+ });
+
+ if(error){
+  showStatus($("authStatus"),error.message);
+ }
+}
+
+async function signup(){
+ const email=$("authEmail")?.value.trim();
+ const password=$("authPassword")?.value;
+ const username=$("authUsername")?.value.trim();
+
+ if(!email||!password||!username){
+  return showStatus(
+   $("authStatus"),
+   "Enter email, password and username."
+  );
+ }
+
+ if(password.length<6){
+  return showStatus(
+   $("authStatus"),
+   "Password must be at least 6 characters."
+  );
+ }
+
+ const {data,error}=await sb.auth.signUp({
+  email,
+  password,
+  options:{
+   data:{username}
+  }
+ });
+
+ if(error){
+  return showStatus($("authStatus"),error.message);
+ }
+
+ if(data.user){
+  const {error:profileError}=await sb
+   .from("profiles")
+   .upsert({
+    id:data.user.id,
+    username,
+    display_name:username
+   });
+
+  if(profileError){
+   console.error(profileError);
+  }
+
+  showStatus(
+   $("authStatus"),
+   "Account created. Check your email if confirmation is enabled.",
+   true
+  );
+ }
+}
+
+/* =========================
+   NAVIGATION
+========================= */
+
+async function renderView(view){
+ currentView=view;
+
+ document
+  .querySelectorAll(".nav button")
+  .forEach(b=>{
+   b.classList.toggle(
+    "active",
+    b.dataset.view===view
+   );
+  });
+
+ if(view==="home")return renderHome();
+ if(view==="discover")return renderDiscover();
+ if(view==="create")return renderCreate();
+ if(view==="messages")return renderMessages();
+ if(view==="profile")return renderProfile(user.id);
+}
+
+/* =========================
+   BLOCKS
+========================= */
+
+async function blockedIds(){
+ const {data}=await sb
+  .from("blocks")
+  .select("blocked_id")
+  .eq("blocker_id",user.id);
+
+ return new Set(
+  (data||[]).map(x=>x.blocked_id)
+ );
+}
+
+/* =========================
+   HOME
+========================= */
+
+async function renderHome(){
+ $("main").innerHTML=`
+ <section class="panel">
+  <div class="title">Stories</div>
+  <div id="stories" class="storybar">
+   Loading...
+  </div>
+ </section>
+
+ <div id="feed">
+  Loading feed...
+ </div>
+ `;
+
+ await renderStories();
+
+ const blocked=await blockedIds();
+
+ const {data:posts,error}=await sb
+  .from("posts")
+  .select(
+   "id,user_id,media_url,media_type,caption,created_at,music_id"
+  )
+  .order("created_at",{ascending:false})
+  .limit(40);
+
+ if(error){
+  $("feed").textContent=error.message;
+  return;
+ }
+
+ const visible=(posts||[])
+  .filter(p=>!blocked.has(p.user_id));
+
+ const html=await Promise.all(
+  visible.map(renderPost)
+ );
+
+ $("feed").innerHTML=
+  html.join("")||
+  `<div class="panel muted">No posts yet.</div>`;
+}
+
+async function renderPost(p){
+ const [
+  {data:author},
+  {count:likes},
+  {count:comments},
+  {data:liked}
+ ]=await Promise.all([
+  sb
+   .from("profiles")
+   .select("username,display_name,avatar_url")
+   .eq("id",p.user_id)
+   .maybeSingle(),
+
+  sb
+   .from("post_likes")
+   .select("*",{count:"exact",head:true})
+   .eq("post_id",p.id),
+
+  sb
+   .from("comments")
+   .select("*",{count:"exact",head:true})
+   .eq("post_id",p.id),
+
+  sb
+   .from("post_likes")
+   .select("id")
+   .eq("post_id",p.id)
+   .eq("user_id",user.id)
+   .maybeSingle()
+ ]);
+
+ const media=
+  p.media_type==="video"
+  ?
+  `<video
+    class="post-media"
+    controls
+    playsinline
+    src="${esc(p.media_url)}">
+   </video>`
+  :
+  `<img
+    class="post-media"
+    src="${esc(p.media_url)}"
+    alt="Vidora post">`;
+
+ return `
+ <article class="card">
+
+  <div class="row">
+   <img
+    class="avatar sm"
+    src="${avatarSrc(author?.avatar_url)}">
+
+   <div>
+    <b>
+     ${esc(
+      author?.display_name||
+      author?.username||
+      "User"
+     )}
+    </b>
+
+    <div class="muted">
+     @${esc(author?.username||"user")}
+    </div>
+   </div>
+
+   <span class="spacer"></span>
+
+   ${
+    p.user_id===user.id
+    ?
+    `<button
+      class="iconbtn"
+      onclick="deletePost('${p.id}')">
+      🗑
+     </button>`
+    :
+    ""
+   }
+  </div>
+
+  ${media}
+
+  ${
+   p.caption
+   ?
+   `<div style="margin-top:9px">
+    ${esc(p.caption)}
+   </div>`
+   :
+   ""
+  }
+
+  <div class="post-actions">
+
+   <button
+    class="${liked?"active":""}"
+    onclick="toggleLike('${p.id}',this)">
+    ♥ ${likes||0}
+   </button>
+
+   <button
+    onclick="openComments('${p.id}')">
+    💬 ${comments||0}
+   </button>
+
+   <button
+    onclick="sharePost('${p.id}')">
+    ↗ Share
+   </button>
+
+  </div>
+
+ </article>`;
+}
+
+/* =========================
+   STORIES
+========================= */
+
+async function renderStories(){
+ const blocked=await blockedIds();
+
+ const {data:stories}=await sb
+  .from("stories")
+  .select("*")
+  .order("created_at",{ascending:false})
+  .limit(50);
+
+ storyItems=(stories||[])
+  .filter(s=>!blocked.has(s.user_id));
+
+ const users=[
+  ...new Set(
+   storyItems.map(s=>s.user_id)
+  )
+ ];
+
+ const profiles={};
+
+ if(users.length){
+  const {data}=await sb
+   .from("profiles")
+   .select("id,username,avatar_url")
+   .in("id",users);
+
+  (data||[]).forEach(
+   x=>profiles[x.id]=x
+  );
+ }
+
+ const groups={};
+
+ storyItems.forEach(s=>{
+  if(!groups[s.user_id]){
+   groups[s.user_id]=[];
+  }
+
+  groups[s.user_id].push(s);
+ });
+
+ $("stories").innerHTML=
+  Object.entries(groups)
+   .map(([id])=>{
+    const pr=profiles[id]||{};
+
+    return `
+    <button
+     class="storyitem"
+     onclick="openStoryUser('${id}')">
+
+     <div class="storyring">
+      <img
+       src="${avatarSrc(pr.avatar_url)}">
+     </div>
+
+     <small>
+      ${esc(pr.username||"Story")}
+     </small>
+
+    </button>`;
+   })
+   .join("")
+  ||
+  `<span class="muted">
+   No stories yet. Create the first one.
+  </span>`;
+}
+
+async function openStoryUser(id){
+ const arr=storyItems.filter(
+  s=>s.user_id===id
+ );
+
+ storyIndex=0;
+
+ window.currentStorySet=arr;
+
+ openStory(arr,0);
+}
+
+function openStory(arr,i){
+ if(!arr||!arr.length)return;
+
+ const s=arr[i];
+
+ if(!s)return;
+
+ window.currentStorySet=arr;
+ storyIndex=i;
+
+ const media=
+  s.media_type==="video"
+  ?
+  `<video
+   class="post-media"
+   controls
+   autoplay
+   playsinline
+   src="${esc(s.media_url)}">
+  </video>`
+  :
+  `<img
+   class="post-media"
+   src="${esc(s.media_url)}">`;
+
+ $("sheet").innerHTML=`
+ <div class="row">
+
+  <b>
+   Story ${i+1}/${arr.length}
+  </b>
+
+  <span class="spacer"></span>
+
+  <button
+   class="iconbtn"
+   onclick="closeModal()">
+   ×
+  </button>
+
+ </div>
+
+ ${media}
+
+ <div
+  class="wrap"
+  style="margin-top:10px">
+
+  <button
+   class="btn"
+   onclick="storyMove(${i-1})">
+   ← Prev
+  </button>
+
+  <button
+   class="btn"
+   onclick="storyMove(${i+1})">
+   Next →
+  </button>
+
+  ${
+   s.user_id===user.id
+   ?
+   `<button
+    class="btn danger"
+    onclick="deleteStory('${s.id}')">
+    Delete
+   </button>`
+   :
+   ""
+  }
+
+ </div>`;
+
+ $("modal").classList.remove("hidden");
+}
+
+function storyMove(i){
+ const arr=window.currentStorySet||[];
+
+ if(i<0||i>=arr.length)return;
+
+ openStory(arr,i);
+}
+
+async function publishStory(){
+ const file=$("storyFile")?.files[0];
+
+ if(!file){
+  return toast("Choose a photo or video.");
+ }
+
+ if(file.size>50*1024*1024){
+  return toast("Maximum file size is 50MB.");
+ }
+
+ try{
+  const url=await uploadMedia(file,"stories");
+
+  const {error}=await sb
+   .from("stories")
+   .insert({
+    user_id:user.id,
+    media_url:url,
+    media_type:file.type.startsWith("video/")
+     ?"video"
+     :"image"
+   });
+
+  if(error)throw error;
+
+  toast("Story published.");
+  renderView("home");
+
+ }catch(e){
+  toast(e.message);
+ }
+}
+
+/* =========================
+   POSTS
+========================= */
+
+async function publishPost(){
+ const file=$("createFile")?.files[0];
+ const caption=$("createCaption")?.value.trim();
+
+ if(!file){
+  return toast("Choose an image or video.");
+ }
+
+ if(file.size>50*1024*1024){
+  return toast("Maximum file size is 50MB.");
+ }
+
+ try{
+  const url=await uploadMedia(file,"posts");
+
+  const {error}=await sb
+   .from("posts")
+   .insert({
+    user_id:user.id,
+    media_url:url,
+    media_type:file.type.startsWith("video/")
+     ?"video"
+     :"image",
+    caption:caption||"",
+    music_id:selectedMusic?.id||null
+   });
+
+  if(error)throw error;
+
+  toast("Post published.");
+
+  if($("createFile"))$("createFile").value="";
+  if($("createCaption"))$("createCaption").value="";
+
+  selectedMusic=null;
+
+  renderView("home");
+
+ }catch(e){
+  toast(e.message);
+ }
+}
+
+async function uploadMedia(file,folder){
+ if(!file)throw new Error("No file selected.");
+
+ const ext=
+  file.name.includes(".")
+  ?
+  file.name.split(".").pop().toLowerCase()
+  :
+  "bin";
+
+ const path=
+  `${folder}/${user.id}/${crypto.randomUUID()}.${ext}`;
+
+ const {error}=await sb.storage
+  .from("media")
+  .upload(path,file,{
+   upsert:false,
+   contentType:file.type||undefined
+  });
+
+ if(error)throw error;
+
+ const {data}=sb.storage
+  .from("media")
+  .getPublicUrl(path);
+
+ return data.publicUrl;
+}
+
+async function deletePost(id){
+ if(!confirm("Delete this post?"))return;
+
+ const {error}=await sb
+  .from("posts")
+  .delete()
+  .eq("id",id)
+  .eq("user_id",user.id);
+
+ if(error){
+  return toast(error.message);
+ }
+
+ toast("Post deleted.");
+ renderView(currentView);
+}
+
+async function deleteStory(id){
+ if(!confirm("Delete this story?"))return;
+
+ const {error}=await sb
+  .from("stories")
+  .delete()
+  .eq("id",id)
+  .eq("user_id",user.id);
+
+ if(error){
+  return toast(error.message);
+ }
+
+ closeModal();
+ toast("Story deleted.");
+ renderView("home");
+}
+
+/* =========================
+   LIKES
+========================= */
+
+async function toggleLike(postId){
+ const {data}=await sb
+  .from("post_likes")
+  .select("id")
+  .eq("post_id",postId)
+  .eq("user_id",user.id)
+  .maybeSingle();
+
+ if(data){
+  await sb
+   .from("post_likes")
+   .delete()
+   .eq("id",data.id);
+ }else{
+  const {error}=await sb
+   .from("post_likes")
+   .insert({
+    post_id:postId,
+    user_id:user.id
+   });
+
+  if(error){
+   return toast(error.message);
+  }
+
+  const {data:p}=await sb
+   .from("posts")
+   .select("user_id")
+   .eq("id",postId)
+   .single();
+
+  if(p&&p.user_id!==user.id){
+   await sb
+    .from("notifications")
+    .insert({
+     user_id:p.user_id,
+     actor_id:user.id,
+     type:"like",
+     post_id:postId
     });
-    if (pErr) { if (msg) msg.textContent = "Account created, profile error: " + pErr.message; return; }
+  }
+ }
 
-    currentUser = user;
-    await showApp();
-  } catch (e) {
-    if (msg) msg.textContent = "Sign up failed.";
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "Create Account"; }
+ renderView(currentView);
+}
+
+/* =========================
+   COMMENTS
+========================= */
+
+async function openComments(postId){
+ commentsPost=postId;
+
+ const {data:comments,error}=await sb
+  .from("comments")
+  .select(
+   "id,user_id,content,created_at"
+  )
+  .eq("post_id",postId)
+  .order("created_at",{ascending:true});
+
+ if(error){
+  return toast(error.message);
+ }
+
+ const ids=[
+  ...new Set(
+   (comments||[]).map(c=>c.user_id)
+  )
+ ];
+
+ const prof={};
+
+ if(ids.length){
+  const {data}=await sb
+   .from("profiles")
+   .select("id,username,avatar_url")
+   .in("id",ids);
+
+  (data||[]).forEach(
+   x=>prof[x.id]=x
+  );
+ }
+
+ $("sheet").innerHTML=`
+ <div class="row">
+  <b>Comments</b>
+
+  <span class="spacer"></span>
+
+  <button
+   class="iconbtn"
+   onclick="closeModal()">
+   ×
+  </button>
+ </div>
+
+ <div id="commentList">
+
+ ${
+  (comments||[])
+   .map(c=>`
+    <div class="panel">
+
+     <div class="row">
+
+      <img
+       class="avatar sm"
+       src="${avatarSrc(prof[c.user_id]?.avatar_url)}">
+
+      <b>
+       @${esc(
+        prof[c.user_id]?.username||
+        "user"
+       )}
+      </b>
+
+      <span class="spacer"></span>
+
+      ${
+       c.user_id===user.id
+       ?
+       `<button
+        class="iconbtn"
+        onclick="deleteComment('${c.id}')">
+        🗑
+       </button>`
+       :
+       ""
+      }
+
+     </div>
+
+     <div style="margin-top:7px">
+      ${esc(c.content)}
+     </div>
+
+    </div>
+   `)
+   .join("")
+   ||
+   `<p class="muted">No comments yet.</p>`
+ }
+
+ </div>
+
+ <div class="row">
+  <input
+   id="commentInput"
+   class="field"
+   maxlength="500"
+   placeholder="Write a comment...">
+
+  <button
+   class="btn"
+   onclick="addComment()">
+   Send
+  </button>
+ </div>
+ `;
+
+ $("modal").classList.remove("hidden");
+}
+
+async function addComment(){
+ const content=$("commentInput")?.value.trim();
+
+ if(!content){
+  return;
+ }
+
+ if(content.length>500){
+  return toast("Comment is too long.");
+ }
+
+ const {error}=await sb
+  .from("comments")
+  .insert({
+   post_id:commentsPost,
+   user_id:user.id,
+   content
+  });
+
+ if(error){
+  return toast(error.message);
+ }
+
+ const {data:p}=await sb
+  .from("posts")
+  .select("user_id")
+  .eq("id",commentsPost)
+  .single();
+
+ if(p&&p.user_id!==user.id){
+  await sb
+   .from("notifications")
+   .insert({
+    user_id:p.user_id,
+    actor_id:user.id,
+    type:"comment",
+    post_id:commentsPost
+   });
+ }
+
+ openComments(commentsPost);
+}
+
+async function deleteComment(id){
+ const {error}=await sb
+  .from("comments")
+  .delete()
+  .eq("id",id)
+  .eq("user_id",user.id);
+
+ if(error){
+  return toast(error.message);
+ }
+
+ openComments(commentsPost);
+}
+
+async function sharePost(id){
+ const url=
+  location.origin+
+  location.pathname+
+  "?post="+encodeURIComponent(id);
+
+ try{
+  if(navigator.share){
+   await navigator.share({
+    title:"Vidora post",
+    url
+   });
+  }else if(navigator.clipboard){
+   await navigator.clipboard.writeText(url);
+   toast("Post link copied.");
+  }else{
+   toast(url);
+  }
+ }catch(e){
+  if(e.name!=="AbortError"){
+   toast("Unable to share.");
   }
 }
 
-async function login() {
-  const email = $("email")?.value.trim();
-  const password = $("password")?.value || "";
-  const msg = $("authMessage");
-  const btn = $("loginBtn");
-  if (!email || !password) { if (msg) msg.textContent = "Enter email and password."; return; }
-  if (btn) { btn.disabled = true; btn.textContent = "Logging in..."; }
-  try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) { if (msg) msg.textContent = error.message; return; }
-    currentUser = data.user;
-    await showApp();
-  } catch (e) {
-    if (msg) msg.textContent = "Login failed.";
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "Log In"; }
+/* =========================
+   CREATE
+========================= */
+
+async function renderCreate(){
+ $("main").innerHTML=`
+ <section class="panel">
+
+  <div class="title">
+   Create a post
+  </div>
+
+  <input
+   id="createFile"
+   class="field"
+   type="file"
+   accept="image/*,video/*">
+
+  <textarea
+   id="createCaption"
+   class="field"
+   maxlength="2000"
+   placeholder="Write a caption..."></textarea>
+
+  <div class="muted">
+   Maximum upload size: 50MB
+  </div>
+
+  <div
+   id="musicBox"
+   class="panel">
+   <b>Music</b>
+   <div class="muted">
+    Select music for your post.
+   </div>
+   <div
+    id="musicList"
+    class="wrap"
+    style="margin-top:8px">
+    Loading...
+   </div>
+  </div>
+
+  <button
+   class="btn primary"
+   onclick="publishPost()">
+   🚀 Publish to Vidora
+  </button>
+
+ </section>
+
+ <section class="panel">
+
+  <div class="title">
+   Create a story
+  </div>
+
+  <input
+   id="storyFile"
+   class="field"
+   type="file"
+   accept="image/*,video/*">
+
+  <button
+   class="btn primary"
+   onclick="publishStory()">
+   📖 Publish Story
+  </button>
+
+ </section>
+ `;
+
+ await loadMusic();
+}
+
+async function loadMusic(){
+ const {data,error}=await sb
+  .from("tracks")
+  .select("id,title,artist,audio_url")
+  .order("title",{ascending:true})
+  .limit(100);
+
+ if(error){
+  $("musicList").innerHTML=
+   `<span class="muted">
+    Music library unavailable.
+   </span>`;
+  return;
+ }
+
+ $("musicList").innerHTML=
+  (data||[])
+   .map(t=>`
+    <button
+     class="btn"
+     onclick="selectMusic('${t.id}')">
+     🎵 ${esc(t.title)}
+     ${t.artist?`— ${esc(t.artist)}`:""}
+    </button>
+   `)
+   .join("")
+  ||
+  `<span class="muted">
+   No tracks added yet.
+  </span>`;
+}
+
+async function selectMusic(id){
+ const {data}=await sb
+  .from("tracks")
+  .select("*")
+  .eq("id",id)
+  .maybeSingle();
+
+ selectedMusic=data||null;
+
+ toast(
+  selectedMusic
+  ?
+  `Selected ${selectedMusic.title}`
+  :
+  "Music not found."
+ );
+}
+
+/* =========================
+   DISCOVER
+========================= */
+
+async function renderDiscover(){
+ $("main").innerHTML=`
+ <section class="panel">
+
+  <div class="title">
+   Discover
+  </div>
+
+  <input
+   id="discoverSearch"
+   class="field"
+   placeholder="Search users..."
+   oninput="searchUsers(this.value)">
+
+ </section>
+
+ <div id="discoverResults">
+  <div class="panel muted">
+   Search for people on Vidora.
+  </div>
+ </div>
+ `;
+}
+
+async function searchUsers(q){
+ const box=$("discoverResults");
+
+ if(!q||q.trim().length<2){
+  box.innerHTML=`
+   <div class="panel muted">
+    Type at least 2 characters.
+   </div>`;
+  return;
+ }
+
+ const term=q.trim();
+
+ const {data,error}=await sb
+  .from("profiles")
+  .select(
+   "id,username,display_name,avatar_url,bio"
+  )
+  .or(
+   `username.ilike.%${term}%,display_name.ilike.%${term}%`
+  )
+  .limit(30);
+
+ if(error){
+  box.textContent=error.message;
+  return;
+ }
+
+ const blocked=await blockedIds();
+
+ const users=(data||[])
+  .filter(p=>p.id!==user.id)
+  .filter(p=>!blocked.has(p.id));
+
+ if(!users.length){
+  box.innerHTML=`
+   <div class="panel muted">
+    No users found.
+   </div>`;
+  return;
+ }
+
+ const html=await Promise.all(
+  users.map(async p=>{
+   const {data:follow}=await sb
+    .from("follows")
+    .select("id")
+    .eq("follower_id",user.id)
+    .eq("following_id",p.id)
+    .maybeSingle();
+
+   return `
+   <div class="card">
+
+    <div class="row">
+
+     <img
+      class="avatar"
+      src="${avatarSrc(p.avatar_url)}">
+
+     <div>
+      <b>
+       ${esc(
+        p.display_name||
+        p.username||
+        "User"
+       )}
+      </b>
+
+      <div class="muted">
+       @${esc(p.username||"user")}
+      </div>
+
+      ${
+       p.bio
+       ?
+       `<div class="muted">
+        ${esc(p.bio)}
+       </div>`
+       :
+       ""
+      }
+
+     </div>
+
+     <span class="spacer"></span>
+
+     <button
+      class="btn"
+      onclick="toggleFollow('${p.id}')">
+      ${follow?"Following":"Follow"}
+     </button>
+
+    </div>
+
+   </div>`;
+  })
+ );
+
+ box.innerHTML=html.join("");
+}
+
+/* =========================
+   FOLLOW
+========================= */
+
+async function toggleFollow(id){
+ const {data}=await sb
+  .from("follows")
+  .select("id")
+  .eq("follower_id",user.id)
+  .eq("following_id",id)
+  .maybeSingle();
+
+ if(data){
+  await sb
+   .from("follows")
+   .delete()
+   .eq("id",data.id);
+
+  toast("Unfollowed.");
+ }else{
+  const {error}=await sb
+   .from("follows")
+   .insert({
+    follower_id:user.id,
+    following_id:id
+   });
+
+  if(error){
+   return toast(error.message);
   }
+
+  await sb
+   .from("notifications")
+   .insert({
+    user_id:id,
+    actor_id:user.id,
+    type:"follow"
+   });
+
+  toast("Following.");
+ }
+
+ renderView(currentView);
 }
 
-async function logout() {
-  await supabaseClient.auth.signOut();
-  currentUser = null;
-  showAuthScreen();
-  showAuthChoice();
-}
+/* =========================
+   PROFILE
+========================= */
 
-async function deleteAccount() {
-  if (!currentUser) return;
-  if (!confirm("Delete your Vidora account permanently?")) return;
-  // Preferred: Supabase Edge Function with service role.
-  // Client-side best effort cleanup:
-  try {
-    await supabaseClient.from("posts").delete().eq("user_id", currentUser.id);
-    await supabaseClient.from("comments").delete().eq("user_id", currentUser.id);
-    await supabaseClient.from("likes").delete().eq("user_id", currentUser.id);
-    await supabaseClient.from("follows").delete().eq("follower_id", currentUser.id);
-    await supabaseClient.from("follows").delete().eq("following_id", currentUser.id);
-    await supabaseClient.from("profiles").delete().eq("id", currentUser.id);
-    await supabaseClient.auth.signOut();
-    currentUser = null;
-    alert("Your Vidora data was removed. Full auth deletion may require server support.");
-    showAuthScreen();
-    showAuthChoice();
-  } catch (e) {
-    alert("Could not fully delete account from client.");
+async function renderProfile(id){
+ const {data:p,error}=await sb
+  .from("profiles")
+  .select("*")
+  .eq("id",id)
+  .maybeSingle();
+
+ if(error){
+  return toast(error.message);
+ }
+
+ if(!p){
+  return toast("Profile not found.");
+ }
+
+ const {count:followers}=await sb
+  .from("follows")
+  .select("*",{count:"exact",head:true})
+  .eq("following_id",id);
+
+ const {count:following}=await sb
+  .from("follows")
+  .select("*",{count:"exact",head:true})
+  .eq("follower_id",id);
+
+ const isOwn=id===user.id;
+
+ $("main").innerHTML=`
+ <section class="panel">
+
+  <div class="row">
+
+   <img
+    class="avatar lg"
+    src="${avatarSrc(p.avatar_url)}">
+
+   <div>
+
+    <div class="title" style="margin:0">
+     ${esc(
+      p.display_name||
+      p.username||
+      "User"
+     )}
+    </div>
+
+    <div class="muted">
+     @${esc(p.username||"user")}
+    </div>
+
+   </div>
+
+   <span class="spacer"></span>
+
+  </div>
+
+  ${
+   p.bio
+   ?
+   `<p>${esc(p.bio)}</p>`
+   :
+   ""
   }
+
+  <div class="wrap">
+
+   <span class="btn">
+    Followers: ${followers||0}
+   </span>
+
+   <span class="btn">
+    Following: ${following||0}
+   </span>
+
+  </div>
+
+  <div
+   class="wrap"
+   style="margin-top:10px">
+
+   ${
+    isOwn
+    ?
+    `
+    <button
+     class="btn"
+     onclick="editProfile()">
+     Edit profile
+    </button>
+
+    <button
+     class="btn"
+     onclick="openAvatarPicker()">
+     Change avatar
+    </button>
+
+    <button
+     class="btn"
+     onclick="openAssistant()">
+     AI Assistant
+    </button>
+
+    <button
+     class="btn danger"
+     onclick="deleteAccount()">
+     Delete account
+    </button>
+
+    <button
+     class="btn"
+     onclick="logout()">
+     Log out
+    </button>
+    `
+    :
+    `
+    <button
+     class="btn"
+     onclick="toggleFollow('${id}')">
+     Follow / Unfollow
+    </button>
+
+    <button
+     class="btn"
+     onclick="toggleBlock('${id}')">
+     Block / Unblock
+    </button>
+    `
+   }
+
+  </div>
+
+ </section>
+ `;
 }
 
-async function checkSession() {
-  const { data } = await supabaseClient.auth.getSession();
-  if (data?.session?.user) {
-    currentUser = data.session.user;
-    await showApp();
-  } else {
-    showAuthScreen();
-    showAuthChoice();
+async function editProfile(){
+ const {data:p}=await sb
+  .from("profiles")
+  .select("*")
+  .eq("id",user.id)
+  .maybeSingle();
+
+ $("sheet").innerHTML=`
+ <div class="row">
+
+  <b>Edit profile</b>
+
+  <span class="spacer"></span>
+
+  <button
+   class="iconbtn"
+   onclick="closeModal()">
+   ×
+  </button>
+
+ </div>
+
+ <input
+  id="editDisplayName"
+  class="field"
+  value="${esc(p?.display_name||"")}"
+  placeholder="Display name">
+
+ <input
+  id="editUsername"
+  class="field"
+  value="${esc(p?.username||"")}"
+  placeholder="Username">
+
+ <textarea
+  id="editBio"
+  class="field"
+  maxlength="300"
+  placeholder="Bio">${esc(p?.bio||"")}</textarea>
+
+ <button
+  class="btn primary"
+  onclick="saveProfile()">
+  Save profile
+ </button>
+ `;
+
+ $("modal").classList.remove("hidden");
+}
+
+async function saveProfile(){
+ const display_name=
+  $("editDisplayName")?.value.trim();
+
+ const username=
+  $("editUsername")?.value.trim();
+
+ const bio=
+  $("editBio")?.value.trim();
+
+ if(!username){
+  return toast("Username cannot be empty.");
+ }
+
+ const {error}=await sb
+  .from("profiles")
+  .update({
+   display_name,
+   username,
+   bio
+  })
+  .eq("id",user.id);
+
+ if(error){
+  return toast(error.message);
+ }
+
+ await loadProfile();
+ closeModal();
+ toast("Profile updated.");
+ renderProfile(user.id);
+}
+
+/* =========================
+   BLOCKING
+========================= */
+
+async function toggleBlock(id){
+ const {data}=await sb
+  .from("blocks")
+  .select("id")
+  .eq("blocker_id",user.id)
+  .eq("blocked_id",id)
+  .maybeSingle();
+
+ if(data){
+  await sb
+   .from("blocks")
+   .delete()
+   .eq("id",data.id);
+
+  toast("User unblocked.");
+ }else{
+  const {error}=await sb
+   .from("blocks")
+   .insert({
+    blocker_id:user.id,
+    blocked_id:id
+   });
+
+  if(error){
+   return toast(error.message);
   }
-}
-async function showApp() {
-  showAppScreen();
-  initializeVidoraAvatarSystem();
-  renderVidoraFilterChips();
-  renderNotifications();
-  showPage("home");
-  if (interactiveAvatarEnabled) showInteractiveAvatar();
 
-     if (currentUser) {
-    setupIncomingCallListener();
+  toast("User blocked.");
+ }
+
+ renderView(currentView);
+}
+
+/* =========================
+   AVATARS
+========================= */
+
+function openAvatarPicker(){
+ selectedAvatar=null;
+ uploadedAvatarUrl=null;
+
+ $("sheet").innerHTML=`
+ <div class="row">
+
+  <b>Choose your avatar</b>
+
+  <span class="spacer"></span>
+
+  <button
+   class="iconbtn"
+   onclick="closeModal()">
+   ×
+  </button>
+
+ </div>
+
+ <div class="panel">
+
+  <b>Upload your own photo</b>
+
+  <input
+   id="avatarUpload"
+   class="field"
+   type="file"
+   accept="image/*"
+   onchange="previewAvatarUpload()">
+
+  <div
+   id="avatarUploadPreview"
+   class="muted"
+   style="margin-top:8px">
+   You can use your own photo as your Vidora avatar.
+  </div>
+
+ </div>
+
+ <div class="wrap">
+
+  <button
+   class="btn"
+   onclick="filterAvatars('All')">
+   All
+  </button>
+
+  <button
+   class="btn"
+   onclick="filterAvatars('Original')">
+   Original
+  </button>
+
+  <button
+   class="btn"
+   onclick="filterAvatars('New')">
+   New
+  </button>
+
+  <button
+   class="btn"
+   onclick="filterAvatars('Expanded')">
+   Expanded
+  </button>
+
+ </div>
+
+ <input
+  id="avatarSearch"
+  class="field"
+  placeholder="Search avatars..."
+  oninput="filterAvatars('search')">
+
+ <div
+  id="avatarGrid"
+  class="avatar-grid">
+ </div>
+
+ <button
+  class="btn primary"
+  onclick="saveAvatar()">
+  Save avatar
+ </button>
+ `;
+
+ renderAvatarGrid(AVATARS);
+
+ $("modal").classList.remove("hidden");
+}
+
+function renderAvatarGrid(list){
+ const grid=$("avatarGrid");
+
+ if(!grid)return;
+
+ grid.innerHTML=list.map(a=>`
+  <button
+   class="avatar-choice"
+   onclick="selectAvatar('${esc(a.name)}')">
+
+   <img
+    src="${esc(a.file)}"
+    onerror="this.src='${fallbackAvatar(a.name)}'">
+
+   <span>
+    ${esc(a.name)}
+   </span>
+
+  </button>
+ `).join("");
+}
+
+function filterAvatars(category){
+ let list=AVATARS;
+
+ if(category!=="All"&&category!=="search"){
+  list=list.filter(
+   a=>a.cat===category
+  );
+ }
+
+ const search=
+  $("avatarSearch")?.value.trim().toLowerCase();
+
+ if(search){
+  list=list.filter(
+   a=>a.name.toLowerCase().includes(search)
+  );
+ }
+
+ renderAvatarGrid(list);
+}
+
+function selectAvatar(name){
+ selectedAvatar=
+  AVATARS.find(a=>a.name===name)||null;
+
+ uploadedAvatarUrl=null;
+
+ document
+  .querySelectorAll(".avatar-choice")
+  .forEach(btn=>{
+   btn.classList.toggle(
+    "selected",
+    btn.textContent.trim().startsWith(name)
+   );
+  });
+
+ toast(
+  selectedAvatar
+  ?
+  `${selectedAvatar.name} selected. Tap Save avatar.`
+  :
+  "Avatar not found."
+ );
+}
+
+function previewAvatarUpload(){
+ const f=$("avatarUpload")?.files[0];
+
+ if(!f)return;
+
+ if(!f.type.startsWith("image/")){
+  return toast("Choose an image.");
+ }
+
+ if(f.size>8*1024*1024){
+  return toast("Avatar photo must be 8MB or less.");
+ }
+
+ selectedAvatar=null;
+
+ uploadedAvatarUrl=
+  URL.createObjectURL(f);
+
+ const preview=$("avatarUploadPreview");
+
+ if(preview){
+  preview.innerHTML=`
+   <img
+    class="avatar lg"
+    src="${uploadedAvatarUrl}"
+    alt="Avatar preview">
+  `;
+ }
+
+ toast("Photo selected. Tap Save avatar.");
+}
+
+async function saveAvatar(){
+ try{
+  let url=null;
+
+  if(uploadedAvatarUrl){
+   const f=$("avatarUpload")?.files[0];
+
+   if(!f){
+    return toast("Choose the photo again.");
+   }
+
+   url=await uploadMedia(f,"avatars");
+
+  }else if(selectedAvatar){
+   url=selectedAvatar.file;
+
+  }else{
+   return toast("Choose an avatar or photo.");
   }
-}
 
-/* 7) PROFILE + PHOTO UPLOAD */
-async function loadProfile() {
-  if (!currentUser) return;
-  const { data } = await supabaseClient.from("profiles")
-    .select("username,display_name,bio,avatar_url,age")
-    .eq("id", currentUser.id).maybeSingle();
+  const {error}=await sb
+   .from("profiles")
+   .update({
+    avatar_url:url
+   })
+   .eq("id",user.id);
 
-  const name = data?.display_name || "Vidora User";
-  const username = data?.username || "user";
-  if ($("profileDisplayName")) $("profileDisplayName").textContent = name;
-  if ($("profileUsername")) $("profileUsername").textContent = "@" + username;
-  if ($("profileBio")) $("profileBio").textContent = data?.bio || "No bio yet";
-  if ($("profileEmail")) $("profileEmail").textContent = currentUser.email || "";
+  if(error)throw error;
 
-  const followers = await countFollowers(currentUser.id);
-  if ($("profileFollowers")) $("profileFollowers").textContent = followers + " Followers";
-
-  const avatar = $("profileAvatar");
-  if (avatar) {
-    if (data?.avatar_url) {
-      avatar.innerHTML = '<img class="profileAvatarImage" src="' + escapeHTML(data.avatar_url) + '" alt="Avatar">';
-    } else {
-      renderDefaultAvatar(avatar, name);
-    }
-  }
-}
-
-async function uploadProfilePhoto(e) {
-  const file = e?.target?.files?.[0];
-  if (!file || !currentUser) return;
-  if (!file.type.startsWith("image/")) return alert("Choose an image.");
-  const path = currentUser.id + "/avatar/" + safeName(file);
-  const { error } = await supabaseClient.storage.from("media").upload(path, file, { upsert: true });
-  if (error) return alert(error.message);
-  const { data } = supabaseClient.storage.from("media").getPublicUrl(path);
-  await supabaseClient.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", currentUser.id);
   await loadProfile();
+
+  closeModal();
+
+  toast("Avatar saved!");
+
+  renderProfile(user.id);
+
+ }catch(e){
+  toast(e.message);
+ }
 }
 
-async function saveProfile() {
-  if (!currentUser) return;
-  const display_name = $("editDisplayName")?.value.trim();
-  const username = $("editUsername")?.value.trim().toLowerCase();
-  const bio = $("editBio")?.value.trim() || "";
-  if (!display_name || !username) return setMessage("profileMessage", "Name and username required.");
-  const { error } = await supabaseClient.from("profiles")
-    .update({ display_name, username, bio }).eq("id", currentUser.id);
-  if (error) return setMessage("profileMessage", error.message);
-  setMessage("profileMessage", "Profile updated", true);
-  await loadProfile();
+/* =========================
+   MESSAGES
+========================= */
+
+async function renderMessages(){
+ const {data:follows}=await sb
+  .from("follows")
+  .select("following_id")
+  .eq("follower_id",user.id);
+
+ const ids=(follows||[])
+  .map(x=>x.following_id);
+
+ let users=[];
+
+ if(ids.length){
+  const {data}=await sb
+   .from("profiles")
+   .select(
+    "id,username,display_name,avatar_url"
+   )
+   .in("id",ids);
+
+  users=data||[];
+ }
+
+ const blocked=await blockedIds();
+
+ users=users.filter(
+  x=>!blocked.has(x.id)
+ );
+
+ $("main").innerHTML=`
+ <section class="panel">
+
+  <div class="title">
+   Messages
+  </div>
+
+  <div class="muted">
+   Chat is available with accounts you follow.
+  </div>
+
+ </section>
+
+ ${
+  users.map(p=>`
+   <button
+    class="card row"
+    style="width:100%;text-align:left;color:inherit"
+    onclick="openChat('${p.id}')">
+
+    <img
+     class="avatar"
+     src="${avatarSrc(p.avatar_url)}">
+
+    <div>
+
+     <b>
+      ${esc(
+       p.display_name||
+       p.username
+      )}
+     </b>
+
+     <div class="muted">
+      @${esc(p.username)}
+     </div>
+
+    </div>
+
+   </button>
+  `).join("")
+  ||
+  `
+  <div class="panel muted">
+   Follow someone to start a chat.
+  </div>
+  `
+ }
+ `;
 }
 
-/* 8) FOLLOW / BLOCK / COUNTS */
-async function countFollowers(userId) {
-  const { count } = await supabaseClient.from("follows")
-    .select("id", { count: "exact", head: true }).eq("following_id", userId);
-  return count || 0;
-}
-async function toggleFollow(userId, btn) {
-  if (!currentUser || userId === currentUser.id) return;
-  const { data: existing } = await supabaseClient.from("follows").select("id")
-    .eq("follower_id", currentUser.id).eq("following_id", userId).maybeSingle();
-  if (existing) {
-    await supabaseClient.from("follows").delete().eq("id", existing.id);
-    if (btn) btn.textContent = "Follow";
-  } else {
-    await supabaseClient.from("follows").insert({ follower_id: currentUser.id, following_id: userId });
-    if (btn) btn.textContent = "Unfollow";
-    pushNotification("follow", "Someone followed you", "User");
+async function openChat(id){
+ chatUser=id;
+
+ const {data:p}=await sb
+  .from("profiles")
+  .select("*")
+  .eq("id",id)
+  .single();
+
+ if(!p){
+  return toast("User not found.");
+ }
+
+ const {data:msgs,error}=await sb
+  .from("messages")
+  .select("*")
+  .or(
+   `and(sender_id.eq.${user.id},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${user.id})`
+  )
+  .order("created_at",{ascending:true})
+  .limit(100);
+
+ if(error){
+  return toast(error.message);
+ }
+
+ $("sheet").innerHTML=`
+ <div class="row">
+
+  <img
+   class="avatar sm"
+   src="${avatarSrc(p.avatar_url)}">
+
+  <b>
+   ${esc(
+    p.display_name||
+    p.username
+   )}
+  </b>
+
+  <span class="spacer"></span>
+
+  <button
+   class="iconbtn"
+   onclick="closeModal()">
+   ×
+  </button>
+
+ </div>
+
+ <div
+  id="chatList"
+  class="chat-list">
+
+  ${
+   (msgs||[])
+    .map(messageHtml)
+    .join("")
   }
-}
-async function blockUser(userId) {
-  if (!currentUser || userId === currentUser.id) return;
-  if (!confirm("Block this user?")) return;
-  await supabaseClient.from("blocks").upsert({ blocker_id: currentUser.id, blocked_id: userId });
-  alert("User blocked");
-  await loadFeed();
-}
-async function getBlockedIds() {
-  if (!currentUser) return [];
-  const { data } = await supabaseClient.from("blocks").select("blocked_id").eq("blocker_id", currentUser.id);
-  return (data || []).map(x => x.blocked_id);
+
+ </div>
+
+ <div class="row">
+
+  <input
+   id="chatInput"
+   class="field"
+   placeholder="Message...">
+
+  <button
+   class="btn"
+   onclick="sendMessage()">
+   Send
+  </button>
+
+  <button
+   class="btn"
+   onclick="recordVoice()">
+   🎙
+  </button>
+
+ </div>
+
+ <div
+  id="voiceStatus"
+  class="muted">
+ </div>
+ `;
+
+ $("modal").classList.remove("hidden");
+
+ const chatList=$("chatList");
+
+ if(chatList){
+  chatList.scrollTop=chatList.scrollHeight;
+ }
 }
 
-/* 9) POSTS / LIKES / COMMENTS */
-function validateMediaFile(file) {
-  if (!file) return { valid: false, message: "Choose a photo or video." };
-  if (!(file.type.startsWith("image/") || file.type.startsWith("video/")))
-    return { valid: false, message: "Only photos/videos allowed." };
-  return { valid: true };
-}
-function previewCreateMedia(e) {
-  const file = e?.target?.files?.[0];
-  const preview = $("createMediaPreview");
-  if (!preview) return;
-  preview.innerHTML = "";
-  if (!file) return;
-  const url = URL.createObjectURL(file);
-  if (file.type.startsWith("video/")) {
-    const v = document.createElement("video");
-    v.src = url; v.controls = true; v.playsInline = true; v.muted = muteOriginalAudio;
-    preview.appendChild(v);
-  } else {
-    const img = document.createElement("img");
-    img.src = url; preview.appendChild(img);
+function messageHtml(m){
+ return `
+ <div
+  class="msg ${m.sender_id===user.id?"mine":""}">
+
+  ${
+   m.voice_url
+   ?
+   `
+   🎙
+   <audio
+    controls
+    src="${esc(m.voice_url)}">
+   </audio>
+   `
+   :
+   esc(m.content||"")
   }
-  selectVidoraFilter(selectedVidoraFilter);
+
+ </div>`;
 }
 
-async function createPost(file, caption) {
-  const path = currentUser.id + "/" + safeName(file);
-  const mediaType = file.type.startsWith("video/") ? "video" : "image";
-  const { error: upErr } = await supabaseClient.storage.from("media").upload(path, file);
-  if (upErr) return { success: false, message: upErr.message };
-  const { data } = supabaseClient.storage.from("media").getPublicUrl(path);
+async function sendMessage(){
+ const content=$("chatInput")?.value.trim();
 
-  const payload = {
-    user_id: currentUser.id,
-    media_url: data.publicUrl,
-    media_type: mediaType,
-    caption: caption || "",
-    views: 0,
-    filter_name: selectedVidoraFilter || "normal",
-    sound_name: selectedVidoraSound?.name || null,
-    sound_url: selectedVidoraSound?.audioUrl || null,
-    mute_original: muteOriginalAudio
+ if(!content||!chatUser)return;
+
+ const {error}=await sb
+  .from("messages")
+  .insert({
+   sender_id:user.id,
+   receiver_id:chatUser,
+   content
+  });
+
+ if(error){
+  return toast(error.message);
+ }
+
+ await sb
+  .from("notifications")
+  .insert({
+   user_id:chatUser,
+   actor_id:user.id,
+   type:"message"
+  });
+
+ $("chatInput").value="";
+
+ openChat(chatUser);
+}
+
+async function recordVoice(){
+ if(!navigator.mediaDevices?.getUserMedia){
+  return toast(
+   "Voice recording is not supported here."
+  );
+ }
+
+ if(
+  window._voiceRec &&
+  window._voiceRec.state==="recording"
+ ){
+  window._voiceRec.stop();
+
+  const status=$("voiceStatus");
+
+  if(status){
+   status.textContent="Uploading voice note...";
+  }
+
+  return;
+ }
+
+ try{
+  const stream=
+   await navigator.mediaDevices.getUserMedia({
+    audio:true
+   });
+
+  const rec=new MediaRecorder(stream);
+  const chunks=[];
+
+  rec.ondataavailable=e=>{
+   if(e.data.size){
+    chunks.push(e.data);
+   }
   };
 
-  const { error } = await supabaseClient.from("posts").insert(payload);
-  if (error) return { success: false, message: error.message };
-  return { success: true };
-}
+  rec.onstop=async()=>{
+   stream
+    .getTracks()
+    .forEach(t=>t.stop());
 
-async function publishFromCreate() {
-  const fileInput = $("createFile");
-  const captionInput = $("createCaption");
-  if (!fileInput || !captionInput) return;
-  const file = fileInput.files[0];
-  let caption = captionInput.value.trim();
-  clearMessage("createMessage");
-  if (!currentUser) return setMessage("createMessage", "Please log in.");
-  const v = validateMediaFile(file);
-  if (!v.valid) return setMessage("createMessage", v.message);
+   const blob=new Blob(
+    chunks,
+    {
+     type:rec.mimeType||"audio/webm"
+    }
+   );
 
-  if (selectedVidoraSound) caption += (caption ? "\n\n" : "") + "🎵 " + selectedVidoraSound.name + " — " + selectedVidoraSound.artist;
-  if (selectedVidoraFilter !== "normal") caption += (caption ? "\n" : "") + "🎨 " + selectedVidoraFilter;
+   const file=new File(
+    [blob],
+    "voice.webm",
+    {
+     type:blob.type
+    }
+   );
 
-  try {
-    const result = await createPost(file, caption);
-    if (!result.success) return setMessage("createMessage", result.message);
-    setMessage("createMessage", "Posted!", true);
-    fileInput.value = ""; captionInput.value = "";
-    removeVidoraSound(); selectVidoraFilter("normal");
-    $("createMediaPreview").innerHTML = "";
-    await loadFeed();
-    showPage("home");
-  } catch (e) {
-    setMessage("createMessage", "Could not publish.");
+   try{
+    const url=
+     await uploadMedia(file,"voice");
+
+    const {error}=await sb
+     .from("messages")
+     .insert({
+      sender_id:user.id,
+      receiver_id:chatUser,
+      voice_url:url
+     });
+
+    if(error)throw error;
+
+    await sb
+     .from("notifications")
+     .insert({
+      user_id:chatUser,
+      actor_id:user.id,
+      type:"message"
+     });
+
+    openChat(chatUser);
+
+   }catch(e){
+    toast(e.message);
+   }
+
+   window._voiceRec=null;
+  };
+
+  window._voiceRec=rec;
+
+  rec.start();
+
+  const status=$("voiceStatus");
+
+  if(status){
+   status.textContent=
+    "Recording... tap 🎙 again to stop.";
   }
+
+ }catch(e){
+  toast(e.message);
+ }
 }
 
-async function deletePost(postId) {
-  if (!confirm("Delete this post?")) return;
-  const { error } = await supabaseClient.from("posts").delete().eq("id", postId).eq("user_id", currentUser.id);
-  if (error) return alert(error.message);
-  await loadFeed();
+/* =========================
+   NOTIFICATIONS
+========================= */
+
+async function loadNotifications(){
+ const {count}=await sb
+  .from("notifications")
+  .select("*",{count:"exact",head:true})
+  .eq("user_id",user.id)
+  .eq("read",false);
+
+ const el=$("notifCount");
+
+ if(el){
+  el.textContent=
+   count
+   ?
+   `(${count})`
+   :
+   "";
+ }
 }
 
-async function getLikeCount(postId) {
-  const { count } = await supabaseClient.from("likes").select("id", { count: "exact", head: true }).eq("post_id", postId);
-  return count || 0;
+async function showNotifications(){
+ const {data,error}=await sb
+  .from("notifications")
+  .select("*")
+  .eq("user_id",user.id)
+  .order("created_at",{ascending:false})
+  .limit(50);
+
+ if(error){
+  return toast(error.message);
+ }
+
+ $("sheet").innerHTML=`
+ <div class="row">
+
+  <b>Notifications</b>
+
+  <span class="spacer"></span>
+
+  <button
+   class="iconbtn"
+   onclick="closeModal()">
+   ×
+  </button>
+
+ </div>
+
+ ${
+  (data||[])
+   .map(n=>`
+    <div class="panel">
+
+     <b>${esc(n.type)}</b>
+
+     <div class="muted">
+      ${new Date(
+       n.created_at
+      ).toLocaleString()}
+     </div>
+
+    </div>
+   `)
+   .join("")
+  ||
+  `<p class="muted">
+   No notifications.
+  </p>`
+ }
+ `;
+
+ $("modal").classList.remove("hidden");
+
+ await sb
+  .from("notifications")
+  .update({read:true})
+  .eq("user_id",user.id);
+
+ loadNotifications();
 }
-async function getCommentCount(postId) {
-  const { count } = await supabaseClient.from("comments").select("id", { count: "exact", head: true }).eq("post_id", postId);
-  return count || 0;
+
+/* =========================
+   AI ASSISTANT
+========================= */
+
+function openAssistant(){
+ const box=$("assistantBox");
+
+ if(!box)return;
+
+ box.classList.remove("hidden");
+
+ if(
+  $("assistantMessages")&&
+  !$("assistantMessages").children.length
+ ){
+  assistantSay(
+   "Hi! I'm your Vidora AI assistant. Ask me general questions, weather questions, theme commands, music questions, or questions about Vidora."
+  );
+ }
 }
-async function toggleLike(postId, btn) {
-  if (!currentUser) return;
-  const { data: existing } = await supabaseClient.from("likes").select("id")
-    .eq("post_id", postId).eq("user_id", currentUser.id).maybeSingle();
-  if (existing) {
-    await supabaseClient.from("likes").delete().eq("id", existing.id);
-  } else {
-    await supabaseClient.from("likes").insert({ post_id: postId, user_id: currentUser.id });
-    pushNotification("like", "Someone liked a post", "User");
+
+function assistantSay(text){
+ const box=$("assistantMessages");
+
+ if(!box)return;
+
+ const d=document.createElement("div");
+
+ d.className="msg";
+ d.textContent=text;
+
+ box.appendChild(d);
+
+ box.scrollTop=box.scrollHeight;
+}
+
+async function assistantSend(){
+ const input=$("assistantInput");
+ const q=input?.value.trim();
+
+ if(!q)return;
+
+ input.value="";
+
+ const messages=$("assistantMessages");
+
+ if(messages){
+  const d=document.createElement("div");
+
+  d.className="msg mine";
+  d.textContent=q;
+
+  messages.appendChild(d);
+
+  messages.scrollTop=messages.scrollHeight;
+ }
+
+ const low=q.toLowerCase();
+
+ /* THEME COMMANDS */
+
+ if(low.includes("theme")){
+
+  if(
+   low.includes("light")||
+   low.includes("white")
+  ){
+   setTheme("light");
+
+  }else if(
+   low.includes("purple")
+  ){
+   setTheme("purple");
+
+  }else{
+   setTheme("dark");
   }
-  const c = await getLikeCount(postId);
-  if (btn) btn.textContent = "❤️ " + c;
+
+  assistantSay(
+   "I changed the Vidora theme."
+  );
+
+  return;
+ }
+
+ /* WEATHER */
+
+ if(low.includes("weather")){
+
+  assistantSay(
+   "I can check the weather if you allow location access."
+  );
+
+  if(!navigator.geolocation){
+   assistantSay(
+    "Location services are not available on this device."
+   );
+   return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+   async pos=>{
+    try{
+     const u=
+      `https://api.open-meteo.com/v1/forecast`+
+      `?latitude=${pos.coords.latitude}`+
+      `&longitude=${pos.coords.longitude}`+
+      `&current=temperature_2m,weather_code`;
+
+     const r=await fetch(u);
+
+     if(!r.ok){
+      throw new Error("Weather request failed.");
+     }
+
+     const j=await r.json();
+
+     const temp=
+      j.current?.temperature_2m;
+
+     const code=
+      j.current?.weather_code;
+
+     assistantSay(
+      `Current temperature: ${
+       temp??"unknown"
+      }°C. Weather code: ${
+       code??"unknown"
+      }.`
+     );
+
+    }catch(e){
+     assistantSay(
+      "I couldn't retrieve the weather right now."
+     );
+    }
+   },
+   ()=>{
+    assistantSay(
+     "Location permission was not granted."
+    );
+   }
+  );
+
+  return;
+ }
+
+ /* MUSIC */
+
+ if(
+  low.includes("music")||
+  low.includes("song")||
+  low.includes("beat")||
+  low.includes("drill")||
+  low.includes("funk")
+ ){
+  assistantSay(
+   "You can use the Music section when creating a post. Available tracks are loaded from Vidora's tracks table."
+  );
+ }
+
+ /* GENERAL AI */
+
+ assistantHistory.push({
+  role:"user",
+  content:q
+ });
+
+ try{
+
+  const {data,error}=
+   await sb.functions.invoke(
+    "vidora-avatar",
+    {
+     body:{
+      messages:
+       assistantHistory.slice(-12)
+     }
+    }
+   );
+
+  if(error)throw error;
+
+  const answer=
+   data?.answer||
+   "I couldn't answer that right now.";
+
+  assistantHistory.push({
+   role:"assistant",
+   content:answer
+  });
+
+  assistantSay(answer);
+
+ }catch(e){
+
+  console.error(e);
+
+  assistantSay(
+   "The AI assistant isn't connected yet. Make sure the vidora-avatar Supabase Edge Function is deployed and its AI secret is configured."
+  );
+ }
 }
 
-async function loadComments(postId, box) {
-  box.innerHTML = "Loading...";
-  const { data } = await supabaseClient.from("comments")
-    .select("id,user_id,content,created_at").eq("post_id", postId).order("created_at");
-  if (!data?.length) { box.innerHTML = "<p class='muted'>No comments yet.</p>"; return; }
-  box.innerHTML = "";
-  for (const c of data) {
-    let name = "user";
-    const { data: p } = await supabaseClient.from("profiles").select("username").eq("id", c.user_id).maybeSingle();
-    if (p?.username) name = p.username;
-    const row = document.createElement("div");
-    row.className = "commentRow";
-    row.innerHTML = "<strong>@" + escapeHTML(name) + "</strong> " + escapeHTML(c.content) +
-      (currentUser?.id === c.user_id ? " <button type='button' class='secondary'>Delete</button>" : "");
-    const del = row.querySelector("button");
-    if (del) del.onclick = async function () {
-      await supabaseClient.from("comments").delete().eq("id", c.id).eq("user_id", currentUser.id);
-      await loadComments(postId, box);
+function setTheme(t){
+ if(t==="light"){
+
+  document.documentElement
+   .style.setProperty(
+    "--bg",
+    "#f4f4f7"
+   );
+
+  document.documentElement
+   .style.setProperty(
+    "--surface",
+    "#ffffff"
+   );
+
+  document.documentElement
+   .style.setProperty(
+    "--surface2",
+    "#eeeef4"
+   );
+
+  document.documentElement
+   .style.setProperty(
+    "--text",
+    "#111111"
+   );
+
+  document.documentElement
+   .style.setProperty(
+    "--muted",
+    "#666666"
+   );
+
+ }else if(t==="purple"){
+
+  document.documentElement
+   .style.setProperty(
+    "--bg",
+    "#0e0718"
+   );
+
+  document.documentElement
+   .style.setProperty(
+    "--surface",
+    "#171025"
+   );
+
+  document.documentElement
+   .style.setProperty(
+    "--surface2",
+    "#211535"
+   );
+
+  document.documentElement
+   .style.setProperty(
+    "--text",
+    "#ffffff"
+   );
+
+  document.documentElement
+   .style.setProperty(
+    "--muted",
+    "#b7a7c7"
+   );
+
+ }else{
+
+  const values=[
+   "#08080d",
+   "#11111a",
+   "#181824",
+   "#f7f7fb",
+   "#9b9baa"
+  ];
+
+  [
+   "--bg",
+   "--surface",
+   "--surface2",
+   "--text",
+   "--muted"
+  ].forEach(
+   (x,i)=>
+    document.documentElement
+     .style.setProperty(
+      x,
+      values[i]
+     )
+  );
+ }
+
+ localStorage.setItem(
+  "vidoraTheme",
+  t
+ );
+}
+
+/* Restore saved theme */
+
+const savedTheme=
+ localStorage.getItem("vidoraTheme");
+
+if(savedTheme){
+ setTheme(savedTheme);
+}
+
+/* =========================
+   ACCOUNT
+========================= */
+
+async function logout(){
+ await sb.auth.signOut();
+}
+
+async function deleteAccount(){
+ if(
+  !confirm(
+   "Delete your Vidora account? This cannot be undone."
+  )
+ ){
+  return;
+ }
+
+ try{
+
+  const {data,error}=
+   await sb.functions.invoke(
+    "delete-account"
+   );
+
+  if(error){
+   return toast(error.message);
+  }
+
+  await sb.auth.signOut();
+
+  toast(
+   data?.message||
+   "Account deleted."
+  );
+
+ }catch(e){
+  toast(e.message);
+ }
+}
+
+/* =========================
+   MODAL
+========================= */
+
+function closeModal(){
+ $("modal")?.classList.add(
+  "hidden"
+ );
+}
+
+/* =========================
+   REALTIME
+========================= */
+
+function subscribeRealtime(){
+
+ if(realtimeChannel){
+  try{
+   sb.removeChannel(realtimeChannel);
+  }catch(e){}
+ }
+
+ realtimeChannel=
+  sb.channel(
+   "vidora-live-"+user.id
+  )
+
+  .on(
+   "postgres_changes",
+   {
+    event:"*",
+    schema:"public",
+    table:"notifications",
+    filter:`user_id=eq.${user.id}`
+   },
+   ()=>{
+    loadNotifications();
+   }
+  )
+
+  .on(
+   "postgres_changes",
+   {
+    event:"*",
+    schema:"public",
+    table:"messages",
+    filter:`receiver_id=eq.${user.id}`
+   },
+   ()=>{
+    if(
+     chatUser&&
+     $("modal")&&
+     !$("modal").classList.contains("hidden")
+    ){
+     openChat(chatUser);
+    }
+   }
+  )
+
+  .subscribe();
+}
+
+/* =========================
+   GLOBAL FUNCTIONS
+========================= */
+
+window.openAvatarPicker=
+ openAvatarPicker;
+
+window.filterAvatars=
+ filterAvatars;
+
+window.selectAvatar=
+ selectAvatar;
+
+window.previewAvatarUpload=
+ previewAvatarUpload;
+
+window.saveAvatar=
+ saveAvatar;
+
+window.renderProfile=
+ renderProfile;
+
+window.toggleFollow=
+ toggleFollow;
+
+window.toggleBlock=
+ toggleBlock;
+
+window.editProfile=
+ editProfile;
+
+window.saveProfile=
+ saveProfile;
+
+window.logout=
+ logout;
+
+window.deleteAccount=
+ deleteAccount;
+
+window.publishPost=
+ publishPost;
+
+window.publishStory=
+ publishStory;
+
+window.selectMusic=
+ selectMusic;
+
+window.deletePost=
+ deletePost;
+
+window.deleteStory=
+ deleteStory;
+
+window.toggleLike=
+ toggleLike;
+
+window.openComments=
+ openComments;
+
+window.addComment=
+ addComment;
+
+window.deleteComment=
+ deleteComment;
+
+window.sharePost=
+ sharePost;
+
+window.closeModal=
+ closeModal;
+
+window.openStoryUser=
+ openStoryUser;
+
+window.storyMove=
+ storyMove;
+
+window.openChat=
+ openChat;
+
+window.sendMessage=
+ sendMessage;
+
+window.recordVoice=
+ recordVoice;
+
+window.openAssistant=
+ openAssistant;
+
+window.setTheme=
+ setTheme;
+
+window.searchUsers=
+ searchUsers;
+
+/* =========================
+   BUTTON EVENTS
+========================= */
+
+document.addEventListener(
+ "DOMContentLoaded",
+ ()=>{
+  const loginBtn=$("loginBtn");
+  const signupBtn=$("signupBtn");
+
+  if(loginBtn){
+   loginBtn.onclick=login;
+  }
+
+  if(signupBtn){
+   signupBtn.onclick=signup;
+  }
+
+  document
+   .querySelectorAll(".nav button")
+   .forEach(b=>{
+    b.onclick=()=>{
+     renderView(
+      b.dataset.view
+     );
     };
-    box.appendChild(row);
+   });
+
+  const notifications=
+   $("openNotificationsBtn");
+
+  if(notifications){
+   notifications.onclick=
+    showNotifications;
   }
-}
 
-async function addComment(postId, input, box) {
-  const content = input.value.trim();
-  if (!content) return;
-  const { error } = await supabaseClient.from("comments").insert({
-    post_id: postId, user_id: currentUser.id, content
-  });
-  if (error) return alert(error.message);
-  input.value = "";
-  await loadComments(postId, box);
-}
+  const avatarBtn=
+   $("openAvatarBtn");
 
-async function incrementViews(postId, ownerId) {
-  if (!currentUser || currentUser.id === ownerId) return;
-  // simple best-effort
-  try {
-    const { data } = await supabaseClient.from("posts").select("views").eq("id", postId).maybeSingle();
-    await supabaseClient.from("posts").update({ views: (data?.views || 0) + 1 }).eq("id", postId);
-  } catch (e) {}
-}
+  if(avatarBtn){
+   avatarBtn.onclick=
+    openAvatarPicker;
+  }
 
-/* 10) FEED */
-async function loadFeed() {
-  if (feedLoading) return;
-  feedLoading = true;
-  const feed = $("feed");
-  if (!feed) { feedLoading = false; return; }
-  feed.innerHTML = '<div class="loading">Loading Vidora...</div>';
-  try {
-    const blocked = await getBlockedIds();
-    const { data, error } = await supabaseClient.from("posts")
-      .select("id,user_id,media_url,media_type,caption,created_at,views,sound_name,sound_url,mute_original,filter_name")
-      .order("created_at", { ascending: false });
-    if (error) { feed.innerHTML = '<div class="loading">' + escapeHTML(error.message) + "</div>"; return; }
-    const posts = (data || []).filter(p => !blocked.includes(p.user_id));
-    if (!posts.length) { feed.innerHTML = '<div class="loading">No posts yet.</div>'; return; }
-    feed.innerHTML = "";
-    for (const post of posts) {
-      const el = await createPostElement(post);
-      if (el) feed.appendChild(el);
-      incrementViews(post.id, post.user_id);
+  const assistantFab=
+   $("assistantFab");
+
+  if(assistantFab){
+   assistantFab.onclick=
+    openAssistant;
+  }
+
+  const closeAssistant=
+   $("closeAssistant");
+
+  if(closeAssistant){
+   closeAssistant.onclick=()=>{
+    $("assistantBox")
+     ?.classList.add("hidden");
+   };
+  }
+
+  const assistantSendBtn=
+   $("assistantSend");
+
+  if(assistantSendBtn){
+   assistantSendBtn.onclick=
+    assistantSend;
+  }
+
+  const assistantInput=
+   $("assistantInput");
+
+  if(assistantInput){
+   assistantInput.addEventListener(
+    "keydown",
+    e=>{
+     if(e.key==="Enter"){
+      e.preventDefault();
+      assistantSend();
+     }
     }
-  } finally { feedLoading = false; }
-}
-
-async function createPostElement(post) {
-  const article = document.createElement("article");
-  article.className = "postCard";
-  let username = "user";
-  const { data: profile } = await supabaseClient.from("profiles").select("username,display_name").eq("id", post.user_id).maybeSingle();
-  username = profile?.username || profile?.display_name || username;
-
-  const likes = await getLikeCount(post.id);
-  const comments = await getCommentCount(post.id);
-  const isOwner = currentUser?.id === post.user_id;
-  const followers = isOwner ? await countFollowers(currentUser.id) : null;
-
-  const media = post.media_type === "video"
-    ? '<video src="' + escapeHTML(post.media_url) + '" controls playsinline ' + (post.mute_original ? "muted" : "") + "></video>"
-    : '<img src="' + escapeHTML(post.media_url) + '" alt="Post">';
-
-  const ownerStats = isOwner
-    ? '<span>👁️ ' + (post.views || 0) + ' Views</span><span>👥 ' + followers + ' Followers</span>'
-    : "";
-
-  article.innerHTML =
-    '<div class="postHeader"><strong>@' + escapeHTML(username) + "</strong><span>" + escapeHTML(formatDate(post.created_at)) +
-    '</span></div><div class="postMedia">' + media +
-    '<div class="vidoraMark">V</div></div>' +
-    '<div class="postCaption">' + escapeHTML(post.caption || "") + "</div>" +
-    (post.sound_url ? '<div class="postSongRow"><button type="button" class="playPostSongBtn">▶ Play song</button> <span>' +
-      escapeHTML(post.sound_name || "Vidora Song") + "</span></div>" : "") +
-    '<div class="postStats"><span>❤️ ' + likes + ' Likes</span><span>💬 ' + comments + ' Comments</span>' + ownerStats + "</div>" +
-    '<div class="postActions">' +
-    '<button type="button" class="likeBtn">❤️ ' + likes + "</button>" +
-    '<button type="button" class="commentToggleBtn">💬 Comment</button>' +
-    (!isOwner ? '<button type="button" class="followBtn">Follow</button><button type="button" class="chatBtn">Chat</button><button type="button" class="blockBtn">Block</button>' : "") +
-    (isOwner ? '<button type="button" class="deletePostBtn">Delete</button>' : "") +
-    "</div>" +
-    '<div class="commentsBox hidden"></div>' +
-    '<div class="addCommentRow hidden"><input type="text" class="commentInput" placeholder="Write a comment..."><button type="button" class="sendCommentBtn">Post</button></div>';
-
-  article.querySelector(".likeBtn").onclick = function () { toggleLike(post.id, article.querySelector(".likeBtn")); };
-  const cBox = article.querySelector(".commentsBox");
-  const cRow = article.querySelector(".addCommentRow");
-  article.querySelector(".commentToggleBtn").onclick = async function () {
-    cBox.classList.toggle("hidden"); cRow.classList.toggle("hidden");
-    if (!cBox.classList.contains("hidden")) await loadComments(post.id, cBox);
-  };
-  article.querySelector(".sendCommentBtn").onclick = function () {
-    addComment(post.id, article.querySelector(".commentInput"), cBox);
-  };
-  if (article.querySelector(".deletePostBtn")) article.querySelector(".deletePostBtn").onclick = function () { deletePost(post.id); };
-  if (article.querySelector(".followBtn")) article.querySelector(".followBtn").onclick = function () { toggleFollow(post.user_id, article.querySelector(".followBtn")); };
-  if (article.querySelector(".chatBtn")) article.querySelector(".chatBtn").onclick = function () { openChatWith(post.user_id, username); };
-  if (article.querySelector(".blockBtn")) article.querySelector(".blockBtn").onclick = function () { blockUser(post.user_id); };
-  if (article.querySelector(".playPostSongBtn") && post.sound_url) {
-    article.querySelector(".playPostSongBtn").onclick = function () {
-      stopVidoraSound();
-      const a = new Audio(post.sound_url);
-      vidoraAudioPlayer = a;
-      a.play().catch(() => alert("Could not play song"));
-    };
+   );
   }
-  return article;
-}
 
-/* 11) STORIES */
-async function createStory() {
-  const input = $("storyFileInput");
-  if (!input?.files?.[0] || !currentUser) return alert("Choose a story file.");
-  const file = input.files[0];
-  const path = currentUser.id + "/stories/" + safeName(file);
-  const mediaType = file.type.startsWith("video/") ? "video" : "image";
-  const { error: upErr } = await supabaseClient.storage.from("media").upload(path, file);
-  if (upErr) return alert(upErr.message);
-  const { data } = supabaseClient.storage.from("media").getPublicUrl(path);
-  const { error } = await supabaseClient.from("stories").insert({
-    user_id: currentUser.id,
-    media_url: data.publicUrl,
-    media_type: mediaType,
-    sound_name: selectedVidoraSound?.name || null,
-    sound_url: selectedVidoraSound?.audioUrl || null
-  });
-  if (error) return alert(error.message);
-  alert("Story created");
-  input.value = "";
-  await loadStories();
-}
-async function loadStories() {
-  const row = $("storiesRow"); if (!row) return;
-  const { data } = await supabaseClient.from("stories").select("*").order("created_at", { ascending: false }).limit(40);
-  row.innerHTML = "";
-  (data || []).forEach(function (story) {
-    const b = document.createElement("button");
-    b.type = "button"; b.className = "storyBubble"; b.textContent = "Story";
-    b.onclick = function () { openStoryViewer(story); };
-    row.appendChild(b);
-  });
-}
-function openStoryViewer(story) {
-  const viewer = $("storyViewer"); const content = $("storyViewerContent");
-  if (!viewer || !content) return;
-  content.innerHTML = story.media_type === "video"
-    ? '<video src="' + escapeHTML(story.media_url) + '" controls autoplay playsinline></video>'
-    : '<img src="' + escapeHTML(story.media_url) + '" alt="Story">';
-  viewer.dataset.storyId = story.id;
-  viewer.dataset.storyUserId = story.user_id;
-  viewer.classList.remove("hidden");
-  if (story.sound_url) {
-    stopVidoraSound();
-    const a = new Audio(story.sound_url);
-    vidoraAudioPlayer = a; a.play().catch(() => {});
-  }
-}
-function closeStoryViewer() { stopVidoraSound(); $("storyViewer")?.classList.add("hidden"); }
-async function deleteStory() {
-  const viewer = $("storyViewer");
-  if (!viewer || currentUser?.id !== viewer.dataset.storyUserId) return alert("Only your story can be deleted.");
-  await supabaseClient.from("stories").delete().eq("id", viewer.dataset.storyId);
-  closeStoryViewer();
-  await loadStories();
-}
+  const modal=$("modal");
 
-/* 12) CHAT */
-function openChatWith(userId, username) {
-  activeChatUser = { id: userId, username: username || "user" };
-  showPage("chat");
-  if ($("chatThreadTitle")) $("chatThreadTitle").textContent = "@" + activeChatUser.username;
-  $("chatStatus")?.classList.add("hidden");
-  $("chatThread")?.classList.remove("hidden");
-  renderChatMessages();
-}
-function renderChatMessages() {
-  const box = $("chatMessages"); if (!box || !activeChatUser) return;
-  const msgs = localChats[activeChatUser.id] || [];
-  box.innerHTML = "";
-  if (!msgs.length) {
-    box.innerHTML = '<div class="chatEmpty">Start a conversation with @' + escapeHTML(activeChatUser.username) + "</div>";
-    return;
-  }
-  msgs.forEach(function (m) {
-    const row = document.createElement("div");
-    row.className = "chatBubble " + (m.from === "me" ? "chatMe" : "chatThem");
-    if (m.type === "voice") row.innerHTML = "🎤 <audio controls src='" + escapeHTML(m.audioUrl) + "'></audio>";
-    else row.textContent = m.text || "";
-    box.appendChild(row);
-  });
-  box.scrollTop = box.scrollHeight;
-}
-function sendChatMessage() {
-  const input = $("chatInput"); if (!input || !activeChatUser) return;
-  const text = input.value.trim(); if (!text) return;
-  if (!localChats[activeChatUser.id]) localChats[activeChatUser.id] = [];
-  localChats[activeChatUser.id].push({ from: "me", text, at: Date.now() });
-  saveChats(); input.value = ""; renderChatMessages();
-}
-function handleVoiceNoteUpload(e) {
-  const file = e?.target?.files?.[0];
-  if (!file || !activeChatUser) return;
-  if (!file.type.startsWith("audio/")) return alert("Choose audio.");
-  if (!localChats[activeChatUser.id]) localChats[activeChatUser.id] = [];
-  localChats[activeChatUser.id].push({ from: "me", type: "voice", audioUrl: URL.createObjectURL(file), at: Date.now() });
-  saveChats(); renderChatMessages();
-}
-
-/* 13) CALLS */
-function openCallUI(title, name, hologram) {
-  if ($("callTitle")) $("callTitle").textContent = title;
-  if ($("callUserName")) $("callUserName").textContent = name || "User";
-  const panel = $("callPanel");
-  if (panel) {
-    panel.classList.remove("hidden");
-    panel.classList.toggle("hologramMode", !!hologram);
-  }
-}
-async function startLocalCamera(hologram) {
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    const video = $("localCallVideo");
-    if (video) {
-      video.srcObject = localStream;
-      video.classList.toggle("hologramVideo", !!hologram);
-      video.play();
+  if(modal){
+   modal.addEventListener(
+    "click",
+    e=>{
+     if(e.target===modal){
+      closeModal();
+     }
     }
-  } catch (e) { alert("Allow camera & mic for calls."); }
-}
-function stopLocalCamera() {
-  if (localStream) localStream.getTracks().forEach(t => t.stop());
-  localStream = null;
-  const video = $("localCallVideo"); if (video) video.srcObject = null;
-}
-function startVoiceCall(name) { activeCallType = "voice"; openCallUI("Voice Call", name, false); }
-async function startVideoCall(name) {
-  activeCallType = "video";
-
-  if (!activeChatUser || !activeChatUser.id) {
-    alert("Open a chat with the person you want to call first.");
-    return;
+   );
   }
 
-  openCallUI("Video Call", name, false);
-
-  await startLocalCamera(false);
-
-  const callId = [
-    currentUser.id,
-    activeChatUser.id
-  ].sort().join("-");
-
-  activeCallId = callId;
-  activeCallUserId = activeChatUser.id;
-
-  // Notify the receiver first
-  const receiverChannel = supabaseClient.channel(
-    "vidora-user-" + activeChatUser.id
-  );
-
-  await receiverChannel.subscribe();
-
-  await receiverChannel.send({
-    type: "broadcast",
-    event: "incoming-call",
-    payload: {
-      callId: callId,
-      callerId: currentUser.id,
-      callerName:
-        currentUser.username ||
-        currentUser.display_name ||
-        "Vidora User",
-      callType: "video"
-    }
-  });
-
-  console.log("Incoming call invitation sent.");
-
-  // Wait briefly so the receiver can join the call channel
-  await new Promise(function (resolve) {
-    setTimeout(resolve, 1500);
-  });
-
-  await startWebRTCCall(callId, true);
-
-  console.log("WebRTC video call started.");
-}
-
-   
-
-
-    /* WEBRTC SIGNALING */
-
-async function createCallChannel(callId) {
-  if (!callId) return null;
-
-  if (callChannel) {
-    try {
-      await supabaseClient.removeChannel(callChannel);
-    } catch (e) {
-      console.log("Previous call channel cleanup:", e);
-    }
-  }
-
-  callChannel = supabaseClient.channel("vidora-call-" + callId);
-
-  callChannel.on(
-    "broadcast",
-    { event: "webrtc-signal" },
-    function (payload) {
-      if (typeof handleWebRTCSignal === "function") {
-        handleWebRTCSignal(payload.payload);
-      }
-    }
-  );
-
-  await new Promise(function (resolve, reject) {
-    callChannel.subscribe(function (status) {
-      console.log("Vidora WebRTC channel:", status);
-
-      if (status === "SUBSCRIBED") {
-        resolve();
-      }
-
-      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-        reject(new Error("Could not connect to Vidora call channel."));
-      }
-    });
-  });
-
-  return callChannel;
-}
-
-/* WEBRTC PEER CONNECTION */
-
-function createWebRTCPeer() {
-  peerConnection = new RTCPeerConnection(WEBRTC_CONFIG);
-
-  if (localStream) {
-    localStream.getTracks().forEach(function (track) {
-      peerConnection.addTrack(track, localStream);
-    });
-  }
-
-  remoteStream = new MediaStream();
-
-  const remoteVideo = $("remoteCallVideo");
-
-  if (remoteVideo) {
-    remoteVideo.srcObject = remoteStream;
-  }
-
-  peerConnection.ontrack = function (event) {
-    event.streams[0].getTracks().forEach(function (track) {
-      remoteStream.addTrack(track);
-    });
-  };
-
-  peerConnection.onicecandidate = function (event) {
-    if (event.candidate) {
-      sendWebRTCSignal("ice-candidate", event.candidate);
-    }
-  };
-
-  peerConnection.onconnectionstatechange = function () {
-    console.log(
-      "WebRTC connection:",
-      peerConnection.connectionState
-    );
-  };
-
-  return peerConnection;
-}
-
-/* HANDLE WEBRTC SIGNALS */
-
-async function handleWebRTCSignal(signal) {
-  if (!signal || !signal.type) return;
-
-  if (!peerConnection) {
-    createWebRTCPeer();
-  }
-
-  if (signal.type === "offer") {
-    await peerConnection.setRemoteDescription(
-      new RTCSessionDescription(signal.data)
-    );
-
-    const answer = await peerConnection.createAnswer();
-
-    await peerConnection.setLocalDescription(answer);
-
-    await sendWebRTCSignal(
-      "answer",
-      peerConnection.localDescription
-    );
-  }
-
-  else if (signal.type === "answer") {
-    await peerConnection.setRemoteDescription(
-      new RTCSessionDescription(signal.data)
-    );
-  }
-
-  else if (signal.type === "ice-candidate") {
-    try {
-      if (peerConnection.remoteDescription) {
-        await peerConnection.addIceCandidate(
-          new RTCIceCandidate(signal.data)
-        );
-      } else {
-        pendingIceCandidates.push(signal.data);
-      }
-    } catch (error) {
-      console.log("ICE candidate error:", error);
-    }
-  }
-}
-
-async function startWebRTCCall(callId, isCaller) {
-  if (!callId) return;
-
-  activeCallId = callId;
-  isCallInitiator = isCaller;
-
-  await createCallChannel(callId);
-
-  createWebRTCPeer();
-
-  if (isCaller) {
-    const offer = await peerConnection.createOffer();
-
-    await peerConnection.setLocalDescription(offer);
-
-    await sendWebRTCSignal(
-      "offer",
-      peerConnection.localDescription
-    );
-  }
-}
-
-async function joinWebRTCCall(callId) {
-  if (!callId) return;
-
-  activeCallId = callId;
-  isCallInitiator = false;
-
-  await createCallChannel(callId);
-
-  createWebRTCPeer();
-
-  console.log("Joined Vidora WebRTC call:", callId);
-}
-
-async function receiveWebRTCCall(callId) {
-  if (!callId) return;
-
-  await joinWebRTCCall(callId);
-
-  console.log("Receiving Vidora WebRTC call:", callId);
-}
-async function listenForIncomingCall(callId) {
-  if (!callId) return;
-
-  await receiveWebRTCCall(callId);
-
-  console.log("Vidora is listening for call:", callId);
-}
-async function setupIncomingCallListener() {
-  if (!currentUser) return;
-
-  const userChannel = supabaseClient.channel(
-    "vidora-user-" + currentUser.id
-  );
-
-  userChannel
-    .on(
-      "broadcast",
-      { event: "incoming-call" },
-      async function (payload) {
-        const call = payload.payload;
-
-        if (!call || !call.callId) return;
-
-        const accepted = confirm(
-          "Incoming video call from " +
-          (call.callerName || "Vidora User") +
-          ". Accept?"
-        );
-
-        if (!accepted) return;
-
-        activeCallType = "video";
-        activeCallUserId = call.callerId;
-        activeCallId = call.callId;
-
-        openCallUI(
-          "Video Call",
-          call.callerName || "Vidora User",
-          false
-        );
-
-        await startLocalCamera(false);
-
-        await receiveWebRTCCall(call.callId);
-      }
-    )
-    .subscribe(function (status) {
-      console.log(
-        "Incoming call listener:",
-        status
-      );
-    });
-
-  console.log("Vidora incoming-call listener ready.");
-}
-
-/* 14) NOTIFICATIONS */
-function renderNotifications() {
-  const box = $("notificationList"); if (!box) return;
-  if (!localNotifications.length) { box.innerHTML = "<p class='muted'>No notifications</p>"; return; }
-  box.innerHTML = localNotifications.slice(0, 20).map(n =>
-    "<div class='noteItem'><strong>" + escapeHTML(n.type) + "</strong> — " + escapeHTML(n.text) +
-    "<small>" + escapeHTML(formatDate(n.at)) + "</small></div>"
-  ).join("");
-}
-
-/* 15) NAV */
-function showPage(page) {
-  const map = {
-    home: "homeScreen", profile: "profileScreen", create: "createScreen",
-    discover: "discoverScreen", friends: "friendsScreen", chat: "chatScreen",
-    notifications: "notificationsScreen"
-  };
-  Object.values(map).forEach(function (id) { $(id)?.classList.add("hidden"); });
-  $(map[page] || map.home)?.classList.remove("hidden");
-  if (page === "home") { loadFeed(); loadStories(); }
-  if (page === "profile") loadProfile();
-  if (page === "create") renderVidoraFilterChips();
-  if (page === "notifications") renderNotifications();
-}
-function showpage(p) { showPage(p); }
-
-/* 16) INIT + EXPORTS */
-document.addEventListener("DOMContentLoaded", async function () {
-  initializeVidoraAvatarSystem();
-  renderVidoraFilterChips();
-  await checkSession();
-});
-
-window.signUp = signUp; window.login = login; window.logout = logout;
-window.showAuthChoice = showAuthChoice; window.showLoginForm = showLoginForm; window.showCreateAccount = showCreateAccount;
-window.togglePassword = togglePassword; window.deleteAccount = deleteAccount;
-window.showPage = showPage; window.showpage = showpage;
-window.loadProfile = loadProfile; window.saveProfile = saveProfile; window.uploadProfilePhoto = uploadProfilePhoto;
-window.previewCreateMedia = previewCreateMedia; window.publishFromCreate = publishFromCreate;
-window.openVidoraSongs = openVidoraSongs; window.openVidoraSounds = openVidoraSongs;
-window.closeVidoraSounds = closeVidoraSounds; window.removeVidoraSound = removeVidoraSound;
-window.handleCustomSoundUpload = handleCustomSoundUpload; window.playSelectedCustomSound = playSelectedCustomSound;
-window.toggleMuteOriginalAudio = toggleMuteOriginalAudio; window.selectVidoraFilter = selectVidoraFilter;
-window.selectVidoraAvatar = selectVidoraAvatar;
-window.createStory = createStory; window.closeStoryViewer = closeStoryViewer; window.deleteStory = deleteStory;
-window.openChatWith = openChatWith; window.sendChatMessage = sendChatMessage; window.handleVoiceNoteUpload = handleVoiceNoteUpload;
-window.startVoiceCall = startVoiceCall; window.startVideoCall = startVideoCall; window.startHologramCall = startHologramCall; window.endCall = endCall;
-window.showInteractiveAvatar = showInteractiveAvatar; window.closeInteractiveAvatar = closeInteractiveAvatar;
-window.toggleInteractiveAvatar = toggleInteractiveAvatar; window.openAvatarChat = openAvatarChat; window.closeAvatarChat = closeAvatarChat;
-window.sendAvatarMessage = sendAvatarMessage;
-console.log("VIDORA PROFESSIONAL READY");
+  init();
+ }
+);
