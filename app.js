@@ -48,6 +48,69 @@ const AVATARS = [
 
 
 /* =========================
+   FILTERS (Snapchat / TikTok style)
+========================= */
+
+const FILTERS = [
+  { id:"none",     name:"Original",  css:"none" },
+  { id:"vivid",    name:"Vivid",     css:"saturate(1.6) contrast(1.1)" },
+  { id:"warm",     name:"Warm",      css:"sepia(.25) saturate(1.3) brightness(1.05)" },
+  { id:"cool",     name:"Cool",      css:"hue-rotate(15deg) saturate(1.2) brightness(1.05)" },
+  { id:"noir",     name:"Noir",      css:"grayscale(1) contrast(1.2)" },
+  { id:"vintage",  name:"Vintage",   css:"sepia(.45) contrast(1.1) brightness(.95)" },
+  { id:"fade",     name:"Fade",      css:"contrast(.85) brightness(1.1) saturate(.8)" },
+  { id:"drama",    name:"Drama",     css:"contrast(1.4) saturate(1.2)" },
+  { id:"glow",     name:"Glow",      css:"brightness(1.15) contrast(1.05) saturate(1.3)" },
+  { id:"moon",     name:"Moon",      css:"grayscale(.4) brightness(1.1) contrast(1.15) hue-rotate(200deg)" },
+  { id:"sunset",   name:"Sunset",    css:"sepia(.35) hue-rotate(-15deg) saturate(1.5)" },
+  { id:"arctic",   name:"Arctic",    css:"hue-rotate(180deg) saturate(.7) brightness(1.1)" },
+  { id:"pop",      name:"Pop",       css:"saturate(2) contrast(1.15)" },
+  { id:"soft",     name:"Soft",      css:"blur(0.3px) brightness(1.08) contrast(.92)" },
+  { id:"cinema",   name:"Cinema",    css:"contrast(1.25) saturate(.9) brightness(.95)" },
+  { id:"neon",     name:"Neon",      css:"saturate(1.8) contrast(1.2) hue-rotate(300deg)" },
+  { id:"retro",    name:"Retro",     css:"sepia(.5) contrast(1.2) saturate(1.4)" },
+  { id:"mist",     name:"Mist",      css:"opacity(.95) brightness(1.12) contrast(.88)" },
+  { id:"fire",     name:"Fire",      css:"sepia(.3) hue-rotate(-30deg) saturate(1.7) contrast(1.1)" },
+  { id:"ice",      name:"Ice",       css:"hue-rotate(160deg) saturate(.85) brightness(1.12)" }
+];
+
+
+/* =========================
+   BUILTIN MUSIC (Beatz / Drills / Funk)
+========================= */
+
+const BUILTIN_TRACKS = [
+  /* BEATZ */
+  { id:"bz1",  title:"Night Pulse",      artist:"Vidora Beatz",  category:"Beatz",  audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+  { id:"bz2",  title:"Chrome Drive",     artist:"Vidora Beatz",  category:"Beatz",  audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+  { id:"bz3",  title:"Low Rider",        artist:"Vidora Beatz",  category:"Beatz",  audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+  { id:"bz4",  title:"Skyline",          artist:"Vidora Beatz",  category:"Beatz",  audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+  { id:"bz5",  title:"Velvet Knock",     artist:"Vidora Beatz",  category:"Beatz",  audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+  { id:"bz6",  title:"Midnight Grid",    artist:"Vidora Beatz",  category:"Beatz",  audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
+  { id:"bz7",  title:"Soft Thunder",     artist:"Vidora Beatz",  category:"Beatz",  audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+  { id:"bz8",  title:"Neon Walk",        artist:"Vidora Beatz",  category:"Beatz",  audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
+  /* DRILLS */
+  { id:"dr1",  title:"UK Slide",         artist:"Vidora Drills", category:"Drills", audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" },
+  { id:"dr2",  title:"Dark Lane",        artist:"Vidora Drills", category:"Drills", audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
+  { id:"dr3",  title:"Cold Blocks",      artist:"Vidora Drills", category:"Drills", audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
+  { id:"dr4",  title:"Rapid Fire",       artist:"Vidora Drills", category:"Drills", audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" },
+  { id:"dr5",  title:"Shadow Step",      artist:"Vidora Drills", category:"Drills", audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3" },
+  { id:"dr6",  title:"Street Clock",     artist:"Vidora Drills", category:"Drills", audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3" },
+  { id:"dr7",  title:"Iron Tempo",       artist:"Vidora Drills", category:"Drills", audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" },
+  { id:"dr8",  title:"Frost Drill",      artist:"Vidora Drills", category:"Drills", audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" },
+  /* FUNK */
+  { id:"fk1",  title:"Groovy Lane",      artist:"Vidora Funk",   category:"Funk",   audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+  { id:"fk2",  title:"Bass Pocket",      artist:"Vidora Funk",   category:"Funk",   audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+  { id:"fk3",  title:"Saturday Glow",    artist:"Vidora Funk",   category:"Funk",   audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+  { id:"fk4",  title:"Electric Soul",    artist:"Vidora Funk",   category:"Funk",   audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+  { id:"fk5",  title:"Disco Heat",       artist:"Vidora Funk",   category:"Funk",   audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+  { id:"fk6",  title:"Funky Horizon",    artist:"Vidora Funk",   category:"Funk",   audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
+  { id:"fk7",  title:"Rhythm Room",      artist:"Vidora Funk",   category:"Funk",   audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+  { id:"fk8",  title:"Gold Step",        artist:"Vidora Funk",   category:"Funk",   audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" }
+];
+
+
+/* =========================
    STATE
 ========================= */
 
@@ -61,8 +124,13 @@ let storyIndex = 0;
 let commentsPost = null;
 let chatUser = null;
 let selectedMusic = null;
+let selectedStoryMusic = null;
+let selectedFilter = "none";
+let selectedStoryFilter = "none";
+let musicCategory = "All";
 let assistantHistory = [];
 let realtimeChannel = null;
+let storyAudio = null;
 
 
 /* =========================
@@ -1058,6 +1126,23 @@ async function openStoryUser(id){
 }
 
 
+function stopStoryAudio(){
+  if(storyAudio){
+    try{
+      storyAudio.pause();
+      storyAudio.src = "";
+    }catch(e){}
+    storyAudio = null;
+  }
+}
+
+
+function getFilterCss(id){
+  const f = FILTERS.find(x=>x.id===id);
+  return f ? f.css : "none";
+}
+
+
 function openStory(arr,i){
 
   if(!arr || !arr.length)return;
@@ -1067,29 +1152,56 @@ function openStory(arr,i){
   if(!s)return;
 
   window.currentStorySet=arr;
-
   storyIndex=i;
 
+  stopStoryAudio();
+
+  const filterCss = getFilterCss(s.filter || "none");
 
   const media =
     s.media_type==="video"
     ?
     `
       <video
-        class="post-media"
+        class="post-media story-media"
         controls
         autoplay
         playsinline
+        style="filter:${filterCss}"
         src="${esc(s.media_url)}">
       </video>
     `
     :
     `
       <img
-        class="post-media"
+        class="post-media story-media"
+        style="filter:${filterCss}"
         src="${esc(s.media_url)}">
     `;
 
+  const musicId = s.music_id || s.musicId || null;
+  let track = null;
+  if(musicId){
+    track =
+      (window._musicTracks || []).find(t=>t.id===musicId) ||
+      BUILTIN_TRACKS.find(t=>t.id===musicId) ||
+      null;
+  }
+
+  const musicBar =
+    track
+    ?
+    `
+      <div class="story-music-bar">
+        <span class="story-music-icon">🎵</span>
+        <div class="story-music-info">
+          <b>${esc(track.title)}</b>
+          <div class="muted">${esc(track.artist || track.category || "")}</div>
+        </div>
+      </div>
+    `
+    :
+    "";
 
   $("sheet").innerHTML = `
 
@@ -1110,6 +1222,8 @@ function openStory(arr,i){
     </div>
 
     ${media}
+
+    ${musicBar}
 
     <div
       class="wrap"
@@ -1144,9 +1258,18 @@ function openStory(arr,i){
     </div>
   `;
 
-
   $("modal")
     .classList.remove("hidden");
+
+  /* WhatsApp-style: auto-play story music */
+  if(track && track.audio_url){
+    try{
+      storyAudio = new Audio(track.audio_url);
+      storyAudio.loop = true;
+      storyAudio.volume = 0.85;
+      storyAudio.play().catch(()=>{});
+    }catch(e){}
+  }
 }
 
 
@@ -1156,6 +1279,7 @@ function storyMove(i){
     window.currentStorySet||[];
 
   if(i<0 || i>=arr.length){
+    stopStoryAudio();
     return;
   }
 
@@ -1168,23 +1292,21 @@ async function publishStory(){
   const file =
     $("storyFile")?.files[0];
 
-
   if(!file){
     return toast(
       "Choose a photo or video."
     );
   }
 
-
   if(file.size>50*1024*1024){
-
     return toast(
       "Maximum file size is 50MB."
     );
   }
 
-
   try{
+
+    toast("Uploading story...");
 
     const url =
       await uploadMedia(
@@ -1192,39 +1314,61 @@ async function publishStory(){
         "stories"
       );
 
+    const payload = {
+      user_id: user.id,
+      media_url: url,
+      media_type:
+        file.type.startsWith("video/")
+        ?
+        "video"
+        :
+        "image"
+    };
 
-    const {
-      error
-    } = await sb
+    if(selectedStoryMusic?.id){
+      payload.music_id = selectedStoryMusic.id;
+    }
+
+    if(selectedStoryFilter && selectedStoryFilter !== "none"){
+      payload.filter = selectedStoryFilter;
+    }
+
+    let { error } = await sb
       .from("stories")
-      .insert({
+      .insert(payload);
 
-        user_id:user.id,
+    /* Retry without optional columns if schema is older */
+    if(error && (error.message||"").match(/filter|music_id|column/i)){
+      const basic = {
+        user_id: user.id,
+        media_url: url,
+        media_type: payload.media_type
+      };
+      if(selectedStoryMusic?.id){
+        basic.music_id = selectedStoryMusic.id;
+      }
+      const retry = await sb.from("stories").insert(basic);
+      error = retry.error;
+      if(error && (error.message||"").match(/music_id|column/i)){
+        const bare = await sb.from("stories").insert({
+          user_id: user.id,
+          media_url: url,
+          media_type: payload.media_type
+        });
+        error = bare.error;
+      }
+    }
 
-        media_url:url,
+    if(error) throw error;
 
-        media_type:
-          file.type.startsWith("video/")
-          ?
-          "video"
-          :
-          "image"
+    selectedStoryMusic = null;
+    selectedStoryFilter = "none";
 
-      });
-
-
-    if(error)throw error;
-
-
-    toast(
-      "Story published."
-    );
-
+    toast("Story published.");
     await renderView("home");
 
   }catch(e){
-
-    toast(e.message);
+    toast(e.message || "Story failed.");
   }
 }
 
@@ -1337,26 +1481,21 @@ async function publishPost(){
 
     };
 
-
-    /*
-      Only add music_id when a track
-      was actually selected.
-    */
-
     if(selectedMusic?.id){
-
       postData.music_id =
         selectedMusic.id;
     }
 
+    if(selectedFilter && selectedFilter !== "none"){
+      postData.filter = selectedFilter;
+    }
 
     console.log(
       "Creating post:",
       postData
     );
 
-
-    const {
+    let {
       data:createdPost,
       error
     } = await sb
@@ -1365,6 +1504,17 @@ async function publishPost(){
       .select()
       .single();
 
+    /* Retry without filter if column missing */
+    if(error && (error.message||"").match(/filter|column/i)){
+      delete postData.filter;
+      const retry = await sb
+        .from("posts")
+        .insert(postData)
+        .select()
+        .single();
+      createdPost = retry.data;
+      error = retry.error;
+    }
 
     if(error){
 
@@ -1408,12 +1558,7 @@ async function publishPost(){
 
 
     selectedMusic = null;
-
-
-    /*
-      Return to Home and reload
-      the feed.
-    */
+    selectedFilter = "none";
 
     await renderView("home");
 
@@ -1841,19 +1986,26 @@ async function sharePost(id){
 
 async function renderCreate(){
 
+  selectedMusic = null;
+  selectedStoryMusic = null;
+  selectedFilter = "none";
+  selectedStoryFilter = "none";
+  musicCategory = "All";
+
   $("main").innerHTML = `
 
     <section class="panel">
 
-      <div class="title">
-        Create a post
-      </div>
+      <div class="title">Create a post</div>
 
       <input
         id="createFile"
         class="field"
         type="file"
-        accept="image/*,video/*">
+        accept="image/*,video/*"
+        onchange="previewCreateMedia()">
+
+      <div id="createPreview" class="create-preview hidden"></div>
 
       <textarea
         id="createCaption"
@@ -1861,230 +2013,294 @@ async function renderCreate(){
         maxlength="2000"
         placeholder="Write a caption..."></textarea>
 
-      <div class="muted">
-        Maximum upload size: 50MB
+      <div class="muted">Maximum upload size: 50MB</div>
+
+      <div class="panel" style="margin-top:10px">
+        <b>Filters</b>
+        <div class="muted">Snapchat & TikTok style filters</div>
+        <div id="filterGrid" class="filter-grid"></div>
       </div>
 
-      <div class="panel">
-
+      <div class="panel" style="margin-top:10px">
         <b>Music</b>
-
-        <div class="muted">
-          Select music for your post.
+        <div class="muted">Beatz · Drills · Funk + library tracks</div>
+        <div class="wrap" style="margin-top:8px">
+          <button class="btn" onclick="setMusicCategory('All')">All</button>
+          <button class="btn" onclick="setMusicCategory('Beatz')">Beatz</button>
+          <button class="btn" onclick="setMusicCategory('Drills')">Drills</button>
+          <button class="btn" onclick="setMusicCategory('Funk')">Funk</button>
         </div>
-
         <input
           id="musicSearch"
           class="field"
-          placeholder="Filter songs..."
-          oninput="filterMusic(this.value)"
-          style="margin-top:8px">
-
-        <div
-          id="selectedMusicLabel"
-          class="muted"
-          style="margin-top:6px">
-          No song selected.
-        </div>
-
-        <div
-          id="musicList"
-          class="wrap"
-          style="margin-top:8px">
-
-          Loading...
-
-        </div>
-
+          placeholder="Search songs..."
+          oninput="filterMusic(this.value)">
+        <div id="selectedMusicLabel" class="muted" style="margin-top:6px">No song selected.</div>
+        <div id="musicList" class="wrap" style="margin-top:8px">Loading...</div>
       </div>
 
-      <button
-        class="btn primary"
-        onclick="publishPost()">
-        🚀 Publish to Vidora
-      </button>
+      <button class="btn primary" onclick="publishPost()">🚀 Publish to Vidora</button>
 
     </section>
 
-
     <section class="panel">
 
-      <div class="title">
-        Create a story
-      </div>
+      <div class="title">Create a story</div>
 
       <input
         id="storyFile"
         class="field"
         type="file"
-        accept="image/*,video/*">
+        accept="image/*,video/*"
+        onchange="previewStoryMedia()">
 
-      <button
-        class="btn primary"
-        onclick="publishStory()">
-        📖 Publish Story
-      </button>
+      <div id="storyPreview" class="create-preview hidden"></div>
+
+      <div class="panel" style="margin-top:10px">
+        <b>Story filter</b>
+        <div id="storyFilterGrid" class="filter-grid"></div>
+      </div>
+
+      <div class="panel" style="margin-top:10px">
+        <b>Story music</b>
+        <div class="muted">Plays automatically like WhatsApp stories</div>
+        <div class="wrap" style="margin-top:8px">
+          <button class="btn" onclick="setStoryMusicCategory('All')">All</button>
+          <button class="btn" onclick="setStoryMusicCategory('Beatz')">Beatz</button>
+          <button class="btn" onclick="setStoryMusicCategory('Drills')">Drills</button>
+          <button class="btn" onclick="setStoryMusicCategory('Funk')">Funk</button>
+        </div>
+        <div id="selectedStoryMusicLabel" class="muted" style="margin-top:6px">No song selected.</div>
+        <div id="storyMusicList" class="wrap" style="margin-top:8px">Loading...</div>
+      </div>
+
+      <button class="btn primary" onclick="publishStory()">📖 Publish Story</button>
 
     </section>
   `;
 
-
-  selectedMusic = null;
-  window._musicTracks = [];
+  renderFilterGrid("filterGrid", "post");
+  renderFilterGrid("storyFilterGrid", "story");
   await loadMusic();
+}
+
+
+function renderFilterGrid(containerId, mode){
+
+  const box = $(containerId);
+  if(!box) return;
+
+  const current =
+    mode === "story"
+    ? selectedStoryFilter
+    : selectedFilter;
+
+  box.innerHTML = FILTERS.map(f=>`
+    <button
+      class="filter-chip ${current===f.id?"active":""}"
+      onclick="selectFilter('${f.id}','${mode}')"
+      title="${esc(f.name)}">
+      <span class="filter-swatch" style="filter:${f.css}"></span>
+      <small>${esc(f.name)}</small>
+    </button>
+  `).join("");
+}
+
+
+function selectFilter(id, mode){
+
+  if(mode === "story"){
+    selectedStoryFilter = id;
+    renderFilterGrid("storyFilterGrid", "story");
+    applyPreviewFilter("storyPreview", id);
+  }else{
+    selectedFilter = id;
+    renderFilterGrid("filterGrid", "post");
+    applyPreviewFilter("createPreview", id);
+  }
+
+  toast("Filter: " + (FILTERS.find(x=>x.id===id)?.name || id));
+}
+
+
+function applyPreviewFilter(previewId, filterId){
+
+  const box = $(previewId);
+  if(!box) return;
+  const el = box.querySelector("img,video");
+  if(el){
+    el.style.filter = getFilterCss(filterId);
+  }
+}
+
+
+function previewCreateMedia(){
+
+  const file = $("createFile")?.files[0];
+  const box = $("createPreview");
+  if(!file || !box) return;
+
+  const url = URL.createObjectURL(file);
+  const isVideo = file.type.startsWith("video/");
+
+  box.classList.remove("hidden");
+  box.innerHTML = isVideo
+    ? `<video class="post-media" controls playsinline src="${url}" style="filter:${getFilterCss(selectedFilter)}"></video>`
+    : `<img class="post-media" src="${url}" style="filter:${getFilterCss(selectedFilter)}">`;
+}
+
+
+function previewStoryMedia(){
+
+  const file = $("storyFile")?.files[0];
+  const box = $("storyPreview");
+  if(!file || !box) return;
+
+  const url = URL.createObjectURL(file);
+  const isVideo = file.type.startsWith("video/");
+
+  box.classList.remove("hidden");
+  box.innerHTML = isVideo
+    ? `<video class="post-media" controls playsinline src="${url}" style="filter:${getFilterCss(selectedStoryFilter)}"></video>`
+    : `<img class="post-media" src="${url}" style="filter:${getFilterCss(selectedStoryFilter)}">`;
 }
 
 
 async function loadMusic(){
 
-  const box = $("musicList");
-  if(!box) return;
+  let dbTracks = [];
 
-  const {
-    data,
-    error
-  } = await sb
-    .from("tracks")
-    .select(
-      "id,title,artist,audio_url"
-    )
-    .order(
-      "title",
-      {ascending:true}
-    )
-    .limit(100);
+  try{
+    const { data } = await sb
+      .from("tracks")
+      .select("id,title,artist,audio_url,category")
+      .order("title",{ascending:true})
+      .limit(100);
 
+    dbTracks = (data||[]).map(t=>({
+      ...t,
+      category: t.category || "Library"
+    }));
+  }catch(e){}
 
-  if(error){
+  window._musicTracks = [
+    ...BUILTIN_TRACKS,
+    ...dbTracks
+  ];
 
-    box.innerHTML =
-      `
-        <span class="muted">
-          Music library unavailable: ${esc(error.message)}
-        </span>
-      `;
-
-    return;
-  }
-
-  window._musicTracks = data || [];
-
-  renderMusicList(window._musicTracks);
+  renderMusicList(window._musicTracks, "musicList", "post");
+  renderMusicList(window._musicTracks, "storyMusicList", "story");
 }
 
 
-function renderMusicList(list){
+function renderMusicList(list, boxId, mode){
 
-  const box = $("musicList");
+  const box = $(boxId || "musicList");
   if(!box) return;
 
+  const selected =
+    mode === "story"
+    ? selectedStoryMusic
+    : selectedMusic;
+
+  let rows = list || [];
+
+  if(musicCategory && musicCategory !== "All"){
+    rows = rows.filter(t=>
+      (t.category||"").toLowerCase() === musicCategory.toLowerCase()
+    );
+  }
+
   box.innerHTML =
-    (list||[])
-      .map(t=>{
+    rows.map(t=>{
+      const isSelected =
+        selected && selected.id === t.id;
 
-        const isSelected =
-          selectedMusic &&
-          selectedMusic.id === t.id;
-
-        return `
-
+      return `
         <button
-          class="btn ${isSelected ? "primary" : ""}"
-          data-music-id="${esc(t.id)}"
-          onclick="selectMusic('${t.id}')">
-
+          class="btn music-chip ${isSelected?"primary":""}"
+          onclick="${mode==="story"?`selectStoryMusic('${t.id}')`:`selectMusic('${t.id}')`}">
           🎵 ${esc(t.title)}
-
-          ${
-            t.artist
-            ?
-            `— ${esc(t.artist)}`
-            :
-            ""
-          }
-
+          ${t.artist ? `— ${esc(t.artist)}` : ""}
+          <span class="muted"> · ${esc(t.category||"")}</span>
         </button>
-
       `;
-      })
-      .join("")
-
+    }).join("")
     ||
+    `<span class="muted">No tracks in this category.</span>`;
+}
 
-    `
-      <span class="muted">
-        No tracks found.
-      </span>
-    `;
+
+function setMusicCategory(cat){
+  musicCategory = cat || "All";
+  filterMusic($("musicSearch")?.value || "");
+}
+
+
+function setStoryMusicCategory(cat){
+  musicCategory = cat || "All";
+  renderMusicList(window._musicTracks || [], "storyMusicList", "story");
 }
 
 
 function filterMusic(q){
 
-  const term =
-    (q || "")
-      .trim()
-      .toLowerCase();
+  const term = (q || "").trim().toLowerCase();
+  let all = window._musicTracks || [];
 
-  const all =
-    window._musicTracks || [];
-
-  if(!term){
-    renderMusicList(all);
-    return;
+  if(musicCategory && musicCategory !== "All"){
+    all = all.filter(t=>
+      (t.category||"").toLowerCase() === musicCategory.toLowerCase()
+    );
   }
 
-  const filtered =
-    all.filter(t=>
-      (t.title || "")
-        .toLowerCase()
-        .includes(term) ||
-      (t.artist || "")
-        .toLowerCase()
-        .includes(term)
+  if(term){
+    all = all.filter(t=>
+      (t.title||"").toLowerCase().includes(term) ||
+      (t.artist||"").toLowerCase().includes(term) ||
+      (t.category||"").toLowerCase().includes(term)
     );
+  }
 
-  renderMusicList(filtered);
+  renderMusicList(all, "musicList", "post");
 }
 
 
-async function selectMusic(id){
-
-  const {
-    data
-  } = await sb
-    .from("tracks")
-    .select("*")
-    .eq("id",id)
-    .maybeSingle();
-
+function selectMusic(id){
 
   selectedMusic =
-    data||null;
-
+    (window._musicTracks || []).find(t=>t.id===id) ||
+    BUILTIN_TRACKS.find(t=>t.id===id) ||
+    null;
 
   const label = $("selectedMusicLabel");
-
   if(label){
-    label.textContent =
-      selectedMusic
-      ?
-      `Selected: ${selectedMusic.title}${selectedMusic.artist ? " — " + selectedMusic.artist : ""}`
-      :
-      "No song selected.";
+    label.textContent = selectedMusic
+      ? `Selected: ${selectedMusic.title}${selectedMusic.artist ? " — " + selectedMusic.artist : ""}`
+      : "No song selected.";
   }
 
-  renderMusicList(
-    window._musicTracks || []
-  );
+  renderMusicList(window._musicTracks || [], "musicList", "post");
+  toast(selectedMusic ? `Selected ${selectedMusic.title}` : "Music not found.");
+}
 
-  toast(
-    selectedMusic
-    ?
-    `Selected ${selectedMusic.title}`
-    :
-    "Music not found."
-  );
+
+function selectStoryMusic(id){
+
+  selectedStoryMusic =
+    (window._musicTracks || []).find(t=>t.id===id) ||
+    BUILTIN_TRACKS.find(t=>t.id===id) ||
+    null;
+
+  const label = $("selectedStoryMusicLabel");
+  if(label){
+    label.textContent = selectedStoryMusic
+      ? `Selected: ${selectedStoryMusic.title}${selectedStoryMusic.artist ? " — " + selectedStoryMusic.artist : ""}`
+      : "No song selected.";
+  }
+
+  renderMusicList(window._musicTracks || [], "storyMusicList", "story");
+  toast(selectedStoryMusic ? `Story song: ${selectedStoryMusic.title}` : "Music not found.");
 }
 
 
@@ -3788,7 +4004,7 @@ function openAssistant(){
   ){
 
     assistantSay(
-      "Hi! I'm your Vidora AI assistant. Ask me general questions, weather questions, theme commands, music questions, or questions about Vidora."
+      "Hi! I'm your Vidora AI assistant. I can help with posts, stories, music (Beatz/Drills/Funk), filters, avatars, profile, messages, themes, and general questions. How can I help?"
     );
   }
 }
@@ -3991,12 +4207,85 @@ async function assistantSend(){
     low.includes("song") ||
     low.includes("beat") ||
     low.includes("drill") ||
-    low.includes("funk")
+    low.includes("funk") ||
+    low.includes("beatz")
   ){
 
     assistantSay(
-      "You can use the Music section when creating a post. Available tracks are loaded from Vidora's tracks table."
+      "On Create, pick Beatz, Drills, or Funk for posts and stories. Story music auto-plays like WhatsApp. Search the list or pick a category, then publish."
     );
+    return;
+  }
+
+  /* FILTERS */
+
+  if(
+    low.includes("filter") ||
+    low.includes("snapchat") ||
+    low.includes("tiktok") ||
+    low.includes("effect")
+  ){
+
+    assistantSay(
+      "Vidora has 20 filters (Vivid, Warm, Noir, Vintage, Neon, Cinema, and more). Open Create, choose a photo/video, tap a filter chip, then publish. Stories support filters too."
+    );
+    return;
+  }
+
+  /* STORY HELP */
+
+  if(
+    low.includes("story") ||
+    low.includes("stories")
+  ){
+
+    assistantSay(
+      "To post a story: Create → pick photo/video → optional filter + music → Publish Story. Viewers hear the song automatically while the story plays."
+    );
+    return;
+  }
+
+  /* POST HELP */
+
+  if(
+    low.includes("post") ||
+    low.includes("upload") ||
+    low.includes("publish")
+  ){
+
+    assistantSay(
+      "To publish a post: Create → choose media → caption → filter → music → Publish to Vidora. Max size 50MB. Your feed updates right after."
+    );
+    return;
+  }
+
+  /* AVATAR HELP */
+
+  if(
+    low.includes("avatar") ||
+    low.includes("profile picture") ||
+    low.includes("pfp")
+  ){
+
+    assistantSay(
+      "Tap the profile icon or Profile → Change avatar. Browse Original / New / Expanded packs, search by name, or upload your own photo, then Save avatar."
+    );
+    return;
+  }
+
+  /* HOW TO USE VIDORA */
+
+  if(
+    low.includes("how to") ||
+    low.includes("help") ||
+    low.includes("what can you") ||
+    low.includes("features")
+  ){
+
+    assistantSay(
+      "Vidora features: Home feed + stories, Discover users, Create posts/stories with filters & music, Messages with people you follow, Profile, notifications, themes, and this AI assistant. Ask me anything about these."
+    );
+    return;
   }
 
 
@@ -4247,6 +4536,8 @@ async function deleteAccount(){
 
 function closeModal(){
 
+  stopStoryAudio();
+
   $("modal")
     ?.classList.add(
       "hidden"
@@ -4379,8 +4670,29 @@ window.publishStory =
 window.selectMusic =
   selectMusic;
 
+window.selectStoryMusic =
+  selectStoryMusic;
+
 window.filterMusic =
   filterMusic;
+
+window.setMusicCategory =
+  setMusicCategory;
+
+window.setStoryMusicCategory =
+  setStoryMusicCategory;
+
+window.selectFilter =
+  selectFilter;
+
+window.previewCreateMedia =
+  previewCreateMedia;
+
+window.previewStoryMedia =
+  previewStoryMedia;
+
+window.renderFilterGrid =
+  renderFilterGrid;
 
 window.renderMusicList =
   renderMusicList;
