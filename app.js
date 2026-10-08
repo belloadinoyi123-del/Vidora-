@@ -363,6 +363,9 @@ async function loadProfile(){
 
 async function login(){
 
+  const btn = $("loginBtn");
+  const statusEl = $("authStatus");
+
   const email =
     $("loginEmail")
       ?.value.trim();
@@ -372,35 +375,72 @@ async function login(){
       ?.value;
 
   if(!email || !password){
-
-    return showStatus(
-      $("authStatus"),
+    showStatus(
+      statusEl,
       "Enter your email and password."
     );
-  }
-
-  const {
-    error
-  } = await sb.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if(error){
-
-    showStatus(
-      $("authStatus"),
-      error.message
-    );
-
     return;
   }
 
+  if(btn){
+    btn.disabled = true;
+    btn.textContent = "Signing in...";
+  }
+
   showStatus(
-    $("authStatus"),
-    "Login successful.",
+    statusEl,
+    "Signing in...",
     true
   );
+
+  try{
+
+    const {
+      data,
+      error
+    } = await sb.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if(error){
+      console.error("LOGIN ERROR:", error);
+      showStatus(
+        statusEl,
+        error.message || "Login failed."
+      );
+      return;
+    }
+
+    console.log("LOGIN OK:", data?.user?.id);
+
+    showStatus(
+      statusEl,
+      "Login successful.",
+      true
+    );
+
+    // enterApp is also triggered by onAuthStateChange,
+    // but call it here as a fallback
+    if(data?.user){
+      await enterApp(data.user);
+    }
+
+  }catch(err){
+
+    console.error("LOGIN EXCEPTION:", err);
+    showStatus(
+      statusEl,
+      err?.message || "Network or server error. Check console."
+    );
+
+  }finally{
+
+    if(btn){
+      btn.disabled = false;
+      btn.textContent = "Login";
+    }
+  }
 }
 
 
@@ -4288,6 +4328,12 @@ function subscribeRealtime(){
    GLOBAL FUNCTIONS
 ========================= */
 
+window.login =
+  login;
+
+window.signup =
+  signup;
+
 window.openAvatarPicker =
   openAvatarPicker;
 
@@ -4403,9 +4449,12 @@ document.addEventListener(
 
 
     if(loginBtn){
-
-      loginBtn.onclick =
-        login;
+      loginBtn.type = "button";
+      loginBtn.addEventListener("click", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        login();
+      });
     }
 
 
@@ -4416,9 +4465,12 @@ document.addEventListener(
 
 
     if(signupBtn){
-
-      signupBtn.onclick =
-        signup;
+      signupBtn.type = "button";
+      signupBtn.addEventListener("click", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        signup();
+      });
     }
 
 
