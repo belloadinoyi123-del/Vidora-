@@ -1060,11 +1060,11 @@ async function publishStory(){
   }
 }
 
-
 /* =========================
-   POSTS
+   POSTS / CREATE POST
 ========================= */
 
+    
 async function publishPost(){
 
   const file =
@@ -1075,6 +1075,21 @@ async function publishPost(){
       ?.value.trim();
 
 
+  console.log("=== VIDORA CREATE POST ===");
+  console.log("User:", user);
+  console.log("File:", file);
+  console.log("Caption:", caption);
+  console.log("Selected music:", selectedMusic);
+
+
+  if(!user){
+
+    return toast(
+      "You are not logged in."
+    );
+  }
+
+
   if(!file){
 
     return toast(
@@ -1083,7 +1098,18 @@ async function publishPost(){
   }
 
 
-  if(file.size>50*1024*1024){
+  if(
+    !file.type.startsWith("image/") &&
+    !file.type.startsWith("video/")
+  ){
+
+    return toast(
+      "Please choose an image or video."
+    );
+  }
+
+
+  if(file.size > 50 * 1024 * 1024){
 
     return toast(
       "Maximum upload size is 50MB."
@@ -1093,6 +1119,13 @@ async function publishPost(){
 
   try{
 
+    toast("Uploading media...");
+
+
+    /* =========================
+       UPLOAD MEDIA
+    ========================= */
+
     const url =
       await uploadMedia(
         file,
@@ -1100,192 +1133,147 @@ async function publishPost(){
       );
 
 
+    console.log(
+      "Media uploaded:",
+      url
+    );
+
+
+    if(!url){
+
+      throw new Error(
+        "Media upload returned no URL."
+      );
+    }
+
+
+    /* =========================
+       CREATE POST
+    ========================= */
+
+    const postData = {
+
+      user_id: user.id,
+
+      media_url: url,
+
+      media_type:
+        file.type.startsWith("video/")
+        ?
+        "video"
+        :
+        "image",
+
+      caption:
+        caption || ""
+
+    };
+
+
+    /*
+      Only add music_id when a track
+      was actually selected.
+    */
+
+    if(selectedMusic?.id){
+
+      postData.music_id =
+        selectedMusic.id;
+    }
+
+
+    console.log(
+      "Creating post:",
+      postData
+    );
+
+
     const {
+      data:createdPost,
       error
     } = await sb
       .from("posts")
-      .insert({
-
-        user_id:user.id,
-
-        media_url:url,
-
-        media_type:
-          file.type.startsWith("video/")
-          ?
-          "video"
-          :
-          "image",
-
-        caption:
-          caption||"",
-
-        music_id:
-          selectedMusic?.id||null
-
-      });
+      .insert(postData)
+      .select()
+      .single();
 
 
-    if(error)throw error;
+    if(error){
 
+      console.error(
+        "POST INSERT ERROR:",
+        error
+      );
+
+      throw new Error(
+        error.message ||
+        "Unable to create post."
+      );
+    }
+
+
+    console.log(
+      "Post created:",
+      createdPost
+    );
+
+
+    /* =========================
+       SUCCESS
+    ========================= */
 
     toast(
-      "Post published."
+      "Post published successfully!"
     );
 
 
     if($("createFile")){
-      $("createFile").value="";
+
+      $("createFile").value = "";
     }
+
 
     if($("createCaption")){
-      $("createCaption").value="";
+
+      $("createCaption").value = "";
     }
 
 
-    selectedMusic=null;
+    selectedMusic = null;
 
+
+    /*
+      Return to Home and reload
+      the feed.
+    */
 
     await renderView("home");
 
-  }catch(e){
 
-    toast(e.message);
-  }
-}
+  }catch(error){
 
-
-async function uploadMedia(
-  file,
-  folder
-){
-
-  if(!file){
-    throw new Error(
-      "No file selected."
-    );
-  }
-
-
-  const ext =
-    file.name.includes(".")
-    ?
-    file.name
-      .split(".")
-      .pop()
-      .toLowerCase()
-    :
-    "bin";
-
-
-  const path =
-    `${folder}/${user.id}/${crypto.randomUUID()}.${ext}`;
-
-
-  const {
-    error
-  } = await sb.storage
-    .from("media")
-    .upload(
-      path,
-      file,
-      {
-        upsert:false,
-        contentType:
-          file.type||undefined
-      }
+    console.error(
+      "CREATE POST FAILED:",
+      error
     );
 
 
-  if(error)throw error;
-
-
-  const {
-    data
-  } = sb.storage
-    .from("media")
-    .getPublicUrl(path);
-
-
-  return data.publicUrl;
-}
-
-
-async function deletePost(id){
-
-  if(
-    !confirm(
-      "Delete this post?"
-    )
-  ){
-    return;
-  }
-
-
-  const {
-    error
-  } = await sb
-    .from("posts")
-    .delete()
-    .eq("id",id)
-    .eq("user_id",user.id);
-
-
-  if(error){
-
-    return toast(
-      error.message
+    toast(
+      "Post failed: " +
+      (
+        error?.message ||
+        "Unknown error"
+      )
     );
   }
-
-
-  toast(
-    "Post deleted."
-  );
-
-  await renderView(
-    currentView
-  );
 }
 
-
-async function deleteStory(id){
-
-  if(
-    !confirm(
-      "Delete this story?"
-    )
-  ){
-    return;
-  }
+    
 
 
-  const {
-    error
-  } = await sb
-    .from("stories")
-    .delete()
-    .eq("id",id)
-    .eq("user_id",user.id);
-
-
-  if(error){
-
-    return toast(
-      error.message
-    );
-  }
-
-
-  closeModal();
-
-  toast(
-    "Story deleted."
-  );
-
-  await renderView("home");
-}
-
+    
+    
+  
 
 /* =========================
    LIKES
