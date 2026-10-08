@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <meta name="theme-color" content="#08080d">
+  <title>Vidora</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="toast" class="toast hidden"></div>
+
+<section id="authScreen" class="auth-screen">
+  <div class="auth-box">
+    <div class="logo">Vi<span>dora</span></div>
+    <p class="tagline">Watch. Share. Connect.</p>
+
+    <div id="loginForm" class="auth-form">
+      <h2>Welcome back</h2>
+      <input id="loginEmail" class="field" type="email" placeholder="Email" autocomplete="email">
+      <input id="loginPassword" class="field" type="password" placeholder="Password" autocomplete="current-password">
+      <button id="loginBtn" type="button" class="btn primary full">Login</button>
+      <button id="showSignupBtn" class="text-btn">Create an account</button>
+    </div>
+
+    <div id="signupForm" class="auth-form hidden">
+      <h2>Create account</h2>
+      <input id="signupDisplayName" class="field" type="text" placeholder="Display name">
+      <input id="signupUsername" class="field" type="text" placeholder="Username">
+      <input id="signupAge" class="field" type="number" min="13" max="100" placeholder="Age">
+      <input id="signupEmail" class="field" type="email" placeholder="Email" autocomplete="email">
+      <input id="signupPassword" class="field" type="password" placeholder="Password" autocomplete="new-password">
+      <input id="signupPasswordConfirm" class="field" type="password" placeholder="Confirm password" autocomplete="new-password">
+      <button id="signupBtn" type="button" class="btn primary full">Create account</button>
+      <button id="showLoginBtn" class="text-btn">Already have an account? Login</button>
+    </div>
+    <div id="authStatus" class="status"></div>
+  </div>
+</section>
+
+<div id="app" class="app hidden">
+  <header class="topbar">
+    <div class="logo small">Vi<span>dora</span></div>
+    <div class="top-actions">
+      <button id="openNotificationsBtn" class="iconbtn" title="Notifications">🔔 <span id="notifCount"></span></button>
+      <button id="openAvatarBtn" class="iconbtn" title="Avatar">👤</button>
+    </div>
+  </header>
+  <main id="main"></main>
+  <nav class="nav">
+    <button data-view="home"><span>🏠</span>Home</button>
+    <button data-view="discover"><span>🔎</span>Discover</button>
+    <button data-view="create"><span>➕</span>Create</button>
+    <button data-view="messages"><span>💬</span>Messages</button>
+    <button data-view="profile"><span>👤</span>Profile</button>
+  </nav>
+</div>
+
+<div id="modal" class="modal hidden"><div id="sheet" class="sheet"></div></div>
+
+<button id="assistantFab" class="assistant-fab">✨</button>
+<section id="assistantBox" class="assistant-box hidden">
+  <div class="assistant-header">
+    <div><b>Vidora AI</b><div class="muted">Your Vidora assistant</div></div>
+    <button id="closeAssistant" class="iconbtn">×</button>
+  </div>
+  <div id="assistantMessages" class="assistant-messages"></div>
+  <div class="assistant-input">
+    <input id="assistantInput" class="field" placeholder="Ask about Vidora or anything else...">
+    <button id="assistantSend" class="btn primary">Send</button>
+  </div>
+</section>
+<script src="app.js"></script>
+</body>
+</html>
