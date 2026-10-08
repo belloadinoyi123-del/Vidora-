@@ -1,7 +1,12 @@
 /* =========================================================
    VIDORA APP.JS
-   Complete social app controller
+   Complete controller
    ========================================================= */
+
+
+/* =========================================================
+   SUPABASE
+========================================================= */
 
 const SUPABASE_URL =
   "https://htnrqgzxkfktwoioscjr.supabase.co";
@@ -16,121 +21,14 @@ const sb = supabase.createClient(
 
 
 /* =========================================================
-   AVATARS
+   HELPERS
 ========================================================= */
 
-const OLD_AVATARS = [
-  {name:"Nova",file:"./nova.png",cat:"Original"},
-  {name:"Kai",file:"./kai.png",cat:"Original"},
-  {name:"Luna",file:"./luna.png",cat:"Original"},
-  {name:"Ivy",file:"./ivy.png",cat:"Original"},
-  {name:"Orion",file:"./orion.png",cat:"Original"},
-  {name:"Zeno",file:"./zeno.png",cat:"Original"},
-  {name:"Sage",file:"./sage.png",cat:"Original"},
-  {name:"Rex",file:"./rex.png",cat:"Original"},
-  {name:"Pixel",file:"./pixel.png",cat:"Original"},
-  {name:"Vexa",file:"./vexa.png",cat:"Original"}
-];
-
-const NEW_AVATARS = [
-  "Aero","Mika","Juno","Kairo","Nia",
-  "Zara","Axel","Riven","Sora","Nyx",
-  "Aria","Dax","Milo","Zuri","NovaX",
-  "Kira","Echo","Tari","Vio","Onyx",
-  "Cleo","Ryo","Asha","Zenith","Kairos",
-  "Mira","Jett","Niko","Lumi","Vega"
-].map((name,i)=>({
-  name,
-  file:"./avatars/"+name.toLowerCase()+".png",
-  cat:i<10 ? "New" : "Expanded"
-}));
-
-const AVATARS = [
-  ...OLD_AVATARS,
-  ...NEW_AVATARS
-];
-
-
-/* =========================================================
-   FILTERS
-========================================================= */
-
-const FILTERS = [
-  {id:"none",name:"Original",css:"none"},
-  {id:"vivid",name:"Vivid",css:"saturate(1.6) contrast(1.1)"},
-  {id:"warm",name:"Warm",css:"sepia(.25) saturate(1.3) brightness(1.05)"},
-  {id:"cool",name:"Cool",css:"hue-rotate(15deg) saturate(1.2) brightness(1.05)"},
-  {id:"noir",name:"Noir",css:"grayscale(1) contrast(1.2)"},
-  {id:"vintage",name:"Vintage",css:"sepia(.45) contrast(1.1) brightness(.95)"},
-  {id:"fade",name:"Fade",css:"contrast(.85) brightness(1.1) saturate(.8)"},
-  {id:"drama",name:"Drama",css:"contrast(1.4) saturate(1.2)"},
-  {id:"glow",name:"Glow",css:"brightness(1.15) contrast(1.05) saturate(1.3)"},
-  {id:"moon",name:"Moon",css:"grayscale(.4) brightness(1.1) contrast(1.15) hue-rotate(200deg)"},
-  {id:"sunset",name:"Sunset",css:"sepia(.35) hue-rotate(-15deg) saturate(1.5)"},
-  {id:"arctic",name:"Arctic",css:"hue-rotate(180deg) saturate(.7) brightness(1.1)"},
-  {id:"pop",name:"Pop",css:"saturate(2) contrast(1.15)"},
-  {id:"soft",name:"Soft",css:"blur(.3px) brightness(1.08) contrast(.92)"},
-  {id:"cinema",name:"Cinema",css:"contrast(1.25) saturate(.9) brightness(.95)"},
-  {id:"neon",name:"Neon",css:"saturate(1.8) contrast(1.2) hue-rotate(300deg)"},
-  {id:"retro",name:"Retro",css:"sepia(.5) contrast(1.2) saturate(1.4)"},
-  {id:"mist",name:"Mist",css:"brightness(1.12) contrast(.88)"},
-  {id:"fire",name:"Fire",css:"sepia(.3) hue-rotate(-30deg) saturate(1.7) contrast(1.1)"},
-  {id:"ice",name:"Ice",css:"hue-rotate(160deg) saturate(.85) brightness(1.12)"}
-];
-
-
-/* =========================================================
-   BUILT-IN MUSIC
-   These are demo/royalty-friendly sample URLs.
-   For production, use audio you own or are licensed to use.
-========================================================= */
-
-const BUILTIN_TRACKS = [
-  {id:"bz1",title:"Night Pulse",artist:"Vidora Beatz",category:"Beatz",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"},
-  {id:"bz2",title:"Chrome Drive",artist:"Vidora Beatz",category:"Beatz",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"},
-  {id:"bz3",title:"Low Rider",artist:"Vidora Beatz",category:"Beatz",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"},
-  {id:"bz4",title:"Skyline",artist:"Vidora Beatz",category:"Beatz",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"},
-  {id:"bz5",title:"Velvet Knock",artist:"Vidora Beatz",category:"Beatz",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"},
-  {id:"bz6",title:"Midnight Grid",artist:"Vidora Beatz",category:"Beatz",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"},
-  {id:"bz7",title:"Soft Thunder",artist:"Vidora Beatz",category:"Beatz",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"},
-  {id:"bz8",title:"Neon Walk",artist:"Vidora Beatz",category:"Beatz",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"},
-
-  {id:"dr1",title:"UK Slide",artist:"Vidora Drills",category:"Drills",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3"},
-  {id:"dr2",title:"Dark Lane",artist:"Vidora Drills",category:"Drills",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3"},
-  {id:"dr3",title:"Cold Blocks",artist:"Vidora Drills",category:"Drills",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3"},
-  {id:"dr4",title:"Rapid Fire",artist:"Vidora Drills",category:"Drills",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3"},
-  {id:"dr5",title:"Shadow Step",artist:"Vidora Drills",category:"Drills",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3"},
-  {id:"dr6",title:"Street Clock",artist:"Vidora Drills",category:"Drills",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3"},
-  {id:"dr7",title:"Iron Tempo",artist:"Vidora Drills",category:"Drills",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"},
-  {id:"dr8",title:"Frost Drill",artist:"Vidora Drills",category:"Drills",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3"},
-
-  {id:"fk1",title:"Groovy Lane",artist:"Vidora Funk",category:"Funk",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"},
-  {id:"fk2",title:"Bass Pocket",artist:"Vidora Funk",category:"Funk",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"},
-  {id:"fk3",title:"Saturday Glow",artist:"Vidora Funk",category:"Funk",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"},
-  {id:"fk4",title:"Electric Soul",artist:"Vidora Funk",category:"Funk",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"},
-  {id:"fk5",title:"Disco Heat",artist:"Vidora Funk",category:"Funk",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"},
-  {id:"fk6",title:"Funky Horizon",artist:"Vidora Funk",category:"Funk",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"},
-  {id:"fk7",title:"Rhythm Room",artist:"Vidora Funk",category:"Funk",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"},
-  {id:"fk8",title:"Gold Step",artist:"Vidora Funk",category:"Funk",audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"}
-];
-
-
-/* =========================================================
-   STATE
-========================================================= */
+const $ = id => document.getElementById(id);
 
 let user = null;
 let profile = null;
 let currentView = "home";
-
-let selectedAvatar = null;
-let uploadedAvatarFile = null;
-
-let storyItems = [];
-let storyIndex = 0;
-
-let commentsPost = null;
-let chatUser = null;
 
 let selectedMusic = null;
 let selectedStoryMusic = null;
@@ -138,54 +36,75 @@ let selectedStoryMusic = null;
 let selectedFilter = "none";
 let selectedStoryFilter = "none";
 
-let musicCategory = "All";
-let storyMusicCategory = "All";
-
-let assistantHistory = [];
-let realtimeChannel = null;
+let storyItems = [];
+let storyIndex = 0;
 let storyAudio = null;
 
-let appStarting = false;
+let commentsPost = null;
+let chatUser = null;
+
+let realtimeChannel = null;
 let authListenerReady = false;
+let appStarting = false;
+
+let assistantHistory = [];
+
+let musicCategory = "All";
 
 
-/* =========================================================
-   HELPERS
-========================================================= */
-
-const $ = id => document.getElementById(id);
-
-
-function toast(msg){
+function toast(message){
 
   const el = $("toast");
 
   if(!el) return;
 
-  el.textContent = String(msg || "");
+  el.textContent = String(message || "");
 
   el.classList.remove("hidden");
 
-  clearTimeout(window.__vidoraToastTimer);
+  clearTimeout(window.__vidoraToast);
 
-  window.__vidoraToastTimer = setTimeout(()=>{
+  window.__vidoraToast = setTimeout(()=>{
     el.classList.add("hidden");
   },3000);
 }
 
 
-function esc(v=""){
+function esc(value = ""){
 
-  return String(v).replace(
+  return String(value).replace(
     /[&<>"']/g,
-    m => ({
+    character => ({
       "&":"&amp;",
       "<":"&lt;",
       ">":"&gt;",
       '"':"&quot;",
       "'":"&#039;"
-    }[m])
+    }[character])
   );
+}
+
+
+function safeError(error, fallback = "Something went wrong."){
+
+  return (
+    error?.message ||
+    error?.details ||
+    error?.hint ||
+    fallback
+  );
+}
+
+
+function showStatus(element,message,success=false){
+
+  if(!element) return;
+
+  element.textContent = message || "";
+
+  element.className =
+    "status " +
+    (success ? "ok" : "err");
 }
 
 
@@ -195,15 +114,7 @@ function fallbackAvatar(name="V"){
     encodeURIComponent(`
       <svg xmlns="http://www.w3.org/2000/svg"
            width="160"
-           height="160"
-           viewBox="0 0 160 160">
-
-        <defs>
-          <linearGradient id="g">
-            <stop offset="0%" stop-color="#8b5cf6"/>
-            <stop offset="100%" stop-color="#ff2d75"/>
-          </linearGradient>
-        </defs>
+           height="160">
 
         <rect
           width="160"
@@ -213,20 +124,20 @@ function fallbackAvatar(name="V"){
 
         <circle
           cx="80"
-          cy="62"
+          cy="60"
           r="30"
-          fill="url(#g)"/>
+          fill="#8b5cf6"/>
 
         <path
-          d="M30 145c8-43 92-43 100 0"
-          fill="url(#g)"/>
+          d="M30 150c8-45 92-45 100 0"
+          fill="#ff2d75"/>
 
         <text
           x="80"
           y="153"
           text-anchor="middle"
           fill="white"
-          font-size="14"
+          font-size="15"
           font-family="Arial">
           ${esc(name).slice(0,1)}
         </text>
@@ -236,53 +147,189 @@ function fallbackAvatar(name="V"){
 }
 
 
-function avatarSrc(a){
+function avatarSrc(value){
 
-  if(!a){
+  if(!value){
     return fallbackAvatar("V");
   }
 
-  if(
-    String(a).startsWith("http") ||
-    String(a).startsWith("data:")
-  ){
-    return a;
+  return String(value);
+}
+
+
+/* =========================================================
+   FILTERS
+========================================================= */
+
+const FILTERS = [
+
+  {
+    id:"none",
+    name:"Original",
+    css:"none"
+  },
+
+  {
+    id:"vivid",
+    name:"Vivid",
+    css:"saturate(1.6) contrast(1.1)"
+  },
+
+  {
+    id:"warm",
+    name:"Warm",
+    css:"sepia(.25) saturate(1.3) brightness(1.05)"
+  },
+
+  {
+    id:"cool",
+    name:"Cool",
+    css:"hue-rotate(15deg) saturate(1.2) brightness(1.05)"
+  },
+
+  {
+    id:"noir",
+    name:"Noir",
+    css:"grayscale(1) contrast(1.2)"
+  },
+
+  {
+    id:"vintage",
+    name:"Vintage",
+    css:"sepia(.45) contrast(1.1) brightness(.95)"
+  },
+
+  {
+    id:"fade",
+    name:"Fade",
+    css:"contrast(.85) brightness(1.1) saturate(.8)"
+  },
+
+  {
+    id:"drama",
+    name:"Drama",
+    css:"contrast(1.4) saturate(1.2)"
+  },
+
+  {
+    id:"glow",
+    name:"Glow",
+    css:"brightness(1.15) contrast(1.05) saturate(1.3)"
+  },
+
+  {
+    id:"cinema",
+    name:"Cinema",
+    css:"contrast(1.25) saturate(.9) brightness(.95)"
+  },
+
+  {
+    id:"retro",
+    name:"Retro",
+    css:"sepia(.5) contrast(1.2) saturate(1.4)"
+  },
+
+  {
+    id:"neon",
+    name:"Neon",
+    css:"saturate(1.8) contrast(1.2) hue-rotate(300deg)"
   }
 
-  return a;
-}
+];
 
 
-function showStatus(el,msg,ok=false){
-
-  if(!el) return;
-
-  el.textContent = msg || "";
-
-  el.className =
-    "status " + (ok ? "ok" : "err");
-}
-
-
-function safeError(error,fallback="Something went wrong."){
-
-  return error?.message ||
-         error?.details ||
-         error?.hint ||
-         fallback;
-}
-
-
-function isColumnMissing(error,column){
-
-  const msg =
-    String(error?.message || "").toLowerCase();
+function getFilterCss(id){
 
   return (
-    msg.includes("column") &&
-    msg.includes(String(column).toLowerCase())
+    FILTERS.find(
+      filter => filter.id === id
+    )?.css || "none"
   );
 }
+
+
+/* =========================================================
+   BUILT-IN MUSIC
+   Use only music you have permission to use in production.
+========================================================= */
+
+const BUILTIN_TRACKS = [
+
+  {
+    id:"bz1",
+    title:"Night Pulse",
+    artist:"Vidora Beatz",
+    category:"Beatz",
+    audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  },
+
+  {
+    id:"bz2",
+    title:"Chrome Drive",
+    artist:"Vidora Beatz",
+    category:"Beatz",
+    audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+  },
+
+  {
+    id:"bz3",
+    title:"Low Rider",
+    artist:"Vidora Beatz",
+    category:"Beatz",
+    audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+  },
+
+  {
+    id:"dr1",
+    title:"UK Slide",
+    artist:"Vidora Drills",
+    category:"Drills",
+    audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+  },
+
+  {
+    id:"dr2",
+    title:"Dark Lane",
+    artist:"Vidora Drills",
+    category:"Drills",
+    audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
+  },
+
+  {
+    id:"dr3",
+    title:"Cold Blocks",
+    artist:"Vidora Drills",
+    category:"Drills",
+    audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
+  },
+
+  {
+    id:"fk1",
+    title:"Groovy Lane",
+    artist:"Vidora Funk",
+    category:"Funk",
+    audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"
+  },
+
+  {
+    id:"fk2",
+    title:"Bass Pocket",
+    artist:"Vidora Funk",
+    category:"Funk",
+    audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+  },
+
+  {
+    id:"fk3",
+    title:"Electric Soul",
+    artist:"Vidora Funk",
+    category:"Funk",
+    audio_url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  }
+
+];
+
+window._musicTracks = [...BUILTIN_TRACKS];
 
 
 /* =========================================================
@@ -308,23 +355,17 @@ async function uploadMedia(file,folder="posts"){
     throw new Error("This file type is not supported.");
   }
 
-  const ext =
-    file.name && file.name.includes(".")
+  const extension =
+    file.name?.includes(".")
     ? file.name.split(".").pop().toLowerCase()
-    : (
-        file.type.startsWith("video/")
-        ? "mp4"
-        : file.type.startsWith("audio/")
-        ? "webm"
-        : "jpg"
-      );
+    : "bin";
 
   const path =
     `${folder}/${user.id}/${Date.now()}-${Math.random()
       .toString(36)
-      .slice(2,9)}.${ext}`;
+      .slice(2,9)}.${extension}`;
 
-  const {data,error} =
+  const { data,error } =
     await sb.storage
       .from("media")
       .upload(
@@ -338,21 +379,21 @@ async function uploadMedia(file,folder="posts"){
       );
 
   if(error){
-    throw new Error(
-      safeError(error,"Media upload failed.")
-    );
+    throw error;
   }
 
-  const {data:publicData} =
+  const {
+    data:publicData
+  } =
     sb.storage
       .from("media")
       .getPublicUrl(
-        data?.path || path
+        data.path
       );
 
   if(!publicData?.publicUrl){
     throw new Error(
-      "Could not create the media URL."
+      "Could not create media URL."
     );
   }
 
@@ -361,7 +402,7 @@ async function uploadMedia(file,folder="posts"){
 
 
 /* =========================================================
-   AUTH
+   AUTH INITIALIZATION
 ========================================================= */
 
 async function init(){
@@ -372,23 +413,32 @@ async function init(){
 
   authListenerReady = true;
 
+  console.log(
+    "VIDORA: initializing..."
+  );
+
   try{
 
     const {
-      data:{
-        session
-      }
-    } = await sb.auth.getSession();
+      data,
+      error
+    } =
+      await sb.auth.getSession();
 
-    if(session?.user){
+    if(error){
+      throw error;
+    }
+
+    if(data?.session?.user){
 
       await enterApp(
-        session.user
+        data.session.user
       );
 
     }else{
 
-      $("app")?.classList.add("hidden");
+      $("app")
+        ?.classList.add("hidden");
 
       $("authScreen")
         ?.classList.remove("hidden");
@@ -401,14 +451,18 @@ async function init(){
       error
     );
 
-    $("app")?.classList.add("hidden");
+    $("app")
+      ?.classList.add("hidden");
 
     $("authScreen")
       ?.classList.remove("hidden");
 
     showStatus(
       $("authStatus"),
-      "Unable to connect to Vidora. Check your internet connection."
+      safeError(
+        error,
+        "Unable to connect to Vidora."
+      )
     );
   }
 
@@ -429,10 +483,6 @@ async function init(){
         session?.user
       ){
 
-        /*
-          Do not initialize the application again if
-          the same account is already open.
-        */
         if(
           !user ||
           user.id !== session.user.id
@@ -450,17 +500,6 @@ async function init(){
         user = null;
         profile = null;
 
-        if(realtimeChannel){
-
-          try{
-            await sb.removeChannel(
-              realtimeChannel
-            );
-          }catch(e){}
-
-          realtimeChannel = null;
-        }
-
         stopStoryAudio();
 
         $("app")
@@ -468,9 +507,6 @@ async function init(){
 
         $("authScreen")
           ?.classList.remove("hidden");
-
-        $("loginPassword")
-          && ($("loginPassword").value = "");
       }
 
     }
@@ -478,22 +514,26 @@ async function init(){
 }
 
 
-async function enterApp(u){
+/* =========================================================
+   ENTER APP
+========================================================= */
 
-  if(!u){
+async function enterApp(currentUser){
+
+  if(!currentUser){
     return;
   }
 
   if(
     appStarting &&
-    user?.id === u.id
+    user?.id === currentUser.id
   ){
     return;
   }
 
   appStarting = true;
 
-  user = u;
+  user = currentUser;
 
   $("authScreen")
     ?.classList.add("hidden");
@@ -509,8 +549,6 @@ async function enterApp(u){
 
     await renderView("home");
 
-    subscribeRealtime();
-
   }catch(error){
 
     console.error(
@@ -521,16 +559,21 @@ async function enterApp(u){
     toast(
       safeError(
         error,
-        "Vidora could not load your account."
+        "Unable to load Vidora."
       )
     );
 
   }finally{
 
     appStarting = false;
+
   }
 }
 
+
+/* =========================================================
+   PROFILE
+========================================================= */
 
 async function loadProfile(){
 
@@ -541,16 +584,17 @@ async function loadProfile(){
   const {
     data,
     error
-  } = await sb
-    .from("profiles")
-    .select("*")
-    .eq("id",user.id)
-    .maybeSingle();
+  } =
+    await sb
+      .from("profiles")
+      .select("*")
+      .eq("id",user.id)
+      .maybeSingle();
 
   if(error){
 
-    console.error(
-      "PROFILE LOAD:",
+    console.warn(
+      "PROFILE:",
       error
     );
 
@@ -563,63 +607,88 @@ async function loadProfile(){
 
 /* =========================================================
    LOGIN
+   IMPORTANT AUTH FUNCTION
 ========================================================= */
 
 async function login(){
 
-  const btn = $("loginBtn");
-  const statusEl = $("authStatus");
+  const emailInput =
+    $("loginEmail");
+
+  const passwordInput =
+    $("loginPassword");
+
+  const button =
+    $("loginBtn");
+
+  const status =
+    $("authStatus");
 
   const email =
-    $("loginEmail")
-      ?.value
-      .trim();
+    emailInput?.value
+      ?.trim() || "";
 
   const password =
-    $("loginPassword")
-      ?.value || "";
+    passwordInput?.value || "";
 
-  if(!email || !password){
+
+  if(!email){
 
     showStatus(
-      statusEl,
-      "Enter your email and password."
+      status,
+      "Enter your email."
     );
 
     return;
   }
 
-  if(btn){
 
-    btn.disabled = true;
-    btn.textContent = "Signing in...";
+  if(!password){
+
+    showStatus(
+      status,
+      "Enter your password."
+    );
+
+    return;
   }
 
+
+  if(button){
+
+    button.disabled = true;
+    button.textContent = "Signing in...";
+  }
+
+
   showStatus(
-    statusEl,
+    status,
     "Signing in...",
     true
   );
+
 
   try{
 
     const {
       data,
       error
-    } = await sb.auth.signInWithPassword({
-      email,
-      password
-    });
+    } =
+      await sb.auth.signInWithPassword({
+        email,
+        password
+      });
+
 
     if(error){
 
       console.error(
-        "LOGIN ERROR:",
+        "SUPABASE LOGIN ERROR:",
         error
       );
 
       showStatus(
-        statusEl,
+        status,
         safeError(
           error,
           "Login failed."
@@ -629,48 +698,48 @@ async function login(){
       return;
     }
 
+
+    if(!data?.user){
+
+      throw new Error(
+        "Login succeeded but no user was returned."
+      );
+    }
+
+
     showStatus(
-      statusEl,
+      status,
       "Login successful.",
       true
     );
 
-    /*
-      Supabase's SIGNED_IN event normally calls enterApp.
-      This fallback only calls it if the listener hasn't
-      already opened the app.
-    */
-    if(
-      data?.user &&
-      (!user || user.id !== data.user.id)
-    ){
 
-      await enterApp(
-        data.user
-      );
-    }
+    await enterApp(
+      data.user
+    );
 
   }catch(error){
 
     console.error(
-      "LOGIN EXCEPTION:",
+      "LOGIN ERROR:",
       error
     );
 
     showStatus(
-      statusEl,
+      status,
       safeError(
         error,
-        "Network error. Please try again."
+        "Unable to login. Check your internet connection."
       )
     );
 
   }finally{
 
-    if(btn){
+    if(button){
 
-      btn.disabled = false;
-      btn.textContent = "Login";
+      button.disabled = false;
+      button.textContent = "Login";
+
     }
   }
 }
@@ -685,21 +754,24 @@ async function signup(){
   const displayName =
     $("signupDisplayName")
       ?.value
-      .trim();
+      ?.trim() || "";
 
   const username =
     $("signupUsername")
       ?.value
-      .trim();
+      ?.trim()
+      .toLowerCase() || "";
 
   const age =
-    $("signupAge")
-      ?.value;
+    Number(
+      $("signupAge")
+        ?.value || 0
+    );
 
   const email =
     $("signupEmail")
       ?.value
-      .trim();
+      ?.trim() || "";
 
   const password =
     $("signupPassword")
@@ -709,8 +781,11 @@ async function signup(){
     $("signupPasswordConfirm")
       ?.value || "";
 
-  const statusEl =
+  const status =
     $("authStatus");
+
+  const button =
+    $("signupBtn");
 
 
   if(
@@ -723,7 +798,7 @@ async function signup(){
   ){
 
     showStatus(
-      statusEl,
+      status,
       "Complete all signup fields."
     );
 
@@ -731,10 +806,10 @@ async function signup(){
   }
 
 
-  if(Number(age) < 13){
+  if(age < 13){
 
     showStatus(
-      statusEl,
+      status,
       "You must be at least 13 to use Vidora."
     );
 
@@ -745,7 +820,7 @@ async function signup(){
   if(password.length < 6){
 
     showStatus(
-      statusEl,
+      status,
       "Password must be at least 6 characters."
     );
 
@@ -756,7 +831,7 @@ async function signup(){
   if(password !== confirmPassword){
 
     showStatus(
-      statusEl,
+      status,
       "Passwords do not match."
     );
 
@@ -764,14 +839,19 @@ async function signup(){
   }
 
 
-  const signupBtn =
-    $("signupBtn");
+  if(button){
 
-  if(signupBtn){
+    button.disabled = true;
+    button.textContent = "Creating...";
 
-    signupBtn.disabled = true;
-    signupBtn.textContent = "Creating...";
   }
+
+
+  showStatus(
+    status,
+    "Creating your account...",
+    true
+  );
 
 
   try{
@@ -779,26 +859,32 @@ async function signup(){
     const {
       data,
       error
-    } = await sb.auth.signUp({
+    } =
+      await sb.auth.signUp({
 
-      email,
-      password,
+        email,
+        password,
 
-      options:{
-        data:{
-          username,
-          display_name:displayName,
-          age:Number(age)
+        options:{
+          data:{
+            username,
+            display_name:displayName,
+            age
+          }
         }
-      }
 
-    });
+      });
 
 
     if(error){
 
+      console.error(
+        "SUPABASE SIGNUP ERROR:",
+        error
+      );
+
       showStatus(
-        statusEl,
+        status,
         safeError(
           error,
           "Unable to create account."
@@ -809,15 +895,24 @@ async function signup(){
     }
 
 
-    if(data?.user){
+    if(!data?.user){
 
-      /*
-        Some projects already have a trigger that creates
-        the profile. Upsert is safe for both setups.
-      */
-      const {
-        error:profileError
-      } = await sb
+      throw new Error(
+        "Account could not be created."
+      );
+    }
+
+
+    /*
+      Try to create/update profile.
+      If a database trigger already does this,
+      an error here will NOT destroy signup.
+    */
+
+    const {
+      error:profileError
+    } =
+      await sb
         .from("profiles")
         .upsert({
           id:data.user.id,
@@ -825,49 +920,61 @@ async function signup(){
           display_name:displayName
         });
 
-      if(profileError){
 
-        console.warn(
-          "PROFILE SIGNUP UPSERT:",
-          profileError
-        );
-      }
+    if(profileError){
+
+      console.warn(
+        "PROFILE UPSERT:",
+        profileError
+      );
+
+    }
 
 
-      if(data.session){
+    if(data.session){
 
-        showStatus(
-          statusEl,
-          "Account created successfully.",
-          true
-        );
+      showStatus(
+        status,
+        "Account created successfully.",
+        true
+      );
 
-      }else{
+      await enterApp(
+        data.user
+      );
 
-        showStatus(
-          statusEl,
-          "Account created. Check your email to confirm your account.",
-          true
-        );
-      }
+    }else{
+
+      showStatus(
+        status,
+        "Account created. Check your email to confirm your account.",
+        true
+      );
+
     }
 
   }catch(error){
 
+    console.error(
+      "SIGNUP ERROR:",
+      error
+    );
+
     showStatus(
-      statusEl,
+      status,
       safeError(
         error,
-        "Signup failed."
+        "Unable to create account."
       )
     );
 
   }finally{
 
-    if(signupBtn){
+    if(button){
 
-      signupBtn.disabled = false;
-      signupBtn.textContent = "Create account";
+      button.disabled = false;
+      button.textContent = "Create account";
+
     }
   }
 }
@@ -886,6 +993,7 @@ async function renderView(view){
   currentView =
     view || "home";
 
+
   document
     .querySelectorAll(".nav button")
     .forEach(button=>{
@@ -894,6 +1002,7 @@ async function renderView(view){
         "active",
         button.dataset.view === currentView
       );
+
     });
 
 
@@ -934,27 +1043,24 @@ async function blockedIds(){
   const {
     data,
     error
-  } = await sb
-    .from("blocks")
-    .select("blocked_id")
-    .eq(
-      "blocker_id",
-      user.id
-    );
+  } =
+    await sb
+      .from("blocks")
+      .select("blocked_id")
+      .eq(
+        "blocker_id",
+        user.id
+      );
 
   if(error){
-
-    console.warn(
-      "BLOCKS:",
-      error
-    );
-
     return new Set();
   }
 
   return new Set(
     (data || [])
-      .map(x=>x.blocked_id)
+      .map(
+        item => item.blocked_id
+      )
   );
 }
 
@@ -965,11 +1071,14 @@ async function blockedIds(){
 
 async function renderHome(){
 
-  if(!$("main")){
+  const main =
+    $("main");
+
+  if(!main){
     return;
   }
 
-  $("main").innerHTML = `
+  main.innerHTML = `
 
     <section class="panel">
 
@@ -990,28 +1099,19 @@ async function renderHome(){
     <div id="feed">
       Loading feed...
     </div>
+
   `;
 
 
   await renderStories();
 
 
-  const blocked =
-    await blockedIds();
-
-
-  /*
-    IMPORTANT:
-    First query only the original columns that your
-    existing Vidora database is known to have.
-
-    This prevents a missing music_id/filter column
-    from breaking the entire home feed.
-  */
   let posts = [];
-  let error = null;
 
-  const basicResult =
+  const {
+    data,
+    error
+  } =
     await sb
       .from("posts")
       .select(
@@ -1023,9 +1123,6 @@ async function renderHome(){
       )
       .limit(40);
 
-  posts = basicResult.data || [];
-  error = basicResult.error;
-
 
   if(error){
 
@@ -1036,15 +1133,17 @@ async function renderHome(){
 
     $("feed").innerHTML = `
       <div class="panel">
-        <b>Unable to load posts.</b>
+
+        <b>
+          Unable to load posts.
+        </b>
+
         <div class="muted">
           ${esc(
-            safeError(
-              error,
-              "Please try again."
-            )
+            safeError(error)
           )}
         </div>
+
       </div>
     `;
 
@@ -1052,74 +1151,27 @@ async function renderHome(){
   }
 
 
-  /*
-    Try optional columns separately.
-    If they don't exist, the feed continues normally.
-  */
-  if(posts.length){
-
-    const ids =
-      posts.map(p=>p.id);
-
-    try{
-
-      const optional =
-        await sb
-          .from("posts")
-          .select(
-            "id,music_id,filter"
-          )
-          .in(
-            "id",
-            ids
-          );
-
-      if(!optional.error){
-
-        const map = {};
-
-        (optional.data || [])
-          .forEach(p=>{
-            map[p.id] = p;
-          });
-
-        posts = posts.map(p=>({
-          ...p,
-          music_id:
-            map[p.id]?.music_id || null,
-          filter:
-            map[p.id]?.filter || "none"
-        }));
-
-      }else{
-
-        posts = posts.map(p=>({
-          ...p,
-          music_id:null,
-          filter:"none"
-        }));
-      }
-
-    }catch(e){
-
-      posts = posts.map(p=>({
-        ...p,
-        music_id:null,
-        filter:"none"
-      }));
-    }
-  }
+  posts = data || [];
 
 
-  const visible =
+  const blocked =
+    await blockedIds();
+
+
+  posts =
     posts.filter(
-      p=>!blocked.has(p.user_id)
+      post =>
+        !blocked.has(
+          post.user_id
+        )
     );
 
 
   const html =
     await Promise.all(
-      visible.map(renderPost)
+      posts.map(
+        renderPost
+      )
     );
 
 
@@ -1137,12 +1189,12 @@ async function renderHome(){
    RENDER POST
 ========================================================= */
 
-async function renderPost(p){
+async function renderPost(post){
 
   let author = null;
   let likes = 0;
   let comments = 0;
-  let liked = null;
+  let liked = false;
   let track = null;
 
 
@@ -1154,44 +1206,53 @@ async function renderPost(p){
       )
       .eq(
         "id",
-        p.user_id
+        post.user_id
       )
       .maybeSingle();
+
 
   author =
     authorResult.data || null;
 
 
-  const likesResult =
+  const likeResult =
     await sb
       .from("post_likes")
-      .select("*",{
-        count:"exact",
-        head:true
-      })
+      .select(
+        "*",
+        {
+          count:"exact",
+          head:true
+        }
+      )
       .eq(
         "post_id",
-        p.id
+        post.id
       );
+
 
   likes =
-    likesResult.count || 0;
+    likeResult.count || 0;
 
 
-  const commentsResult =
+  const commentResult =
     await sb
       .from("comments")
-      .select("*",{
-        count:"exact",
-        head:true
-      })
+      .select(
+        "*",
+        {
+          count:"exact",
+          head:true
+        }
+      )
       .eq(
         "post_id",
-        p.id
+        post.id
       );
 
+
   comments =
-    commentsResult.count || 0;
+    commentResult.count || 0;
 
 
   const likedResult =
@@ -1200,7 +1261,7 @@ async function renderPost(p){
       .select("id")
       .eq(
         "post_id",
-        p.id
+        post.id
       )
       .eq(
         "user_id",
@@ -1208,15 +1269,17 @@ async function renderPost(p){
       )
       .maybeSingle();
 
+
   liked =
-    likedResult.data;
+    !!likedResult.data;
 
 
   /*
-    Music is optional.
-    A missing tracks table must NOT break posts.
+    Optional music lookup.
+    Failure here must never break the post.
   */
-  if(p.music_id){
+
+  if(post.music_id){
 
     try{
 
@@ -1228,7 +1291,7 @@ async function renderPost(p){
           )
           .eq(
             "id",
-            p.music_id
+            post.music_id
           )
           .maybeSingle();
 
@@ -1236,88 +1299,58 @@ async function renderPost(p){
         track = result.data;
       }
 
-    }catch(e){}
+    }catch(error){}
   }
 
 
-  const filterCss =
-    getFilterCss(
-      p.filter || "none"
-    );
-
-
   const media =
-    p.media_type === "video"
+    post.media_type === "video"
+
     ?
+
     `
       <video
         class="post-media"
         controls
         playsinline
         preload="metadata"
-        style="filter:${filterCss}"
-        src="${esc(p.media_url)}">
+        src="${esc(post.media_url)}">
       </video>
     `
+
     :
+
     `
       <img
         class="post-media"
         loading="lazy"
-        style="filter:${filterCss}"
-        src="${esc(p.media_url)}"
+        src="${esc(post.media_url)}"
         alt="Vidora post">
     `;
 
 
-  const musicHtml =
+  const music =
     track
+
     ?
+
     `
-      <div
-        class="panel"
-        style="
-          margin-top:8px;
-          padding:9px 10px;
-        ">
+      <div class="panel">
 
-        <div
-          class="row"
-          style="
-            gap:8px;
-            align-items:center;
-          ">
+        🎵
+        <b>
+          ${esc(track.title || "Track")}
+        </b>
 
-          <span>🎵</span>
-
-          <div
-            style="
-              flex:1;
-              min-width:0;
-            ">
-
-            <b>
-              ${esc(
-                track.title ||
-                "Track"
-              )}
-            </b>
-
-            ${
-              track.artist
-              ?
-              `
-                <div class="muted">
-                  ${esc(track.artist)}
-                </div>
-              `
-              :
-              ""
-            }
-
-          </div>
-
-        </div>
+        ${
+          track.artist
+          ?
+          `<div class="muted">
+             ${esc(track.artist)}
+           </div>`
+          :
+          ""
+        }
 
         ${
           track.audio_url
@@ -1326,13 +1359,8 @@ async function renderPost(p){
             <audio
               controls
               preload="none"
-              style="
-                width:100%;
-                margin-top:6px;
-              "
-              src="${esc(
-                track.audio_url
-              )}">
+              style="width:100%;margin-top:7px"
+              src="${esc(track.audio_url)}">
             </audio>
           `
           :
@@ -1341,7 +1369,9 @@ async function renderPost(p){
 
       </div>
     `
+
     :
+
     "";
 
 
@@ -1349,13 +1379,12 @@ async function renderPost(p){
 
     <article
       class="card"
-      data-post-id="${esc(p.id)}">
+      data-post-id="${esc(post.id)}">
 
       <div class="row">
 
         <img
           class="avatar sm"
-          loading="lazy"
           src="${avatarSrc(
             author?.avatar_url
           )}"
@@ -1383,13 +1412,12 @@ async function renderPost(p){
         <span class="spacer"></span>
 
         ${
-          p.user_id === user.id
+          post.user_id === user.id
           ?
           `
             <button
               class="iconbtn"
-              onclick="deletePost('${esc(p.id)}')"
-              title="Delete post">
+              onclick="deletePost('${esc(post.id)}')">
               🗑
             </button>
           `
@@ -1401,10 +1429,10 @@ async function renderPost(p){
 
       ${media}
 
-      ${musicHtml}
+      ${music}
 
       ${
-        p.caption
+        post.caption
         ?
         `
           <div
@@ -1413,7 +1441,9 @@ async function renderPost(p){
               white-space:pre-wrap;
               word-break:break-word;
             ">
-            ${esc(p.caption)}
+
+            ${esc(post.caption)}
+
           </div>
         `
         :
@@ -1424,18 +1454,24 @@ async function renderPost(p){
 
         <button
           class="${liked ? "active" : ""}"
-          onclick="toggleLike('${esc(p.id)}')">
+          onclick="toggleLike('${esc(post.id)}')">
+
           ♥ ${likes}
+
         </button>
 
         <button
-          onclick="openComments('${esc(p.id)}')">
+          onclick="openComments('${esc(post.id)}')">
+
           💬 ${comments}
+
         </button>
 
         <button
-          onclick="sharePost('${esc(p.id)}')">
+          onclick="sharePost('${esc(post.id)}')">
+
           ↗ Share
+
         </button>
 
       </div>
@@ -1459,21 +1495,18 @@ async function renderStories(){
   }
 
 
-  const blocked =
-    await blockedIds();
-
-
   const {
-    data:stories,
+    data,
     error
-  } = await sb
-    .from("stories")
-    .select("*")
-    .order(
-      "created_at",
-      {ascending:false}
-    )
-    .limit(50);
+  } =
+    await sb
+      .from("stories")
+      .select("*")
+      .order(
+        "created_at",
+        {ascending:false}
+      )
+      .limit(50);
 
 
   if(error){
@@ -1483,11 +1516,9 @@ async function renderStories(){
       error
     );
 
-    storyItems = [];
-
     box.innerHTML = `
       <span class="muted">
-        Stories are unavailable right now.
+        No stories available.
       </span>
     `;
 
@@ -1496,19 +1527,18 @@ async function renderStories(){
 
 
   storyItems =
-    (stories || [])
-      .filter(
-        s=>!blocked.has(s.user_id)
-      );
+    data || [];
 
 
-  const users = [
-    ...new Set(
-      storyItems.map(
-        s=>s.user_id
+  const users =
+    [
+      ...new Set(
+        storyItems.map(
+          story =>
+            story.user_id
+        )
       )
-    )
-  ];
+    ];
 
 
   const profiles = {};
@@ -1517,103 +1547,117 @@ async function renderStories(){
   if(users.length){
 
     const {
-      data
-    } = await sb
-      .from("profiles")
-      .select(
-        "id,username,display_name,avatar_url"
-      )
-      .in(
-        "id",
-        users
+      data:profileData
+    } =
+      await sb
+        .from("profiles")
+        .select(
+          "id,username,display_name,avatar_url"
+        )
+        .in(
+          "id",
+          users
+        );
+
+
+    (profileData || [])
+      .forEach(
+        item=>{
+          profiles[item.id] = item;
+        }
       );
-
-
-    (data || []).forEach(
-      x=>{
-        profiles[x.id] = x;
-      }
-    );
   }
 
 
   const groups = {};
 
 
-  storyItems.forEach(s=>{
+  storyItems.forEach(
+    story=>{
 
-    if(!groups[s.user_id]){
-      groups[s.user_id] = [];
+      if(!groups[story.user_id]){
+        groups[story.user_id] = [];
+      }
+
+      groups[story.user_id].push(
+        story
+      );
+
     }
-
-    groups[s.user_id].push(s);
-
-  });
+  );
 
 
   box.innerHTML =
-
     Object.entries(groups)
-      .map(([id])=>{
+      .map(
+        ([id])=>{
 
-        const pr =
-          profiles[id] || {};
+          const p =
+            profiles[id] || {};
 
-        return `
+          return `
 
-          <button
-            class="storyitem"
-            onclick="openStoryUser('${esc(id)}')">
+            <button
+              class="storyitem"
+              onclick="openStoryUser('${esc(id)}')">
 
-            <div class="storyring">
+              <div class="storyring">
 
-              <img
-                loading="lazy"
-                src="${avatarSrc(
-                  pr.avatar_url
-                )}"
-                alt="">
+                <img
+                  src="${avatarSrc(
+                    p.avatar_url
+                  )}"
+                  alt="">
 
-            </div>
+              </div>
 
-            <small>
-              ${esc(
-                pr.username ||
-                pr.display_name ||
-                "Story"
-              )}
-            </small>
+              <small>
+                ${esc(
+                  p.username ||
+                  p.display_name ||
+                  "Story"
+                )}
+              </small>
 
-          </button>
-        `;
-      })
+            </button>
+
+          `;
+
+        }
+      )
       .join("") ||
 
-      `
-        <span class="muted">
-          No stories yet. Create the first one.
-        </span>
-      `;
+    `
+      <span class="muted">
+        No stories yet.
+      </span>
+    `;
 }
 
 
 async function openStoryUser(id){
 
-  const arr =
+  const stories =
     storyItems.filter(
-      s=>s.user_id === id
+      story =>
+        story.user_id === id
     );
 
-  if(!arr.length){
-    return toast("Story unavailable.");
+
+  if(!stories.length){
+    return toast(
+      "Story unavailable."
+    );
   }
+
 
   storyIndex = 0;
 
-  window.currentStorySet = arr;
+  window.currentStorySet =
+    stories;
 
   openStory(
-    arr,
+    stories,
     0
   );
 }
@@ -1621,145 +1665,68 @@ async function openStoryUser(id){
 
 function stopStoryAudio(){
 
-  if(storyAudio){
-
-    try{
-
-      storyAudio.pause();
-      storyAudio.currentTime = 0;
-      storyAudio.src = "";
-
-    }catch(e){}
-
-    storyAudio = null;
-  }
-}
-
-
-function getFilterCss(id){
-
-  const f =
-    FILTERS.find(
-      x=>x.id === id
-    );
-
-  return f
-    ? f.css
-    : "none";
-}
-
-
-function findMusic(id){
-
-  if(!id){
-    return null;
-  }
-
-  return (
-    (window._musicTracks || [])
-      .find(t=>String(t.id) === String(id))
-    ||
-    BUILTIN_TRACKS
-      .find(t=>String(t.id) === String(id))
-    ||
-    null
-  );
-}
-
-
-function openStory(arr,i){
-
-  if(!arr || !arr.length){
+  if(!storyAudio){
     return;
   }
 
-  const s = arr[i];
+  try{
 
-  if(!s){
+    storyAudio.pause();
+    storyAudio.currentTime = 0;
+    storyAudio.src = "";
+
+  }catch(error){}
+
+  storyAudio = null;
+}
+
+
+function openStory(stories,index){
+
+  if(!stories?.length){
     return;
   }
 
-  window.currentStorySet = arr;
-  storyIndex = i;
+  const story =
+    stories[index];
+
+  if(!story){
+    return;
+  }
+
 
   stopStoryAudio();
 
 
-  const filterCss =
-    getFilterCss(
-      s.filter || "none"
-    );
-
-
   const media =
-    s.media_type === "video"
+    story.media_type === "video"
+
     ?
+
     `
       <video
         class="post-media story-media"
         controls
         autoplay
         playsinline
-        style="filter:${filterCss}"
-        src="${esc(s.media_url)}">
+        src="${esc(story.media_url)}">
       </video>
     `
+
     :
+
     `
       <img
         class="post-media story-media"
-        style="filter:${filterCss}"
-        src="${esc(s.media_url)}"
+        src="${esc(story.media_url)}"
         alt="Story">
     `;
 
 
-  const musicId =
-    s.music_id ||
-    s.musicId ||
-    null;
-
-
   const track =
-    findMusic(musicId);
-
-
-  const musicBar =
-    track
-    ?
-    `
-      <div
-        class="story-music-bar">
-
-        <span
-          class="story-music-icon">
-          🎵
-        </span>
-
-        <div
-          class="story-music-info">
-
-          <b>
-            ${esc(
-              track.title ||
-              "Track"
-            )}
-          </b>
-
-          <div class="muted">
-            ${esc(
-              track.artist ||
-              track.category ||
-              ""
-            )}
-          </div>
-
-        </div>
-
-      </div>
-    `
-    :
-    "";
+    story.music_id
+    ? findMusic(story.music_id)
+    : null;
 
 
   $("sheet").innerHTML = `
@@ -1767,7 +1734,7 @@ function openStory(arr,i){
     <div class="row">
 
       <b>
-        Story ${i+1}/${arr.length}
+        Story ${index + 1}/${stories.length}
       </b>
 
       <span class="spacer"></span>
@@ -1782,33 +1749,54 @@ function openStory(arr,i){
 
     ${media}
 
-    ${musicBar}
+    ${
+      track
+      ?
+      `
+        <div class="panel">
 
-    <div
-      class="wrap"
-      style="margin-top:10px">
+          🎵
+          <b>
+            ${esc(
+              track.title
+            )}
+          </b>
+
+          <div class="muted">
+            ${esc(
+              track.artist || ""
+            )}
+          </div>
+
+        </div>
+      `
+      :
+      ""
+    }
+
+    <div class="row wrap">
 
       <button
         class="btn"
-        onclick="storyMove(${i-1})"
-        ${i <= 0 ? "disabled" : ""}>
+        onclick="storyMove(${index - 1})"
+        ${index <= 0 ? "disabled" : ""}>
         ← Prev
       </button>
 
       <button
         class="btn"
-        onclick="storyMove(${i+1})"
-        ${i >= arr.length-1 ? "disabled" : ""}>
+        onclick="storyMove(${index + 1})"
+        ${index >= stories.length - 1 ? "disabled" : ""}>
         Next →
       </button>
 
       ${
-        s.user_id === user.id
+        story.user_id === user.id
         ?
         `
           <button
             class="btn danger"
-            onclick="deleteStory('${esc(s.id)}')">
+            onclick="deleteStory('${esc(story.id)}')">
             Delete
           </button>
         `
@@ -1824,15 +1812,7 @@ function openStory(arr,i){
     ?.classList.remove("hidden");
 
 
-  /*
-    Browser autoplay policies may block audio.
-    We attempt playback, but the user can interact
-    with the story if the browser blocks autoplay.
-  */
-  if(
-    track &&
-    track.audio_url
-  ){
+  if(track?.audio_url){
 
     try{
 
@@ -1842,116 +1822,639 @@ function openStory(arr,i){
         );
 
       storyAudio.loop = true;
-      storyAudio.volume = 0.85;
+      storyAudio.volume = .85;
 
       storyAudio
         .play()
-        .catch(()=>{
-          console.log(
-            "Story audio autoplay was blocked by browser."
-          );
-        });
+        .catch(()=>{});
 
-    }catch(e){}
+    }catch(error){}
   }
 }
 
 
-function storyMove(i){
+function storyMove(index){
 
-  const arr =
+  const stories =
     window.currentStorySet || [];
 
   if(
-    i < 0 ||
-    i >= arr.length
+    index < 0 ||
+    index >= stories.length
   ){
-
     return;
   }
 
+  storyIndex = index;
+
   openStory(
-    arr,
-    i
+    stories,
+    index
   );
 }
 
 
 /* =========================================================
-   DELETE STORY
+   CREATE
 ========================================================= */
 
-async function deleteStory(id){
+async function renderCreate(){
 
-  if(!user || !id){
-    return;
+  $("main").innerHTML = `
+
+    <section class="panel">
+
+      <div class="title">
+        Create Post
+      </div>
+
+      <input
+        id="createFile"
+        class="field"
+        type="file"
+        accept="image/*,video/*">
+
+      <div
+        id="createPreview"
+        class="hidden">
+      </div>
+
+      <textarea
+        id="createCaption"
+        class="field"
+        maxlength="2000"
+        placeholder="Write a caption..."></textarea>
+
+      <div class="title">
+        Filters
+      </div>
+
+      <div class="row wrap">
+
+        ${
+          FILTERS.map(
+            filter=>`
+
+              <button
+                class="btn"
+                onclick="selectFilter('${filter.id}')">
+
+                ${esc(filter.name)}
+
+              </button>
+
+            `
+          ).join("")
+        }
+
+      </div>
+
+      <div class="title">
+        Music
+      </div>
+
+      <div id="musicList">
+        Loading music...
+      </div>
+
+      <button
+        class="btn primary full"
+        onclick="publishPost()">
+
+        🚀 Publish to Vidora
+
+      </button>
+
+    </section>
+
+
+    <section class="panel">
+
+      <div class="title">
+        Create Story
+      </div>
+
+      <input
+        id="storyFile"
+        class="field"
+        type="file"
+        accept="image/*,video/*">
+
+      <div class="title">
+        Story Filters
+      </div>
+
+      <div class="row wrap">
+
+        ${
+          FILTERS.map(
+            filter=>`
+
+              <button
+                class="btn"
+                onclick="selectStoryFilter('${filter.id}')">
+
+                ${esc(filter.name)}
+
+              </button>
+
+            `
+          ).join("")
+        }
+
+      </div>
+
+      <div class="title">
+        Story Music
+      </div>
+
+      <div id="storyMusicList">
+        Loading music...
+      </div>
+
+      <button
+        class="btn primary full"
+        onclick="publishStory()">
+
+        📖 Publish Story
+
+      </button>
+
+    </section>
+  `;
+
+
+  await loadMusic();
+}
+
+
+/* =========================================================
+   FILTER SELECTION
+========================================================= */
+
+function selectFilter(id){
+
+  selectedFilter =
+    id || "none";
+
+  toast(
+    "Post filter selected."
+  );
+}
+
+
+function selectStoryFilter(id){
+
+  selectedStoryFilter =
+    id || "none";
+
+  toast(
+    "Story filter selected."
+  );
+}
+
+
+/* =========================================================
+   MUSIC
+========================================================= */
+
+async function loadMusic(){
+
+  let tracks =
+    [...BUILTIN_TRACKS];
+
+
+  try{
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("tracks")
+        .select(
+          "id,title,artist,audio_url,category"
+        )
+        .limit(100);
+
+
+    if(!error && data?.length){
+
+      tracks = [
+        ...data,
+        ...BUILTIN_TRACKS
+      ];
+
+    }
+
+  }catch(error){
+
+    console.warn(
+      "TRACKS:",
+      error
+    );
+
   }
 
-  const story =
-    storyItems.find(
-      s=>String(s.id) === String(id)
+
+  window._musicTracks =
+    tracks;
+
+
+  const categories = [
+    "All",
+    ...new Set(
+      tracks.map(
+        track =>
+          track.category ||
+          "Other"
+      )
+    )
+  ];
+
+
+  function renderMusicList(
+    target,
+    story=false
+  ){
+
+    if(!target){
+      return;
+    }
+
+
+    const selectedCategory =
+      story
+      ? "All"
+      : musicCategory;
+
+
+    const filtered =
+      tracks.filter(
+        track =>
+          selectedCategory === "All" ||
+          (
+            track.category ||
+            "Other"
+          ) === selectedCategory
+      );
+
+
+    target.innerHTML = `
+
+      <div class="row wrap">
+
+        ${
+          categories.map(
+            category=>`
+
+              <button
+                class="btn"
+                onclick="setMusicCategory('${esc(category)}')">
+
+                ${esc(category)}
+
+              </button>
+
+            `
+          ).join("")
+        }
+
+      </div>
+
+      ${
+        filtered.map(
+          track=>`
+
+            <button
+              class="panel"
+              style="
+                width:100%;
+                text-align:left;
+                cursor:pointer;
+                margin-bottom:6px;
+              "
+              onclick="${
+                story
+                ? `selectStoryMusic('${esc(track.id)}')`
+                : `selectMusic('${esc(track.id)}')`
+              }">
+
+              🎵
+              <b>
+                ${esc(
+                  track.title ||
+                  "Track"
+                )}
+              </b>
+
+              <div class="muted">
+                ${esc(
+                  track.artist ||
+                  "Vidora"
+                )}
+              </div>
+
+            </button>
+
+          `
+        ).join("")
+      }
+
+    `;
+  }
+
+
+  renderMusicList(
+    $("musicList"),
+    false
+  );
+
+
+  renderMusicList(
+    $("storyMusicList"),
+    true
+  );
+}
+
+
+function setMusicCategory(category){
+
+  musicCategory =
+    category || "All";
+
+  loadMusic();
+}
+
+
+function findMusic(id){
+
+  return (
+    window._musicTracks
+      ?.find(
+        track =>
+          String(track.id) ===
+          String(id)
+      ) ||
+
+    BUILTIN_TRACKS.find(
+      track =>
+        String(track.id) ===
+        String(id)
+    ) ||
+
+    null
+  );
+}
+
+
+async function selectMusic(id){
+
+  const track =
+    findMusic(id);
+
+  if(!track){
+    return toast(
+      "Track not found."
     );
+  }
+
+  selectedMusic =
+    track;
+
+  toast(
+    "Selected: " +
+    (track.title || "Track")
+  );
+}
+
+
+async function selectStoryMusic(id){
+
+  const track =
+    findMusic(id);
+
+  if(!track){
+    return toast(
+      "Track not found."
+    );
+  }
+
+  selectedStoryMusic =
+    track;
+
+  toast(
+    "Story music selected."
+  );
+}
+
+
+/* =========================================================
+   CORRECT POST FUNCTION
+========================================================= */
+
+async function publishPost(){
+
+  if(!user){
+
+    return toast(
+      "You are not logged in."
+    );
+  }
+
+
+  const file =
+    $("createFile")
+      ?.files?.[0];
+
+
+  const caption =
+    $("createCaption")
+      ?.value
+      ?.trim() || "";
+
+
+  if(!file){
+
+    return toast(
+      "Choose an image or video."
+    );
+  }
 
 
   if(
-    !confirm(
-      "Delete this story?"
-    )
+    !file.type.startsWith("image/") &&
+    !file.type.startsWith("video/")
   ){
-    return;
+
+    return toast(
+      "Please choose an image or video."
+    );
+  }
+
+
+  if(
+    file.size >
+    50 * 1024 * 1024
+  ){
+
+    return toast(
+      "Maximum upload size is 50MB."
+    );
   }
 
 
   try{
 
-    /*
-      Delete database record first.
-    */
-    const {
-      error
-    } = await sb
-      .from("stories")
-      .delete()
-      .eq(
-        "id",
-        id
-      )
-      .eq(
-        "user_id",
-        user.id
+    toast(
+      "Uploading post..."
+    );
+
+
+    const mediaUrl =
+      await uploadMedia(
+        file,
+        "posts"
       );
 
 
-    if(error){
-      throw error;
+    const mediaType =
+      file.type.startsWith("video/")
+      ? "video"
+      : "image";
+
+
+    /*
+      STEP 1:
+      Insert only columns known to exist.
+      This protects the post system from optional
+      music/filter database columns.
+    */
+
+    const basicPost = {
+
+      user_id:user.id,
+
+      media_url:mediaUrl,
+
+      media_type:mediaType,
+
+      caption:caption
+
+    };
+
+
+    let result =
+      await sb
+        .from("posts")
+        .insert(
+          basicPost
+        )
+        .select()
+        .single();
+
+
+    if(result.error){
+
+      console.error(
+        "POST INSERT:",
+        result.error
+      );
+
+      throw result.error;
     }
 
 
-    stopStoryAudio();
+    /*
+      STEP 2:
+      If the database has music_id/filter,
+      attempt to add those separately.
+      Failure here does NOT delete/break the post.
+    */
+
+    if(
+      selectedMusic?.id ||
+      selectedFilter !== "none"
+    ){
+
+      try{
+
+        const optionalUpdate = {};
+
+        if(selectedMusic?.id){
+          optionalUpdate.music_id =
+            selectedMusic.id;
+        }
+
+        if(selectedFilter !== "none"){
+          optionalUpdate.filter =
+            selectedFilter;
+        }
+
+        if(
+          Object.keys(
+            optionalUpdate
+          ).length
+        ){
+
+          await sb
+            .from("posts")
+            .update(
+              optionalUpdate
+            )
+            .eq(
+              "id",
+              result.data.id
+            );
+
+        }
+
+      }catch(error){
+
+        console.warn(
+          "Optional post features unavailable:",
+          error
+        );
+
+      }
+    }
+
+
+    selectedMusic = null;
+    selectedFilter = "none";
+
+
+    if($("createFile")){
+      $("createFile").value = "";
+    }
+
+    if($("createCaption")){
+      $("createCaption").value = "";
+    }
+
 
     toast(
-      "Story deleted."
+      "Post published successfully!"
     );
 
-    closeModal();
 
     await renderView(
-      currentView === "home"
-      ? "home"
-      : currentView
+      "home"
     );
+
 
   }catch(error){
 
     console.error(
-      "DELETE STORY:",
+      "PUBLISH POST ERROR:",
       error
     );
 
     toast(
+      "Post failed: " +
       safeError(
         error,
-        "Unable to delete story."
+        "Unable to publish post."
       )
     );
   }
@@ -1959,12 +2462,13 @@ async function deleteStory(id){
 
 
 /* =========================================================
-   PUBLISH STORY
+   CORRECT STORY FUNCTION
 ========================================================= */
 
 async function publishStory(){
 
   if(!user){
+
     return toast(
       "You are not logged in."
     );
@@ -1973,7 +2477,7 @@ async function publishStory(){
 
   const file =
     $("storyFile")
-      ?.files[0];
+      ?.files?.[0];
 
 
   if(!file){
@@ -2013,7 +2517,7 @@ async function publishStory(){
     );
 
 
-    const url =
+    const mediaUrl =
       await uploadMedia(
         file,
         "stories"
@@ -2022,37 +2526,25 @@ async function publishStory(){
 
     const mediaType =
       file.type.startsWith("video/")
-      ?
-      "video"
-      :
-      "image";
+      ? "video"
+      : "image";
 
 
     /*
-      Start with the original schema that
-      definitely exists in the project.
+      IMPORTANT:
+      Start with the original stories schema.
+      This prevents missing music/filter columns
+      from breaking story uploads.
     */
-    const basicPayload = {
+
+    const basicStory = {
 
       user_id:user.id,
-      media_url:url,
+
+      media_url:mediaUrl,
+
       media_type:mediaType
 
-    };
-
-
-    /*
-      Try the enhanced version first.
-    */
-    const enhancedPayload = {
-
-      ...basicPayload,
-
-      music_id:
-        selectedStoryMusic?.id || null,
-
-      filter:
-        selectedStoryFilter || "none"
     };
 
 
@@ -2060,44 +2552,74 @@ async function publishStory(){
       await sb
         .from("stories")
         .insert(
-          enhancedPayload
-        );
-
-
-    /*
-      If the new optional columns do not exist,
-      automatically fall back to the old schema.
-    */
-    if(
-      result.error &&
-      (
-        isColumnMissing(
-          result.error,
-          "music_id"
-        ) ||
-        isColumnMissing(
-          result.error,
-          "filter"
+          basicStory
         )
-      )
-    ){
-
-      console.warn(
-        "Optional story columns unavailable. Using basic story schema."
-      );
-
-      result =
-        await sb
-          .from("stories")
-          .insert(
-            basicPayload
-          );
-    }
+        .select()
+        .single();
 
 
     if(result.error){
 
+      console.error(
+        "STORY INSERT:",
+        result.error
+      );
+
       throw result.error;
+    }
+
+
+    /*
+      Add music/filter only if the database supports them.
+    */
+
+    if(
+      selectedStoryMusic?.id ||
+      selectedStoryFilter !== "none"
+    ){
+
+      try{
+
+        const optionalStory = {};
+
+        if(selectedStoryMusic?.id){
+          optionalStory.music_id =
+            selectedStoryMusic.id;
+        }
+
+        if(
+          selectedStoryFilter !== "none"
+        ){
+          optionalStory.filter =
+            selectedStoryFilter;
+        }
+
+        if(
+          Object.keys(
+            optionalStory
+          ).length
+        ){
+
+          await sb
+            .from("stories")
+            .update(
+              optionalStory
+            )
+            .eq(
+              "id",
+              result.data.id
+            );
+
+        }
+
+      }catch(error){
+
+        console.warn(
+          "Optional story features unavailable:",
+          error
+        );
+
+      }
     }
 
 
@@ -2123,7 +2645,7 @@ async function publishStory(){
   }catch(error){
 
     console.error(
-      "STORY PUBLISH:",
+      "PUBLISH STORY ERROR:",
       error
     );
 
@@ -2131,265 +2653,7 @@ async function publishStory(){
       "Story failed: " +
       safeError(
         error,
-        "Please try again."
-      )
-    );
-  }
-}
-
-
-/* =========================================================
-   POSTS / CREATE POST
-========================================================= */
-
-async function publishPost(){
-
-  if(!user){
-
-    return toast(
-      "You are not logged in."
-    );
-  }
-
-
-  const file =
-    $("createFile")
-      ?.files[0];
-
-
-  const caption =
-    $("createCaption")
-      ?.value
-      .trim() || "";
-
-
-  if(!file){
-
-    return toast(
-      "Choose an image or video."
-    );
-  }
-
-
-  if(
-    !file.type.startsWith("image/") &&
-    !file.type.startsWith("video/")
-  ){
-
-    return toast(
-      "Please choose an image or video."
-    );
-  }
-
-
-  if(
-    file.size >
-    50 * 1024 * 1024
-  ){
-
-    return toast(
-      "Maximum upload size is 50MB."
-    );
-  }
-
-
-  try{
-
-    toast(
-      "Uploading media..."
-    );
-
-
-    const url =
-      await uploadMedia(
-        file,
-        "posts"
-      );
-
-
-    if(!url){
-
-      throw new Error(
-        "Media upload returned no URL."
-      );
-    }
-
-
-    const mediaType =
-      file.type.startsWith("video/")
-      ?
-      "video"
-      :
-      "image";
-
-
-    /*
-      This is the IMPORTANT part.
-
-      We first create the post using the columns
-      that your existing database already has.
-    */
-    const basicPost = {
-
-      user_id:user.id,
-
-      media_url:url,
-
-      media_type:mediaType,
-
-      caption
-
-    };
-
-
-    /*
-      Enhanced version adds music and filter.
-      If either optional column is missing,
-      the code automatically falls back.
-    */
-    const enhancedPost = {
-
-      ...basicPost,
-
-      music_id:
-        selectedMusic?.id || null,
-
-      filter:
-        selectedFilter || "none"
-
-    };
-
-
-    console.log(
-      "VIDORA POST:",
-      enhancedPost
-    );
-
-
-    let result =
-      await sb
-        .from("posts")
-        .insert(
-          enhancedPost
-        )
-        .select()
-        .single();
-
-
-    /*
-      Fallback 1:
-      remove filter if the filter column doesn't exist.
-    */
-    if(
-      result.error &&
-      isColumnMissing(
-        result.error,
-        "filter"
-      )
-    ){
-
-      const withoutFilter = {
-
-        ...basicPost,
-
-        music_id:
-          selectedMusic?.id || null
-
-      };
-
-
-      result =
-        await sb
-          .from("posts")
-          .insert(
-            withoutFilter
-          )
-          .select()
-          .single();
-    }
-
-
-    /*
-      Fallback 2:
-      remove music_id too if that column doesn't exist.
-    */
-    if(
-      result.error &&
-      isColumnMissing(
-        result.error,
-        "music_id"
-      )
-    ){
-
-      result =
-        await sb
-          .from("posts")
-          .insert(
-            basicPost
-          )
-          .select()
-          .single();
-    }
-
-
-    if(result.error){
-
-      console.error(
-        "POST INSERT ERROR:",
-        result.error
-      );
-
-      throw result.error;
-    }
-
-
-    /*
-      Reset create form.
-    */
-    if($("createFile")){
-      $("createFile").value = "";
-    }
-
-    if($("createCaption")){
-      $("createCaption").value = "";
-    }
-
-    if($("createPreview")){
-
-      $("createPreview")
-        .classList.add("hidden");
-
-      $("createPreview")
-        .innerHTML = "";
-    }
-
-
-    selectedMusic = null;
-    selectedFilter = "none";
-
-
-    toast(
-      "Post published successfully!"
-    );
-
-
-    await renderView(
-      "home"
-    );
-
-
-  }catch(error){
-
-    console.error(
-      "CREATE POST FAILED:",
-      error
-    );
-
-    toast(
-      "Post failed: " +
-      safeError(
-        error,
-        "Unable to publish post."
+        "Unable to publish story."
       )
     );
   }
@@ -2407,20 +2671,15 @@ async function deletePost(id){
   }
 
 
-  if(
-    !confirm(
-      "Delete this post?"
-    )
-  ){
+  if(!confirm("Delete this post?")){
     return;
   }
 
 
-  try{
-
-    const {
-      error
-    } = await sb
+  const {
+    error
+  } =
+    await sb
       .from("posts")
       .delete()
       .eq(
@@ -2433,35 +2692,25 @@ async function deletePost(id){
       );
 
 
-    if(error){
-      throw error;
-    }
+  if(error){
 
-
-    toast(
-      "Post deleted."
-    );
-
-
-    await renderView(
-      currentView
-    );
-
-
-  }catch(error){
-
-    console.error(
-      "DELETE POST:",
-      error
-    );
-
-    toast(
+    return toast(
       safeError(
         error,
         "Unable to delete post."
       )
     );
   }
+
+
+  toast(
+    "Post deleted."
+  );
+
+
+  await renderView(
+    currentView
+  );
 }
 
 
@@ -2478,28 +2727,26 @@ async function toggleLike(postId){
 
   const {
     data,
-    error:checkError
-  } = await sb
-    .from("post_likes")
-    .select("id")
-    .eq(
-      "post_id",
-      postId
-    )
-    .eq(
-      "user_id",
-      user.id
-    )
-    .maybeSingle();
+    error
+  } =
+    await sb
+      .from("post_likes")
+      .select("id")
+      .eq(
+        "post_id",
+        postId
+      )
+      .eq(
+        "user_id",
+        user.id
+      )
+      .maybeSingle();
 
 
-  if(checkError){
+  if(error){
 
     return toast(
-      safeError(
-        checkError,
-        "Unable to check like."
-      )
+      safeError(error)
     );
   }
 
@@ -2507,68 +2754,40 @@ async function toggleLike(postId){
   if(data){
 
     const {
-      error
-    } = await sb
-      .from("post_likes")
-      .delete()
-      .eq(
-        "id",
-        data.id
-      );
+      error:deleteError
+    } =
+      await sb
+        .from("post_likes")
+        .delete()
+        .eq(
+          "id",
+          data.id
+        );
 
-    if(error){
+
+    if(deleteError){
       return toast(
-        safeError(error)
+        safeError(deleteError)
       );
     }
 
   }else{
 
     const {
-      error
-    } = await sb
-      .from("post_likes")
-      .insert({
-        post_id:postId,
-        user_id:user.id
-      });
-
-
-    if(error){
-
-      return toast(
-        safeError(error)
-      );
-    }
-
-
-    const {
-      data:p
-    } = await sb
-      .from("posts")
-      .select("user_id")
-      .eq(
-        "id",
-        postId
-      )
-      .maybeSingle();
-
-
-    if(
-      p &&
-      p.user_id !== user.id
-    ){
-
+      error:insertError
+    } =
       await sb
-        .from("notifications")
+        .from("post_likes")
         .insert({
-
-          user_id:p.user_id,
-          actor_id:user.id,
-          type:"like",
-          post_id:postId
-
+          post_id:postId,
+          user_id:user.id
         });
+
+
+    if(insertError){
+      return toast(
+        safeError(insertError)
+      );
     }
   }
 
@@ -2585,25 +2804,27 @@ async function toggleLike(postId){
 
 async function openComments(postId){
 
-  commentsPost = postId;
+  commentsPost =
+    postId;
 
 
   const {
-    data:comments,
+    data,
     error
-  } = await sb
-    .from("comments")
-    .select(
-      "id,user_id,content,created_at"
-    )
-    .eq(
-      "post_id",
-      postId
-    )
-    .order(
-      "created_at",
-      {ascending:true}
-    );
+  } =
+    await sb
+      .from("comments")
+      .select(
+        "id,user_id,content,created_at"
+      )
+      .eq(
+        "post_id",
+        postId
+      )
+      .order(
+        "created_at",
+        {ascending:true}
+      );
 
 
   if(error){
@@ -2614,41 +2835,8 @@ async function openComments(postId){
   }
 
 
-  const ids = [
-    ...new Set(
-      (comments || [])
-        .map(
-          c=>c.user_id
-        )
-    )
-  ];
-
-
-  const prof = {};
-
-
-  if(ids.length){
-
-    const {
-      data
-    } = await sb
-      .from("profiles")
-      .select(
-        "id,username,avatar_url"
-      )
-      .in(
-        "id",
-        ids
-      );
-
-
-    (data || [])
-      .forEach(
-        x=>{
-          prof[x.id] = x;
-        }
-      );
-  }
+  const comments =
+    data || [];
 
 
   $("sheet").innerHTML = `
@@ -2672,67 +2860,53 @@ async function openComments(postId){
     <div id="commentList">
 
       ${
-        (comments || [])
-          .map(c=>`
+        comments.map(
+          comment=>`
 
             <div class="panel">
 
-              <div class="row">
-
-                <img
-                  class="avatar sm"
-                  src="${avatarSrc(
-                    prof[c.user_id]
-                      ?.avatar_url
-                  )}"
-                  alt="">
-
-                <b>
-                  @${esc(
-                    prof[c.user_id]
-                      ?.username ||
-                    "user"
-                  )}
-                </b>
-
-                <span class="spacer"></span>
-
-                ${
-                  c.user_id === user.id
-                  ?
-                  `
-                    <button
-                      class="iconbtn"
-                      onclick="deleteComment('${esc(c.id)}')">
-                      🗑
-                    </button>
-                  `
-                  :
-                  ""
-                }
-
-              </div>
+              <b>
+                Comment
+              </b>
 
               <div
                 style="
-                  margin-top:7px;
+                  margin-top:6px;
                   white-space:pre-wrap;
                   word-break:break-word;
                 ">
-                ${esc(c.content)}
+
+                ${esc(
+                  comment.content
+                )}
+
               </div>
+
+              ${
+                comment.user_id === user.id
+                ?
+                `
+                  <button
+                    class="iconbtn"
+                    onclick="deleteComment('${esc(comment.id)}')">
+
+                    🗑
+
+                  </button>
+                `
+                :
+                ""
+              }
 
             </div>
 
-          `)
-          .join("")
-
-        ||
+          `
+        ).join("") ||
 
         `
-          <p class="muted">
+          <div class="muted">
             No comments yet.
-          </p>
+          </div>
         `
       }
 
@@ -2749,10 +2923,13 @@ async function openComments(postId){
       <button
         class="btn"
         onclick="addComment()">
+
         Send
+
       </button>
 
     </div>
+
   `;
 
 
@@ -2765,10 +2942,18 @@ async function openComments(postId){
 
 async function addComment(){
 
+  if(!user || !commentsPost){
+    return;
+  }
+
+
+  const input =
+    $("commentInput");
+
+
   const content =
-    $("commentInput")
-      ?.value
-      .trim();
+    input?.value
+      ?.trim() || "";
 
 
   if(!content){
@@ -2786,15 +2971,18 @@ async function addComment(){
 
   const {
     error
-  } = await sb
-    .from("comments")
-    .insert({
+  } =
+    await sb
+      .from("comments")
+      .insert({
 
-      post_id:commentsPost,
-      user_id:user.id,
-      content
+        post_id:commentsPost,
 
-    });
+        user_id:user.id,
+
+        content:content
+
+      });
 
 
   if(error){
@@ -2805,25 +2993,1537 @@ async function addComment(){
   }
 
 
+  await openComments(
+    commentsPost
+  );
+}
+
+
+async function deleteComment(id){
+
+  if(!user || !id){
+    return;
+  }
+
+
   const {
-    data:p
-  } = await sb
-    .from("posts")
-    .select("user_id")
-    .eq(
-      "id",
-      commentsPost
-    )
-    .maybeSingle();
+    error
+  } =
+    await sb
+      .from("comments")
+      .delete()
+      .eq(
+        "id",
+        id
+      )
+      .eq(
+        "user_id",
+        user.id
+      );
+
+
+  if(error){
+
+    return toast(
+      safeError(error)
+    );
+  }
+
+
+  await openComments(
+    commentsPost
+  );
+}
+
+
+/* =========================================================
+   SHARE
+========================================================= */
+
+async function sharePost(postId){
+
+  const url =
+    window.location.href.split("#")[0] +
+    "#post-" +
+    postId;
+
+
+  try{
+
+    if(
+      navigator.share
+    ){
+
+      await navigator.share({
+        title:"Vidora",
+        text:"Check out this Vidora post.",
+        url
+      });
+
+    }else if(
+      navigator.clipboard
+    ){
+
+      await navigator.clipboard.writeText(
+        url
+      );
+
+      toast(
+        "Post link copied."
+      );
+
+    }else{
+
+      toast(
+        "Sharing is not supported on this browser."
+      );
+    }
+
+  }catch(error){
+
+    console.log(
+      "SHARE:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   DISCOVER
+========================================================= */
+
+async function renderDiscover(){
+
+  $("main").innerHTML = `
+
+    <section class="panel">
+
+      <div class="title">
+        Discover
+      </div>
+
+      <input
+        id="userSearch"
+        class="field"
+        placeholder="Search users...">
+
+      <div id="discoverResults">
+        Search for users.
+      </div>
+
+    </section>
+  `;
+
+
+  $("userSearch")
+    ?.addEventListener(
+      "input",
+      event=>{
+
+        clearTimeout(
+          window.__vidoraSearchTimer
+        );
+
+        window.__vidoraSearchTimer =
+          setTimeout(
+            ()=>{
+              searchUsers(
+                event.target.value
+              );
+            },
+            350
+          );
+
+      }
+    );
+}
+
+
+async function searchUsers(query){
+
+  const box =
+    $("discoverResults");
+
+  if(!box){
+    return;
+  }
+
+
+  query =
+    String(query || "")
+      .trim();
+
+
+  if(!query){
+
+    box.innerHTML =
+      "Search for users.";
+
+    return;
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("profiles")
+      .select(
+        "id,username,display_name,avatar_url"
+      )
+      .or(
+        `username.ilike.%${query}%,display_name.ilike.%${query}%`
+      )
+      .limit(30);
+
+
+  if(error){
+
+    box.innerHTML =
+      esc(
+        safeError(error)
+      );
+
+    return;
+  }
+
+
+  box.innerHTML =
+    (data || [])
+      .map(
+        person=>`
+
+          <div class="panel row">
+
+            <img
+              class="avatar sm"
+              src="${avatarSrc(
+                person.avatar_url
+              )}"
+              alt="">
+
+            <div>
+
+              <b>
+                ${esc(
+                  person.display_name ||
+                  person.username ||
+                  "User"
+                )}
+              </b>
+
+              <div class="muted">
+                @${esc(
+                  person.username ||
+                  "user"
+                )}
+              </div>
+
+            </div>
+
+            <span class="spacer"></span>
+
+            ${
+              person.id !== user.id
+              ?
+              `
+                <button
+                  class="btn"
+                  onclick="toggleFollow('${esc(person.id)}')">
+
+                  Follow
+
+                </button>
+              `
+              :
+              ""
+            }
+
+          </div>
+
+        `
+      ).join("") ||
+
+    `
+      <div class="muted">
+        No users found.
+      </div>
+    `;
+}
+
+
+/* =========================================================
+   FOLLOW
+========================================================= */
+
+async function toggleFollow(targetId){
+
+  if(!user || !targetId){
+    return;
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("follows")
+      .select("id")
+      .eq(
+        "follower_id",
+        user.id
+      )
+      .eq(
+        "following_id",
+        targetId
+      )
+      .maybeSingle();
+
+
+  if(error){
+
+    return toast(
+      safeError(error)
+    );
+  }
+
+
+  if(data){
+
+    await sb
+      .from("follows")
+      .delete()
+      .eq(
+        "id",
+        data.id
+      );
+
+    toast(
+      "Unfollowed."
+    );
+
+  }else{
+
+    const {
+      error:followError
+    } =
+      await sb
+        .from("follows")
+        .insert({
+
+          follower_id:user.id,
+
+          following_id:targetId
+
+        });
+
+
+    if(followError){
+
+      return toast(
+        safeError(followError)
+      );
+    }
+
+    toast(
+      "Following."
+    );
+  }
+}
+
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+async function renderProfile(id){
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("profiles")
+      .select("*")
+      .eq(
+        "id",
+        id
+      )
+      .maybeSingle();
+
+
+  if(error){
+
+    $("main").innerHTML = `
+      <div class="panel">
+        ${esc(
+          safeError(error)
+        )}
+      </div>
+    `;
+
+    return;
+  }
+
+
+  const p =
+    data || profile || {};
+
+
+  $("main").innerHTML = `
+
+    <section class="panel">
+
+      <div style="text-align:center">
+
+        <img
+          class="avatar lg"
+          src="${avatarSrc(
+            p.avatar_url
+          )}"
+          alt="">
+
+        <h2>
+          ${esc(
+            p.display_name ||
+            p.username ||
+            "User"
+          )}
+        </h2>
+
+        <div class="muted">
+          @${esc(
+            p.username ||
+            "user"
+          )}
+        </div>
+
+        ${
+          p.bio
+          ?
+          `
+            <p class="muted">
+              ${esc(p.bio)}
+            </p>
+          `
+          :
+          ""
+        }
+
+        ${
+          id === user.id
+          ?
+          `
+            <button
+              class="btn"
+              onclick="renderAvatarPicker()">
+
+              Change Avatar
+
+            </button>
+
+            <button
+              class="btn danger"
+              onclick="logout()">
+
+              Logout
+
+            </button>
+          `
+          :
+          ""
+        }
+
+      </div>
+
+    </section>
+  `;
+}
+
+
+/* =========================================================
+   AVATAR PICKER
+========================================================= */
+
+async function renderAvatarPicker(){
+
+  const avatars = [
+
+    "https://api.dicebear.com/9.x/bottts/svg?seed=Nova",
+
+    "https://api.dicebear.com/9.x/bottts/svg?seed=Kai",
+
+    "https://api.dicebear.com/9.x/bottts/svg?seed=Luna",
+
+    "https://api.dicebear.com/9.x/bottts/svg?seed=Rex",
+
+    "https://api.dicebear.com/9.x/bottts/svg?seed=Zara",
+
+    "https://api.dicebear.com/9.x/bottts/svg?seed=Kairo"
+
+  ];
+
+
+  $("sheet").innerHTML = `
+
+    <div class="row">
+
+      <b>
+        Choose Avatar
+      </b>
+
+      <span class="spacer"></span>
+
+      <button
+        class="iconbtn"
+        onclick="closeModal()">
+
+        ×
+
+      </button>
+
+    </div>
+
+    <div class="row wrap">
+
+      ${
+        avatars.map(
+          url=>`
+
+            <button
+              class="panel"
+              onclick="saveAvatar('${url}')">
+
+              <img
+                class="avatar"
+                src="${url}"
+                alt="Avatar">
+
+            </button>
+
+          `
+        ).join("")
+      }
+
+    </div>
+
+  `;
+
+
+  $("modal")
+    ?.classList.remove(
+      "hidden"
+    );
+}
+
+
+async function saveAvatar(url){
+
+  if(!user){
+    return;
+  }
+
+
+  const {
+    error
+  } =
+    await sb
+      .from("profiles")
+      .update({
+        avatar_url:url
+      })
+      .eq(
+        "id",
+        user.id
+      );
+
+
+  if(error){
+
+    return toast(
+      safeError(
+        error,
+        "Unable to save avatar."
+      )
+    );
+  }
+
+
+  if(profile){
+    profile.avatar_url =
+      url;
+  }
+
+
+  toast(
+    "Avatar updated."
+  );
+
+
+  closeModal();
+
+
+  await renderView(
+    currentView
+  );
+}
+
+
+/* =========================================================
+   MESSAGES
+========================================================= */
+
+async function renderMessages(){
+
+  $("main").innerHTML = `
+
+    <section class="panel">
+
+      <div class="title">
+        Messages
+      </div>
+
+      <div
+        id="messageUsers">
+
+        Loading...
+
+      </div>
+
+    </section>
+  `;
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("follows")
+      .select(
+        "following_id"
+      )
+      .eq(
+        "follower_id",
+        user.id
+      );
+
+
+  if(error){
+
+    $("messageUsers").innerHTML =
+      `<div class="muted">
+        Unable to load followers.
+      </div>`;
+
+    return;
+  }
+
+
+  const ids =
+    (data || [])
+      .map(
+        x=>x.following_id
+      );
+
+
+  if(!ids.length){
+
+    $("messageUsers").innerHTML =
+      `
+        <div class="muted">
+          Follow users to start chatting.
+        </div>
+      `;
+
+    return;
+  }
+
+
+  const {
+    data:people
+  } =
+    await sb
+      .from("profiles")
+      .select(
+        "id,username,display_name,avatar_url"
+      )
+      .in(
+        "id",
+        ids
+      );
+
+
+  $("messageUsers").innerHTML =
+    (people || [])
+      .map(
+        person=>`
+
+          <button
+            class="panel row"
+            style="
+              width:100%;
+              text-align:left;
+            "
+            onclick="openChat('${esc(person.id)}')">
+
+            <img
+              class="avatar sm"
+              src="${avatarSrc(
+                person.avatar_url
+              )}"
+              alt="">
+
+            <div>
+
+              <b>
+                ${esc(
+                  person.display_name ||
+                  person.username ||
+                  "User"
+                )}
+              </b>
+
+              <div class="muted">
+                @${esc(
+                  person.username ||
+                  "user"
+                )}
+              </div>
+
+            </div>
+
+          </button>
+
+        `
+      ).join("");
+}
+
+
+async function openChat(userId){
+
+  const {
+    data:person
+  } =
+    await sb
+      .from("profiles")
+      .select(
+        "id,username,display_name"
+      )
+      .eq(
+        "id",
+        userId
+      )
+      .maybeSingle();
+
+
+  chatUser =
+    person;
+
+
+  const {
+    data:messages,
+    error
+  } =
+    await sb
+      .from("messages")
+      .select(
+        "id,sender_id,receiver_id,content,voice_url,created_at"
+      )
+      .or(
+        `and(sender_id.eq.${user.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${user.id})`
+      )
+      .order(
+        "created_at",
+        {ascending:true}
+      );
+
+
+  if(error){
+
+    return toast(
+      safeError(
+        error,
+        "Unable to load messages."
+      )
+    );
+  }
+
+
+  $("sheet").innerHTML = `
+
+    <div class="row">
+
+      <b>
+        ${esc(
+          person?.display_name ||
+          person?.username ||
+          "Chat"
+        )}
+      </b>
+
+      <span class="spacer"></span>
+
+      <button
+        class="iconbtn"
+        onclick="closeModal()">
+
+        ×
+
+      </button>
+
+    </div>
+
+    <div
+      id="chatMessages"
+      class="panel">
+
+      ${
+        (messages || [])
+          .map(
+            message=>`
+
+              <div
+                class="panel"
+                style="
+                  margin:5px 0;
+                  text-align:${
+                    message.sender_id === user.id
+                    ? "right"
+                    : "left"
+                  };
+                ">
+
+                ${esc(
+                  message.content || ""
+                )}
+
+              </div>
+
+            `
+          ).join("")
+        ||
+        `<div class="muted">
+          No messages yet.
+        </div>`
+      }
+
+    </div>
+
+    <div class="row">
+
+      <input
+        id="messageInput"
+        class="field"
+        placeholder="Message...">
+
+      <button
+        class="btn primary"
+        onclick="sendMessage()">
+
+        Send
+
+      </button>
+
+    </div>
+
+  `;
+
+
+  $("modal")
+    ?.classList.remove(
+      "hidden"
+    );
+}
+
+
+async function sendMessage(){
+
+  if(
+    !user ||
+    !chatUser
+  ){
+    return;
+  }
+
+
+  const input =
+    $("messageInput");
+
+
+  const content =
+    input?.value
+      ?.trim() || "";
+
+
+  if(!content){
+    return;
+  }
+
+
+  const {
+    error
+  } =
+    await sb
+      .from("messages")
+      .insert({
+
+        sender_id:user.id,
+
+        receiver_id:chatUser.id,
+
+        content
+
+      });
+
+
+  if(error){
+
+    return toast(
+      safeError(
+        error,
+        "Unable to send message."
+      )
+    );
+  }
+
+
+  input.value = "";
+
+  await openChat(
+    chatUser.id
+  );
+}
+
+
+/* =========================================================
+   NOTIFICATIONS
+========================================================= */
+
+async function loadNotifications(){
+
+  if(!user){
+    return;
+  }
+
+
+  const {
+    count
+  } =
+    await sb
+      .from("notifications")
+      .select(
+        "*",
+        {
+          count:"exact",
+          head:true
+        }
+      )
+      .eq(
+        "user_id",
+        user.id
+      )
+      .eq(
+        "read",
+        false
+      );
+
+
+  const badge =
+    $("notifCount");
+
+
+  if(badge){
+
+    badge.textContent =
+      count > 0
+      ? String(count)
+      : "";
+
+  }
+}
+
+
+async function renderNotifications(){
+
+  if(!user){
+    return;
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("notifications")
+      .select("*")
+      .eq(
+        "user_id",
+        user.id
+      )
+      .order(
+        "created_at",
+        {ascending:false}
+      )
+      .limit(30);
+
+
+  if(error){
+
+    return toast(
+      safeError(
+        error,
+        "Unable to load notifications."
+      )
+    );
+  }
+
+
+  $("sheet").innerHTML = `
+
+    <div class="row">
+
+      <b>
+        Notifications
+      </b>
+
+      <span class="spacer"></span>
+
+      <button
+        class="iconbtn"
+        onclick="closeModal()">
+
+        ×
+
+      </button>
+
+    </div>
+
+    ${
+      (data || [])
+        .map(
+          notification=>`
+
+            <div class="panel">
+
+              <b>
+                ${esc(
+                  notification.type ||
+                  "Notification"
+                )}
+              </b>
+
+            </div>
+
+          `
+        ).join("")
+      ||
+      `
+        <div class="muted">
+          No notifications.
+        </div>
+      `
+    }
+
+  `;
+
+
+  $("modal")
+    ?.classList.remove(
+      "hidden"
+    );
+}
+
+
+/* =========================================================
+   AI ASSISTANT
+========================================================= */
+
+function openAssistant(){
+
+  $("assistantBox")
+    ?.classList.remove(
+      "hidden"
+    );
+}
+
+
+function closeAssistant(){
+
+  $("assistantBox")
+    ?.classList.add(
+      "hidden"
+    );
+}
+
+
+function assistantSay(
+  message,
+  from="ai"
+){
+
+  const box =
+    $("assistantMessages");
+
+  if(!box){
+    return;
+  }
+
+
+  const div =
+    document.createElement("div");
+
+  div.className =
+    "panel";
+
+
+  div.innerHTML =
+    `<b>${
+      from === "user"
+      ? "You"
+      : "Vidora AI"
+    }</b><div style="margin-top:5px">
+      ${esc(message)}
+    </div>`;
+
+
+  box.appendChild(div);
+
+  box.scrollTop =
+    box.scrollHeight;
+}
+
+
+async function assistantSend(){
+
+  const input =
+    $("assistantInput");
+
+  const message =
+    input?.value
+      ?.trim() || "";
+
+
+  if(!message){
+    return;
+  }
+
+
+  input.value = "";
+
+  assistantSay(
+    message,
+    "user"
+  );
+
+
+  assistantHistory.push({
+    role:"user",
+    content:message
+  });
+
+
+  const lower =
+    message.toLowerCase();
 
 
   if(
-    p &&
-    p.user_id !== user.id
+    lower.includes("logout")
   ){
 
-    await sb
-      .from("notifications")
-      .insert({
+    assistantSay(
+      "You can logout from your Profile."
+    );
 
-        user
+    return;
+  }
+
+
+  if(
+    lower.includes("post") ||
+    lower.includes("upload")
+  ){
+
+    assistantSay(
+      "Open Create from the bottom navigation to upload a photo or video."
+    );
+
+    return;
+  }
+
+
+  if(
+    lower.includes("story")
+  ){
+
+    assistantSay(
+      "Open Create and use the Create Story section to upload a story."
+    );
+
+    return;
+  }
+
+
+  if(
+    lower.includes("music")
+  ){
+
+    assistantSay(
+      "Vidora supports music selection for posts and stories when the database has the required music columns."
+    );
+
+    return;
+  }
+
+
+  if(
+    lower.includes("avatar")
+  ){
+
+    assistantSay(
+      "Open the avatar button at the top of Vidora to choose an avatar."
+    );
+
+    return;
+  }
+
+
+  assistantSay(
+    "I'm Vidora AI. I can help you understand and use Vidora features such as posts, stories, music, profiles, messages and navigation."
+  );
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+function closeModal(){
+
+  stopStoryAudio();
+
+  $("modal")
+    ?.classList.add(
+      "hidden"
+    );
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+async function logout(){
+
+  try{
+
+    const {
+      error
+    } =
+      await sb.auth.signOut();
+
+    if(error){
+      throw error;
+    }
+
+  }catch(error){
+
+    toast(
+      safeError(
+        error,
+        "Unable to logout."
+      )
+    );
+  }
+}
+
+
+/* =========================================================
+   GLOBAL FUNCTIONS
+========================================================= */
+
+window.login =
+  login;
+
+window.signup =
+  signup;
+
+window.publishPost =
+  publishPost;
+
+window.publishStory =
+  publishStory;
+
+window.deletePost =
+  deletePost;
+
+window.deleteComment =
+  deleteComment;
+
+window.toggleLike =
+  toggleLike;
+
+window.openComments =
+  openComments;
+
+window.addComment =
+  addComment;
+
+window.openStoryUser =
+  openStoryUser;
+
+window.storyMove =
+  storyMove;
+
+window.selectMusic =
+  selectMusic;
+
+window.selectStoryMusic =
+  selectStoryMusic;
+
+window.setMusicCategory =
+  setMusicCategory;
+
+window.selectFilter =
+  selectFilter;
+
+window.selectStoryFilter =
+  selectStoryFilter;
+
+window.toggleFollow =
+  toggleFollow;
+
+window.sharePost =
+  sharePost;
+
+window.openChat =
+  openChat;
+
+window.sendMessage =
+  sendMessage;
+
+window.renderNotifications =
+  renderNotifications;
+
+window.renderAvatarPicker =
+  renderAvatarPicker;
+
+window.saveAvatar =
+  saveAvatar;
+
+window.closeModal =
+  closeModal;
+
+window.logout =
+  logout;
+
+
+/* =========================================================
+   DOM READY
+========================================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  ()=>{
+
+    console.log(
+      "VIDORA APP.JS LOADED"
+    );
+
+
+    /*
+      LOGIN
+    */
+
+    $("loginBtn")
+      ?.addEventListener(
+        "click",
+        login
+      );
+
+
+    /*
+      SIGNUP
+    */
+
+    $("signupBtn")
+      ?.addEventListener(
+        "click",
+        signup
+      );
+
+
+    /*
+      SWITCH TO SIGNUP
+    */
+
+    $("showSignupBtn")
+      ?.addEventListener(
+        "click",
+        ()=>{
+          
+          $("loginForm")
+            ?.classList.add(
+              "hidden"
+            );
+
+          $("signupForm")
+            ?.classList.remove(
+              "hidden"
+            );
+
+          showStatus(
+            $("authStatus"),
+            ""
+          );
+        }
+      );
+
+
+    /*
+      SWITCH TO LOGIN
+    */
+
+    $("showLoginBtn")
+      ?.addEventListener(
+        "click",
+        ()=>{
+
+          $("signupForm")
+            ?.classList.add(
+              "hidden"
+            );
+
+          $("loginForm")
+            ?.classList.remove(
+              "hidden"
+            );
+
+          showStatus(
+            $("authStatus"),
+            ""
+          );
+        }
+      );
+
+
+    /*
+      BOTTOM NAVIGATION
+    */
+
+    document
+      .querySelectorAll(
+        ".nav button"
+      )
+      .forEach(
+        button=>{
+
+          button.addEventListener(
+            "click",
+            ()=>{
+
+              renderView(
+                button.dataset.view
+              );
+
+            }
+          );
+
+        }
+      );
+
+
+    /*
+      NOTIFICATIONS
+    */
+
+    $("openNotificationsBtn")
+      ?.addEventListener(
+        "click",
+        renderNotifications
+      );
+
+
+    /*
+      AVATAR
+    */
+
+    $("openAvatarBtn")
+      ?.addEventListener(
+        "click",
+        renderAvatarPicker
+      );
+
+
+    /*
+      AI
+    */
+
+    $("assistantFab")
+      ?.addEventListener(
+        "click",
+        openAssistant
+      );
+
+
+    $("closeAssistant")
+      ?.addEventListener(
+        "click",
+        closeAssistant
+      );
+
+
+    $("assistantSend")
+      ?.addEventListener(
+        "click",
+        assistantSend
+      );
+
+
+    $("assistantInput")
+      ?.addEventListener(
+        "keydown",
+        event=>{
+
+          if(event.key === "Enter"){
+            assistantSend();
+          }
+
+        }
+      );
+
+
+    /*
+      MODAL BACKDROP
+    */
+
+    $("modal")
+      ?.addEventListener(
+        "click",
+        event=>{
+
+          if(
+            event.target ===
+            $("modal")
+          ){
+
+            closeModal();
+
+          }
+
+        }
+      );
+
+
+    /*
+      START AUTH
+    */
+
+    init();
+
+  }
+);
