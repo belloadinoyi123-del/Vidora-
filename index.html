@@ -2,275 +2,442 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+
   <meta name="theme-color" content="#08080d">
-  <title>Vidora</title>
+
+  <meta
+    name="description"
+    content="Vidora — Watch, share, create, and connect with friends.">
+
+  <title>Vidora — Watch. Share. Connect.</title>
 
   <link rel="stylesheet" href="style.css">
 
+  <!-- Supabase JavaScript SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-<div id="toast" class="toast hidden"></div>
-
-<!-- ================= AUTH ================= -->
-
-<section id="authScreen" class="auth-screen">
-
-  <div class="auth-box">
-
-    <div class="logo">
-      Vi<span>dora</span>
-    </div>
-
-    <p class="tagline">
-      Watch. Share. Connect.
-    </p>
-
-    <!-- LOGIN -->
-
-    <div id="loginForm" class="auth-form">
-
-      <h2>Welcome back</h2>
-
-      <input
-        id="loginEmail"
-        class="field"
-        type="email"
-        placeholder="Email"
-        autocomplete="email">
-
-      <input
-        id="loginPassword"
-        class="field"
-        type="password"
-        placeholder="Password"
-        autocomplete="current-password">
-
-      <button
-        id="loginBtn"
-        type="button"
-        class="btn primary full">
-        Login
-      </button>
-
-      <button
-        id="showSignupBtn"
-        class="text-btn">
-        Create an account
-      </button>
-
-    </div>
-
-    <!-- SIGNUP -->
-
-    <div id="signupForm" class="auth-form hidden">
-
-      <h2>Create account</h2>
-
-      <input
-        id="signupDisplayName"
-        class="field"
-        type="text"
-        placeholder="Display name">
-
-      <input
-        id="signupUsername"
-        class="field"
-        type="text"
-        placeholder="Username">
-
-      <input
-        id="signupAge"
-        class="field"
-        type="number"
-        min="13"
-        max="100"
-        placeholder="Age">
-
-      <input
-        id="signupEmail"
-        class="field"
-        type="email"
-        placeholder="Email"
-        autocomplete="email">
-
-      <input
-        id="signupPassword"
-        class="field"
-        type="password"
-        placeholder="Password"
-        autocomplete="new-password">
-
-      <input
-        id="signupPasswordConfirm"
-        class="field"
-        type="password"
-        placeholder="Confirm password"
-        autocomplete="new-password">
-
-      <button
-        id="signupBtn"
-        type="button"
-        class="btn primary full">
-        Create account
-      </button>
-
-      <button
-        id="showLoginBtn"
-        class="text-btn">
-        Already have an account? Login
-      </button>
-
-    </div>
-
-    <div
-      id="authStatus"
-      class="status">
-    </div>
-
-  </div>
-
-</section>
-
-
-<!-- ================= APP ================= -->
-
-<div id="app" class="app hidden">
-
-  <!-- HEADER -->
-
-  <header class="topbar">
-
-    <div class="logo small">
-      Vi<span>dora</span>
-    </div>
-
-    <div class="top-actions">
-
-      <button
-        id="openNotificationsBtn"
-        class="iconbtn"
-        title="Notifications">
-        🔔
-        <span id="notifCount"></span>
-      </button>
-
-      <button
-        id="openAvatarBtn"
-        class="iconbtn"
-        title="Avatar">
-        👤
-      </button>
-
-    </div>
-
-  </header>
-
-
-  <!-- MAIN -->
-
-  <main id="main"></main>
-
-
-  <!-- BOTTOM NAV -->
-
-  <nav class="nav">
-
-    <button data-view="home">
-      <span>🏠</span>
-      Home
-    </button>
-
-    <button data-view="discover">
-      <span>🔎</span>
-      Discover
-    </button>
-
-    <button data-view="create">
-      <span>➕</span>
-      Create
-    </button>
-
-    <button data-view="messages">
-      <span>💬</span>
-      Messages
-    </button>
-
-    <button data-view="profile">
-      <span>👤</span>
-      Profile
-    </button>
-
-  </nav>
-
-</div>
-
-
-<!-- ================= MODAL ================= -->
-
-<div id="modal" class="modal hidden">
-
-  <div id="sheet" class="sheet"></div>
-
-</div>
-
-
-<!-- ================= AI ASSISTANT ================= -->
-
-<button
-  id="assistantFab"
-  class="assistant-fab">
-  ✨
-</button>
-
-<section
-  id="assistantBox"
-  class="assistant-box hidden">
-
-  <div class="assistant-header">
-
-    <div>
-      <b>Vidora AI</b>
-      <div class="muted">
-        Ask me anything
-      </div>
-    </div>
-
-    <button
-      id="closeAssistant"
-      class="iconbtn">
-      ×
-    </button>
-
-  </div>
+  <!-- ================= TOAST NOTIFICATIONS ================= -->
 
   <div
-    id="assistantMessages"
-    class="assistant-messages">
+    id="toast"
+    class="toast hidden"
+    role="status"
+    aria-live="polite">
   </div>
 
-  <div class="assistant-input">
 
-    <input
-      id="assistantInput"
-      class="field"
-      placeholder="Ask something...">
+  <!-- ================= AUTHENTICATION ================= -->
 
-    <button
-      id="assistantSend"
-      class="btn primary">
-      Send
-    </button>
+  <section id="authScreen" class="auth-screen">
+
+    <div class="auth-box">
+
+      <div class="logo">
+        Vi<span>dora</span>
+      </div>
+
+      <p class="tagline">
+        Watch. Share. Connect.
+      </p>
+
+
+      <!-- LOGIN FORM -->
+
+      <form id="loginForm" class="auth-form">
+
+        <h2>Welcome back</h2>
+
+        <p class="muted">
+          Log in to continue to Vidora.
+        </p>
+
+        <label for="loginEmail">Email address</label>
+
+        <input
+          id="loginEmail"
+          class="field"
+          type="email"
+          placeholder="Enter your email"
+          autocomplete="email"
+          required>
+
+        <label for="loginPassword">Password</label>
+
+        <input
+          id="loginPassword"
+          class="field"
+          type="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          required>
+
+        <button
+          id="loginBtn"
+          type="submit"
+          class="btn primary full">
+          Login
+        </button>
+
+        <button
+          id="showSignupBtn"
+          type="button"
+          class="text-btn">
+          Create an account
+        </button>
+
+      </form>
+
+
+      <!-- SIGNUP FORM -->
+
+      <form id="signupForm" class="auth-form hidden">
+
+        <h2>Create your account</h2>
+
+        <p class="muted">
+          Join the Vidora community.
+        </p>
+
+        <label for="signupDisplayName">Display name</label>
+
+        <input
+          id="signupDisplayName"
+          class="field"
+          type="text"
+          placeholder="Your display name"
+          autocomplete="name"
+          maxlength="60"
+          required>
+
+        <label for="signupUsername">Username</label>
+
+        <input
+          id="signupUsername"
+          class="field"
+          type="text"
+          placeholder="Choose a username"
+          autocomplete="username"
+          minlength="3"
+          maxlength="30"
+          required>
+
+        <label for="signupAge">Age</label>
+
+        <input
+          id="signupAge"
+          class="field"
+          type="number"
+          min="13"
+          max="100"
+          placeholder="Your age"
+          required>
+
+        <label for="signupEmail">Email address</label>
+
+        <input
+          id="signupEmail"
+          class="field"
+          type="email"
+          placeholder="Enter your email"
+          autocomplete="email"
+          required>
+
+        <label for="signupPassword">Password</label>
+
+        <input
+          id="signupPassword"
+          class="field"
+          type="password"
+          placeholder="Create a password"
+          autocomplete="new-password"
+          minlength="8"
+          required>
+
+        <label for="signupPasswordConfirm">
+          Confirm password
+        </label>
+
+        <input
+          id="signupPasswordConfirm"
+          class="field"
+          type="password"
+          placeholder="Enter your password again"
+          autocomplete="new-password"
+          minlength="8"
+          required>
+
+        <button
+          id="signupBtn"
+          type="submit"
+          class="btn primary full">
+          Create account
+        </button>
+
+        <button
+          id="showLoginBtn"
+          type="button"
+          class="text-btn">
+          Already have an account? Login
+        </button>
+
+      </form>
+
+
+      <!-- AUTHENTICATION STATUS -->
+
+      <div
+        id="authStatus"
+        class="status"
+        role="status"
+        aria-live="polite">
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- ================= MAIN APPLICATION ================= -->
+
+  <div id="app" class="app hidden">
+
+
+    <!-- TOP HEADER -->
+
+    <header class="topbar">
+
+      <div class="logo small">
+        Vi<span>dora</span>
+      </div>
+
+      <div class="top-actions">
+
+        <button
+          id="openNotificationsBtn"
+          class="iconbtn"
+          type="button"
+          title="Notifications"
+          aria-label="Open notifications">
+
+          🔔
+
+          <span
+            id="notifCount"
+            class="notification-count">
+          </span>
+
+        </button>
+
+        <button
+          id="openAvatarBtn"
+          class="iconbtn"
+          type="button"
+          title="Choose avatar"
+          aria-label="Choose avatar">
+
+          👤
+
+        </button>
+
+      </div>
+
+    </header>
+
+
+
+    <!-- MAIN CONTENT
+         app.js renders the selected page inside this element. -->
+
+    <main
+      id="main"
+      class="main-content">
+
+      <div class="loading">
+        Loading Vidora...
+      </div>
+
+    </main>
+
+
+
+    <!-- BOTTOM NAVIGATION -->
+
+    <nav class="nav" aria-label="Main navigation">
+
+      <button
+        type="button"
+        data-view="home"
+        aria-label="Home">
+
+        <span>🏠</span>
+        <small>Home</small>
+
+      </button>
+
+      <button
+        type="button"
+        data-view="discover"
+        aria-label="Discover">
+
+        <span>🔎</span>
+        <small>Discover</small>
+
+      </button>
+
+      <button
+        type="button"
+        data-view="create"
+        aria-label="Create">
+
+        <span>➕</span>
+        <small>Create</small>
+
+      </button>
+
+      <button
+        type="button"
+        data-view="messages"
+        aria-label="Messages">
+
+        <span>💬</span>
+        <small>Messages</small>
+
+      </button>
+
+      <button
+        type="button"
+        data-view="profile"
+        aria-label="Profile">
+
+        <span>👤</span>
+        <small>Profile</small>
+
+      </button>
+
+    </nav>
 
   </div>
 
-</section>
 
 
-<script src="app.js"></script>
+  <!-- ================= MODAL / POPUP ================= -->
+
+  <div
+    id="modal"
+    class="modal hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Vidora dialog">
+
+    <div
+      id="sheet"
+      class="sheet">
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ================= VIDORA AI ASSISTANT ================= -->
+
+  <button
+    id="assistantFab"
+    class="assistant-fab"
+    type="button"
+    aria-label="Open Vidora AI">
+
+    ✨
+
+  </button>
+
+
+  <section
+    id="assistantBox"
+    class="assistant-box hidden"
+    aria-label="Vidora AI assistant">
+
+
+    <!-- ASSISTANT HEADER -->
+
+    <div class="assistant-header">
+
+      <div>
+
+        <b>Vidora AI</b>
+
+        <div class="muted">
+          Your creative assistant
+        </div>
+
+      </div>
+
+      <button
+        id="closeAssistant"
+        class="iconbtn"
+        type="button"
+        aria-label="Close assistant">
+
+        ×
+
+      </button>
+
+    </div>
+
+
+
+    <!-- ASSISTANT CONVERSATION -->
+
+    <div
+      id="assistantMessages"
+      class="assistant-messages"
+      aria-live="polite">
+
+    </div>
+
+
+
+    <!-- ASSISTANT INPUT -->
+
+    <form
+      id="assistantForm"
+      class="assistant-input">
+
+      <input
+        id="assistantInput"
+        class="field"
+        type="text"
+        placeholder="Ask Vidora AI..."
+        autocomplete="off"
+        maxlength="1000">
+
+      <button
+        id="assistantSend"
+        class="btn primary"
+        type="submit">
+
+        Send
+
+      </button>
+
+    </form>
+
+  </section>
+
+
+
+  <!-- ================= JAVASCRIPT ================= -->
+
+  <!-- Load Supabase before app.js, as configured above. -->
+  <script src="app.js"></script>
 
 </body>
 </html>
