@@ -1585,10 +1585,16 @@ async function renderProfile(id){
     .eq("id", id)
     .maybeSingle();
 
-  if(error){
-    \( ("main").innerHTML = `<div class="panel"> \){esc(safeError(error))}</div>`;
-    return;
-  }
+  
+if (error) {
+  $("main").innerHTML = `
+    <div class="panel">
+      ${esc(safeError(error, "Unable to load profile."))}
+    </div>
+  `;
+  return;
+}
+
 
   const p = data || profile || {};
 
