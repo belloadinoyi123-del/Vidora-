@@ -3444,131 +3444,454 @@ async function renderProfile(id){
 }
 
 
+
+
 /* =========================================================
-   AVATAR PICKER
-========================================================= */
+   VIDORA AVATAR SYSTEM
+   20 BUILT-IN AVATARS + CUSTOM PROFILE PHOTO
+   ========================================================= */
+
+const VIDORA_AVATARS = [
+
+  /* =========================
+     ORIGINAL 10 AVATARS
+     ========================= */
+
+  {
+    name: "Nova",
+    file: "avatars/nova.png"
+  },
+  {
+    name: "Zeno",
+    file: "avatars/zeno.png"
+  },
+  {
+    name: "Luna",
+    file: "avatars/luna.png"
+  },
+  {
+    name: "Kai",
+    file: "avatars/kai.png"
+  },
+  {
+    name: "Sage",
+    file: "avatars/sage.png"
+  },
+  {
+    name: "Rex",
+    file: "avatars/rex.png"
+  },
+  {
+    name: "Ivy",
+    file: "avatars/ivy.png"
+  },
+  {
+    name: "Orion",
+    file: "avatars/orion.png"
+  },
+  {
+    name: "Pixel",
+    file: "avatars/pixel.png"
+  },
+  {
+    name: "Vexa",
+    file: "avatars/vexa.png"
+  },
+
+
+  /* =========================
+     NEW 10 AVATARS
+     ========================= */
+
+  {
+    name: "Axel",
+    file: "avatars/axel.png"
+  },
+  {
+    name: "Jett",
+    file: "avatars/jett.png"
+  },
+  {
+    name: "Neo",
+    file: "avatars/neo.png"
+  },
+  {
+    name: "Skye",
+    file: "avatars/skye.png"
+  },
+  {
+    name: "Blaze",
+    file: "avatars/blaze.png"
+  },
+  {
+    name: "Aria",
+    file: "avatars/aria.png"
+  },
+  {
+    name: "Kairo",
+    file: "avatars/kairo.png"
+  },
+  {
+    name: "Zara",
+    file: "avatars/zara.png"
+  },
+  {
+    name: "Nia",
+    file: "avatars/nia.png"
+  },
+  {
+    name: "Onyx",
+    file: "avatars/onyx.png"
+  }
+
+];
+
+
+/* =========================================================
+   OPEN AVATAR PICKER
+   ========================================================= */
 
 async function renderAvatarPicker(){
 
-  const avatars = [
+  if(!user){
+    toast("Please login first");
+    return;
+  }
 
-    "https://api.dicebear.com/9.x/bottts/svg?seed=Nova",
-
-    "https://api.dicebear.com/9.x/bottts/svg?seed=Kai",
-
-    "https://api.dicebear.com/9.x/bottts/svg?seed=Luna",
-
-    "https://api.dicebear.com/9.x/bottts/svg?seed=Rex",
-
-    "https://api.dicebear.com/9.x/bottts/svg?seed=Zara",
-
-    "https://api.dicebear.com/9.x/bottts/svg?seed=Kairo"
-
-  ];
-
+  const currentAvatar =
+    profile?.avatar_url || "";
 
   $("sheet").innerHTML = `
 
-    <div class="row">
+    <div class="sheet-head">
 
-      <b>
-        Choose Avatar
-      </b>
+      <div>
+        <h2>Choose Avatar</h2>
 
-      <span class="spacer"></span>
+        <div class="muted">
+          Choose a Vidora avatar or upload your own picture.
+        </div>
+      </div>
 
       <button
         class="iconbtn"
-        onclick="closeModal()">
-
+        type="button"
+        onclick="closeModal()"
+      >
         ×
-
       </button>
 
     </div>
 
-    <div class="row wrap">
 
-      ${
-        avatars.map(
-          url=>`
+    <!-- =========================
+         CUSTOM PROFILE PICTURE
+         ========================= -->
 
-            <button
-              class="panel"
-              onclick="saveAvatar('${url}')">
+    <div
+      class="panel"
+      style="
+        margin-bottom:18px;
+        padding:16px;
+      "
+    >
 
-              <img
-                class="avatar"
-                src="${url}"
-                alt="Avatar">
+      <div class="title">
+        📷 Upload your own picture
+      </div>
 
-            </button>
+      <div
+        class="muted"
+        style="margin:6px 0 12px;"
+      >
+        Use a JPG, PNG or WEBP image.
+      </div>
 
-          `
-        ).join("")
-      }
+      <input
+        id="customAvatarInput"
+        class="field"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        onchange="handleCustomAvatar(this.files[0])"
+      >
+
+      <div
+        id="avatarUploadStatus"
+        class="status"
+        style="margin-top:10px;"
+      ></div>
+
+    </div>
+
+
+    <!-- =========================
+         VIDORA AVATARS
+         ========================= -->
+
+    <div class="title">
+      ✨ Vidora Avatars
+    </div>
+
+    <div
+      class="avatar-grid"
+      style="
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:12px;
+        margin-top:12px;
+      "
+    >
+
+      ${VIDORA_AVATARS.map((avatar) => {
+
+        const selected =
+          currentAvatar === avatar.file;
+
+        return `
+
+          <button
+            type="button"
+            onclick="saveAvatar('${avatar.file}')"
+            style="
+              position:relative;
+              padding:6px;
+              border-radius:16px;
+              border:2px solid ${
+                selected
+                  ? "var(--purple)"
+                  : "var(--border)"
+              };
+              background:var(--surface2);
+              color:var(--text);
+              cursor:pointer;
+              overflow:hidden;
+            "
+          >
+
+            <img
+              src="${avatar.file}"
+              alt="${avatar.name}"
+              loading="lazy"
+              style="
+                width:100%;
+                aspect-ratio:1/1;
+                object-fit:cover;
+                display:block;
+                border-radius:11px;
+              "
+              onerror="
+                this.style.opacity='.25';
+              "
+            >
+
+            <div
+              style="
+                padding:8px 4px 6px;
+                font-size:14px;
+                font-weight:700;
+              "
+            >
+              ${avatar.name}
+            </div>
+
+            ${
+              selected
+                ? `
+                  <span
+                    style="
+                      position:absolute;
+                      top:10px;
+                      right:10px;
+                      width:28px;
+                      height:28px;
+                      border-radius:50%;
+                      background:var(--purple);
+                      color:white;
+                      display:flex;
+                      align-items:center;
+                      justify-content:center;
+                      font-weight:bold;
+                    "
+                  >
+                    ✓
+                  </span>
+                `
+                : ""
+            }
+
+          </button>
+
+        `;
+
+      }).join("")}
 
     </div>
 
   `;
-
-
-  $("modal")
-    ?.classList.remove(
-      "hidden"
-    );
 }
 
 
-async function saveAvatar(url){
+/* =========================================================
+   UPLOAD CUSTOM PROFILE PICTURE
+   ========================================================= */
+
+async function handleCustomAvatar(file){
+
+  if(!file) return;
 
   if(!user){
+    toast("Please login first");
     return;
   }
 
+  const status =
+    $("avatarUploadStatus");
 
-  const {
-    error
-  } =
-    await sb
-      .from("profiles")
-      .update({
-        avatar_url:url
-      })
-      .eq(
-        "id",
-        user.id
+  try {
+
+    if(!file.type.startsWith("image/")){
+      throw new Error(
+        "Please choose an image."
+      );
+    }
+
+    /* Maximum 10MB */
+
+    if(file.size > 10 * 1024 * 1024){
+      throw new Error(
+        "Profile picture must be 10MB or smaller."
+      );
+    }
+
+    if(status){
+      status.textContent =
+        "Uploading profile picture...";
+    }
+
+
+    const extension =
+      (
+        file.name
+          .split(".")
+          .pop() || "jpg"
+      )
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+
+
+    const filePath =
+      `avatars/${user.id}/${Date.now()}_${crypto.randomUUID()}.${extension}`;
+
+
+    /* =========================
+       UPLOAD TO SUPABASE STORAGE
+       ========================= */
+
+    const {
+      error: uploadError
+    } = await sb.storage
+      .from("media")
+      .upload(
+        filePath,
+        file,
+        {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type
+        }
       );
 
 
-  if(error){
+    if(uploadError){
+      throw uploadError;
+    }
 
-    return toast(
-      safeError(
-        error,
-        "Unable to save avatar."
-      )
+
+    /* =========================
+       GET PUBLIC URL
+       ========================= */
+
+    const {
+      data: publicData
+    } = sb.storage
+      .from("media")
+      .getPublicUrl(filePath);
+
+
+    const avatarUrl =
+      publicData?.publicUrl;
+
+
+    if(!avatarUrl){
+      throw new Error(
+        "Could not create profile picture URL."
+      );
+    }
+
+
+    /* =========================
+       SAVE TO PROFILE
+       ========================= */
+
+    const {
+      error: profileError
+    } = await sb
+      .from("profiles")
+      .update({
+        avatar_url: avatarUrl
+      })
+      .eq("id", user.id);
+
+
+    if(profileError){
+      throw profileError;
+    }
+
+
+    /* Update local profile */
+
+    profile = {
+      ...(profile || {}),
+      avatar_url: avatarUrl
+    };
+
+
+    if(status){
+      status.textContent =
+        "Profile picture updated successfully.";
+    }
+
+
+    toast(
+      "Profile picture updated"
     );
+
+
+    closeModal();
+
+
+    /* Refresh profile */
+
+    await renderView("profile");
+
+
+  } catch(error){
+
+    console.error(
+      "Avatar upload error:",
+      error
+    );
+
+    const message =
+      safeError(error);
+
+    if(status){
+      status.textContent =
+        message;
+    }
+
+    toast(message);
   }
-
-
-  if(profile){
-    profile.avatar_url =
-      url;
-  }
-
-
-  toast(
-    "Avatar updated."
-  );
-
-
-  closeModal();
-
-
-  await renderView(
-    currentView
-  );
 }
 
 
