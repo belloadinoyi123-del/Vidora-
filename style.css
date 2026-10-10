@@ -740,3 +740,308 @@ textarea.field{
   }
 
 }
+
+/* =========================================
+   VIDORA MESSAGING UPGRADE
+   Add at the END of style.css
+========================================= */
+
+/* Messages page */
+.messages-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.messages-page .title {
+  margin-bottom: 4px;
+  font-size: 25px;
+  letter-spacing: -0.5px;
+}
+
+.messages-search {
+  position: relative;
+  width: 100%;
+}
+
+.messages-search input {
+  width: 100%;
+  min-height: 48px;
+  padding: 13px 15px 13px 44px;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+
+.messages-search input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(124,92,255,.12);
+}
+
+.messages-search::before {
+  content: "⌕";
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 24px;
+  pointer-events: none;
+}
+
+.messages-people {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.message-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 17px;
+  transition: background .18s ease, border-color .18s ease;
+}
+
+.message-person:hover,
+.message-person:focus-visible {
+  background: var(--surface);
+  border-color: var(--border);
+  outline: none;
+}
+
+.message-person .avatar {
+  flex-shrink: 0;
+}
+
+.message-person-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-person-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.message-person-preview {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.messages-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+  line-height: 1.6;
+}
+
+/* Chat modal */
+#sheet:has(.vidora-chat) {
+  display: flex;
+  flex-direction: column;
+  height: min(82vh, 760px);
+  max-height: 90dvh;
+  min-height: 360px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 24px;
+}
+
+.vidora-chat {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.vidora-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex-shrink: 0;
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(17,17,26,.96);
+}
+
+.vidora-chat-header .avatar {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+}
+
+.vidora-chat-header .chat-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.vidora-chat-header .chat-user-info strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vidora-chat-header .chat-user-info small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+}
+
+.vidora-chat-header button {
+  flex-shrink: 0;
+}
+
+.vidora-chat .chat-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 13px;
+  gap: 10px;
+  scroll-behavior: smooth;
+}
+
+.vidora-chat .msg {
+  max-width: min(82%, 420px);
+  padding: 11px 14px;
+  border-radius: 18px 18px 18px 5px;
+  line-height: 1.45;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  box-shadow: 0 3px 12px rgba(0,0,0,.12);
+}
+
+.vidora-chat .msg.mine {
+  border: 1px solid rgba(124,92,255,.25);
+  border-radius: 18px 18px 5px 18px;
+  background: linear-gradient(
+    135deg,
+    rgba(124,92,255,.34),
+    rgba(255,45,117,.23)
+  );
+}
+
+.vidora-chat .msg time,
+.vidora-chat .msg small {
+  display: block;
+  margin-top: 6px;
+  color: rgba(255,255,255,.65);
+  font-size: 10px;
+  text-align: right;
+}
+
+.vidora-chat .msg audio {
+  display: block;
+  width: min(250px, 100%);
+  margin-top: 8px;
+}
+
+.vidora-chat .chat-composer,
+.vidora-chat form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 12px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.vidora-chat .chat-composer input,
+.vidora-chat form input {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  padding: 11px 14px;
+  border-radius: 22px;
+}
+
+.vidora-chat .chat-composer button,
+.vidora-chat form button {
+  min-width: 46px;
+  min-height: 44px;
+  flex-shrink: 0;
+  border-radius: 15px;
+}
+
+.vidora-chat .chat-loading,
+.vidora-chat .chat-empty {
+  margin: auto;
+  padding: 20px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Small phones */
+@media (max-width: 520px) {
+  #sheet:has(.vidora-chat) {
+    width: 100%;
+    height: 88dvh;
+    max-height: 92dvh;
+    min-height: 320px;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .modal:has(.vidora-chat) {
+    padding: 0;
+  }
+
+  .vidora-chat-header {
+    padding: 12px;
+  }
+
+  .vidora-chat .chat-list {
+    padding: 14px 10px;
+  }
+
+  .vidora-chat .msg {
+    max-width: 88%;
+  }
+
+  .vidora-chat .chat-composer,
+  .vidora-chat form {
+    gap: 7px;
+    padding: 9px;
+    padding-bottom: max(9px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .message-person,
+  .vidora-chat .chat-list {
+    transition: none;
+    scroll-behavior: auto;
+  }
+}
