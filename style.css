@@ -1045,3 +1045,60 @@ textarea.field{
     scroll-behavior: auto;
   }
 }
+
+/* VIDORA CHAT LAYOUT FIX */
+
+#sheet:has(.vidora-chat) {
+  height: min(76dvh, 680px);
+  max-height: 88dvh;
+  min-height: 350px;
+}
+
+.vidora-chat {
+  width: 100%;
+  min-width: 0;
+}
+
+.vidora-chat .chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 14px;
+}
+
+.vidora-chat .msg {
+  width: fit-content;
+  min-width: 60px;
+  max-width: 82%;
+  flex-shrink: 0;
+  white-space: pre-wrap;
+}
+
+.vidora-chat .msg.mine {
+  margin-left: auto;
+}
+
+.vidora-chat .msg:not(.mine) {
+  margin-right: auto;
+}
+
+.vidora-chat .chat-composer,
+.vidora-chat form {
+  width: 100%;
+}
+
+@media (max-width: 520px) {
+  #sheet:has(.vidora-chat) {
+    height: 76dvh;
+    max-height: 84dvh;
+    min-height: 350px;
+  }
+
+  .vidora-chat .chat-list {
+    padding: 14px 12px;
+  }
+
+  .vidora-chat .msg {
+    max-width: 86%;
+  }
+}
