@@ -2679,160 +2679,467 @@ async function handleCustomAvatar(file) {
 }
 
 
+
 /* =========================================================
-   32. MESSAGES
+   32. VIDORA MESSAGING UPGRADE
+   Uses existing messages table:
+   sender_id, receiver_id, content, voice_url, created_at
 ========================================================= */
 
+let chatRefreshTimer = null;
+let messageSearchTimer = null;
+
 async function renderMessages() {
-  $("main").innerHTML = `
-    <section class="panel">
-      <div class="title">Messages</div>
-      <div id="messageUsers">Loading...</div>
+  const main = $("main");
+  if (!main || !user) return;
+
+  if (chatRefreshTimer) {
+    clearInterval(chatRefreshTimer);
+    chatRefreshTimer = null;
+  }
+
+  main.innerHTML = `
+    <section class="panel vidora-messages">
+      <div class="row">
+        <div>
+          <div class="title">Messages 💬</div>
+          <div class="muted">Chat with your Vidora connections</div>
+        </div>
+      </div>
+
+      <input
+        id="chatSearch"
+        class="field"
+        type="search"
+        placeholder="Search people..."
+        autocomplete="off">
+
+      <div id="messageUsers">
+        <div class="muted">Loading conversations...</div>
+      </div>
     </section>
   `;
 
-  const { data, error } = await sb
-    .from("follows")
-    .select("following_id")
-    .eq("follower_id", user.id);
+  const search = $("chatSearch");
 
-  if (error) {
-    $("messageUsers").innerHTML =
-      `<div class="muted">${esc(safeError(error))}</div>`;
+  search?.addEventListener("input", () => {
+    clearTimeout(messageSearchTimer);
 
-    return;
-  }
+    messageSearchTimer = setTimeout(() => {
+      loadChatPeople(search.value);
+    }, 250);
+  });
 
-  const ids = (data || []).map(item => item.following_id);
-
-  if (!ids.length) {
-    $("messageUsers").innerHTML =
-      `<div class="muted">Follow users to start chatting.</div>`;
-
-    return;
-  }
-
-  const { data: people, error: peopleError } = await sb
-    .from("profiles")
-    .select("id,username,display_name,avatar_url")
-    .in("id", ids);
-
-  if (peopleError) {
-    $("messageUsers").innerHTML =
-      `<div class="muted">${esc(safeError(peopleError))}</div>`;
-
-    return;
-  }
-
-  $("messageUsers").innerHTML = (people || []).map(person => `
-    <button class="panel row"
-      style="width:100%;text-align:left"
-      onclick="openChat('${esc(person.id)}')">
-
-      <img
-        class="avatar sm"
-        src="${esc(avatarSrc(person.avatar_url))}"
-        alt="">
-
-      <div>
-        <b>${esc(person.display_name || person.username || "User")}</b>
-        <div class="muted">@${esc(person.username || "user")}</div>
-      </div>
-
-    </button>
-  `).join("") || `<div class="muted">No users found.</div>`;
+  await loadChatPeople("");
 }
 
+async function loadChatPeople(query = "") {
+  const box = $("messageUsers");
+  if (!box || !user) return;
+
+  box.innerHTML = `<div class="muted">Loading people...</div>`;
+
+  try {
+    // Include people the user follows and people who follow the user.
+    const [followingResult, followersResult] = await Promise.all([
+      sb.from("follows")
+        .select("following_id")
+        .eq("follower_id", user.id),
+
+      sb.from("follows")
+        .select("follower_id")
+        .eq("following_id", user.id)
+    ]);
+
+    if (followingResult.error) throw followingResult.error;
+    if (followersResult.error) throw followersResult.error;
+
+    const ids = new Set([
+      ...(followingResult.data || []).map(row => row.following_id),
+      ...(followersResult.data || []).map(row => row.follower_id)
+    ]);
+
+    let people = [];
+
+    if (ids.size) {
+      const { data, error } = await sb
+        .from("profiles")
+        .select("id,username,display_name,avatar_url")
+        .in("id", [...ids]);
+
+      if (error) throw error;
+      people = data || [];
+    }
+
+    const normalizedQuery = String(query || "").trim().toLowerCase();
+
+    people = people.filter(person => {
+      const name = person.display_name || "";
+      const username = person.username || "";
+
+      return (
+        person.id !== user.id &&
+        (
+          !normalizedQuery ||
+          name.toLowerCase().includes(normalizedQuery) ||
+          username.toLowerCase().includes(normalizedQuery)
+        )
+      );
+    });
+
+    people.sort((a, b) =>
+      (a.display_name || a.username || "")
+        .localeCompare(b.display_name || b.username || "")
+    );
+
+    if (!people.length) {
+      box.innerHTML = `
+        <div class="panel muted">
+          ${
+            normalizedQuery
+              ? "No matching people found."
+              : "No connections yet. Follow someone or connect with a follower to start chatting."
+          }
+        </div>
+      `;
+      return;
+    }
+
+    box.innerHTML = people.map(person => `
+      <button
+        type="button"
+        class="panel row vidora-chat-person"
+        style="
+          width:100%;
+          text-align:left;
+          align-items:center;
+          margin-top:8px;
+          cursor:pointer;
+        "
+        onclick="openChat('${esc(person.id)}')">
+
+        <img
+          class="avatar sm"
+          src="${esc(avatarSrc(person.avatar_url))}"
+          alt=""
+          style="flex-shrink:0">
+
+        <div style="min-width:0;flex:1">
+          <div style="font-weight:700;overflow-wrap:anywhere">
+            ${esc(person.display_name || person.username || "User")}
+          </div>
+          <div class="muted">@${esc(person.username || "user")}</div>
+        </div>
+
+        <span aria-hidden="true">›</span>
+      </button>
+    `).join("");
+
+  } catch (error) {
+    console.error("CHAT PEOPLE ERROR:", error);
+
+    box.innerHTML = `
+      <div class="panel">
+        <b>Unable to load chats.</b>
+        <div class="muted">${esc(safeError(error))}</div>
+        <button class="btn" onclick="renderMessages()">Try again</button>
+      </div>
+    `;
+  }
+}
+
+function formatMessageTime(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
 
 async function openChat(userId) {
-  const { data: person, error: personError } = await sb
-    .from("profiles")
-    .select("id,username,display_name")
-    .eq("id", userId)
-    .maybeSingle();
+  if (!user || !userId) return;
 
-  if (personError || !person) {
-    return toast("Unable to find this user.");
+  if (chatRefreshTimer) {
+    clearInterval(chatRefreshTimer);
+    chatRefreshTimer = null;
   }
 
-  chatUser = person;
+  try {
+    const { data: person, error: personError } = await sb
+      .from("profiles")
+      .select("id,username,display_name,avatar_url")
+      .eq("id", userId)
+      .maybeSingle();
 
-  const { data: messages, error } = await sb
-    .from("messages")
-    .select("id,sender_id,receiver_id,content,voice_url,created_at")
-    .or(
-      `and(sender_id.eq.${user.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${user.id})`
-    )
-    .order("created_at", { ascending: true });
+    if (personError) throw personError;
+    if (!person) throw new Error("This user could not be found.");
 
-  if (error) {
-    return toast(safeError(error, "Unable to load messages."));
-  }
+    chatUser = person;
 
-  $("sheet").innerHTML = `
-    <div class="row">
-      <b>${esc(person.display_name || person.username || "Chat")}</b>
+    $("sheet").innerHTML = `
+      <div class="vidora-chat-window">
 
-      <span class="spacer"></span>
+        <div class="row" style="align-items:center">
+          <button
+            class="iconbtn"
+            type="button"
+            onclick="backToMessages()"
+            aria-label="Back to messages">←</button>
 
-      <button class="iconbtn" onclick="closeModal()">×</button>
-    </div>
+          <img
+            class="avatar sm"
+            src="${esc(avatarSrc(person.avatar_url))}"
+            alt="">
 
-    <div id="chatMessages" class="panel">
-      ${
-        (messages || []).map(message => `
-          <div class="panel"
-            style="margin:5px 0;text-align:${
-              message.sender_id === user.id ? "right" : "left"
-            }">
-
-            ${esc(message.content || "")}
-
-            ${
-              message.voice_url
-                ? `<audio controls src="${esc(message.voice_url)}"></audio>`
-                : ""
-            }
+          <div style="min-width:0;flex:1">
+            <b>${esc(person.display_name || person.username || "Chat")}</b>
+            <div class="muted">@${esc(person.username || "user")}</div>
           </div>
-        `).join("") || `<div class="muted">No messages yet.</div>`
+
+          <button
+            class="iconbtn"
+            type="button"
+            onclick="closeModal()"
+            aria-label="Close chat">×</button>
+        </div>
+
+        <div
+          id="chatMessages"
+          role="log"
+          aria-live="polite"
+          aria-label="Chat messages"
+          style="
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+            max-height:55vh;
+            min-height:180px;
+            overflow-y:auto;
+            padding:12px 2px;
+          ">
+          <div class="muted">Loading messages...</div>
+        </div>
+
+        <form
+          id="messageForm"
+          class="row"
+          style="align-items:center;gap:8px">
+
+          <input
+            id="messageInput"
+            class="field"
+            maxlength="2000"
+            autocomplete="off"
+            placeholder="Write a message..."
+            aria-label="Message text"
+            style="min-width:0;flex:1">
+
+          <button
+            id="sendMessageBtn"
+            class="btn primary"
+            type="submit">Send</button>
+        </form>
+
+        <div id="chatStatus" class="muted" role="status"></div>
+      </div>
+    `;
+
+    $("modal")?.classList.remove("hidden");
+
+    $("messageForm")?.addEventListener("submit", async event => {
+      event.preventDefault();
+      await sendMessage();
+    });
+
+    await refreshChatMessages();
+
+    // Poll for new messages while this chat is open.
+    chatRefreshTimer = setInterval(async () => {
+      if (
+        currentView === "messages" &&
+        chatUser?.id === userId &&
+        !$("modal")?.classList.contains("hidden")
+      ) {
+        await refreshChatMessages(true);
+      } else {
+        clearInterval(chatRefreshTimer);
+        chatRefreshTimer = null;
       }
-    </div>
+    }, 5000);
 
-    <div class="row">
-      <input
-        id="messageInput"
-        class="field"
-        maxlength="2000"
-        placeholder="Message...">
-
-      <button class="btn primary" onclick="sendMessage()">Send</button>
-    </div>
-  `;
-
-  $("modal")?.classList.remove("hidden");
+  } catch (error) {
+    console.error("OPEN CHAT ERROR:", error);
+    toast(safeError(error, "Unable to open chat."));
+  }
 }
 
-
-async function sendMessage() {
+async function refreshChatMessages(quiet = false) {
   if (!user || !chatUser) return;
 
+  const box = $("chatMessages");
+  if (!box) return;
+
+  const wasNearBottom =
+    box.scrollHeight - box.scrollTop - box.clientHeight < 100;
+
+  try {
+    const myId = user.id;
+    const otherId = chatUser.id;
+
+    const { data, error } = await sb
+      .from("messages")
+      .select("id,sender_id,receiver_id,content,voice_url,created_at")
+      .or(
+        `and(sender_id.eq.${myId},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${myId})`
+      )
+      .order("created_at", { ascending: true })
+      .limit(200);
+
+    if (error) throw error;
+
+    if (!box.isConnected) return;
+
+    const messages = data || [];
+
+    box.innerHTML = messages.map(message => {
+      const mine = message.sender_id === myId;
+
+      return `
+        <div style="
+          align-self:${mine ? "flex-end" : "flex-start"};
+          width:fit-content;
+          max-width:85%;
+          min-width:65px;
+          padding:10px 12px;
+          border-radius:16px;
+          background:${mine ? "var(--purple, #8b5cf6)" : "var(--surface2, #20202b)"};
+          color:${mine ? "#fff" : "var(--text, #fff)"};
+          overflow-wrap:anywhere;
+        ">
+          ${
+            message.content
+              ? `<div style="white-space:pre-wrap">${esc(message.content)}</div>`
+              : ""
+          }
+
+          ${
+            message.voice_url
+              ? `<audio
+                  controls
+                  preload="none"
+                  src="${esc(message.voice_url)}"
+                  style="display:block;max-width:100%;width:230px;margin-top:6px">
+                </audio>`
+              : ""
+          }
+
+          <div style="
+            font-size:10px;
+            opacity:.8;
+            text-align:right;
+            margin-top:5px">
+            ${esc(formatMessageTime(message.created_at))}
+          </div>
+        </div>
+      `;
+    }).join("") || `
+      <div class="muted" style="margin:auto">
+        No messages yet. Say hello 👋
+      </div>
+    `;
+
+    if (wasNearBottom || !quiet) {
+      box.scrollTop = box.scrollHeight;
+    }
+
+    const status = $("chatStatus");
+    if (status) status.textContent = "";
+
+  } catch (error) {
+    console.error("REFRESH CHAT ERROR:", error);
+
+    if (!quiet) {
+      const status = $("chatStatus");
+      if (status) status.textContent = safeError(error);
+    }
+  }
+}
+
+async function sendMessage() {
+  if (!user || !chatUser) {
+    return toast("Open a chat first.");
+  }
+
   const input = $("messageInput");
+  const button = $("sendMessageBtn");
   const content = input?.value?.trim() || "";
 
   if (!content) return;
+  if (content.length > 2000) return toast("Message is too long.");
 
-  const { error } = await sb
-    .from("messages")
-    .insert({
-      sender_id: user.id,
-      receiver_id: chatUser.id,
-      content
-    });
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Sending...";
+  }
 
-  if (error) return toast(safeError(error, "Unable to send message."));
+  try {
+    const { error } = await sb
+      .from("messages")
+      .insert({
+        sender_id: user.id,
+        receiver_id: chatUser.id,
+        content: content,
+        voice_url: null
+      });
 
-  await openChat(chatUser.id);
+    if (error) throw error;
+
+    if (input) input.value = "";
+
+    await refreshChatMessages();
+
+    input?.focus();
+
+  } catch (error) {
+    console.error("SEND MESSAGE ERROR:", error);
+
+    const status = $("chatStatus");
+
+    if (status) {
+      status.textContent = safeError(error, "Unable to send message.");
+    } else {
+      toast(safeError(error, "Unable to send message."));
+    }
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Send";
+    }
+  }
 }
+
+function backToMessages() {
+  if (chatRefreshTimer) {
+    clearInterval(chatRefreshTimer);
+    chatRefreshTimer = null;
+  }
+
+  chatUser = null;
+  closeModal();
+  renderMessages();
+}
+
+
+
+
+  
 
 
 /* =========================================================
