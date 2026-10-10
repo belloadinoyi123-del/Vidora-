@@ -928,20 +928,22 @@ async function renderPost(post) {
   }
 
   const music = track?.audio_url ? `
-    <div class="panel music-info" style="margin-top:8px">
-      🎵 <b>${esc(track.title || "Track")}</b>
+  <div class="panel music-info" style="margin-top:8px">
+    <b>🎵 ${esc(track.title || "Track")}</b>
+    <div class="muted">${esc(track.artist || "")}</div>
 
-      <div class="muted">${esc(track.artist || "")}</div>
-
-      <audio
-        class="post-audio"
-        preload="none"
-        loop
-        style="display:none"
-        src="${esc(track.audio_url)}">
-      </audio>
-    </div>
-  ` : "";
+    <audio
+      class="post-audio"
+      controls
+      preload="metadata"
+      loop
+      style="display:block;width:100%;margin-top:8px"
+      src="${esc(track.audio_url)}"
+      onplay="stopOtherPostAudio(this)">
+      Your browser cannot play this audio.
+    </audio>
+  </div>
+` : "";
 
   return `
     <article class="card" data-post-id="${esc(post.id)}">
