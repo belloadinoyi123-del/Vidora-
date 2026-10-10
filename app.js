@@ -1818,15 +1818,15 @@ async function uploadCustomSong(forStory = false) {
 }
 
 
+
 /* =========================================================
-   22. PUBLISH POST
+   22. PUBLISH POST — WITH ATTACHED MUSIC
 ========================================================= */
 
 async function publishPost() {
   if (!user) return toast("You are not logged in.");
 
   const file = $("createFile")?.files?.[0];
-
   const caption = $("createCaption")?.value?.trim() || "";
 
   if (!file) return toast("Choose an image or video.");
@@ -1858,38 +1858,63 @@ async function publishPost() {
       caption
     };
 
-    if (selectedMusic?.id) {
-      post.music_id = selectedMusic.id;
+    /* Attach the selected music to this post. */
+    if (selectedMusic) {
+      const songUrl =
+        selectedMusic.audio_url ||
+        selectedMusic.sound_url ||
+        selectedMusic.url ||
+        "";
+
+      if (songUrl) {
+        post.sound_url = songUrl;
+        post.sound_name =
+          selectedMusic.title ||
+          selectedMusic.name ||
+          "Vidora Music";
+      }
+
+      if (selectedMusic.id) {
+        post.music_id = selectedMusic.id;
+      }
     }
 
     if (selectedFilter !== "none") {
       post.filter = selectedFilter;
     }
 
-    let { error } = await sb.from("posts").insert(post);
+    let { error } = await sb
+      .from("posts")
+      .insert(post);
 
     /*
-      Compatibility fallback:
-      Some existing databases may not have music_id or filter
-      columns yet. Retry using only the original post columns.
+      Retry without optional columns if an older
+      database schema does not contain them.
     */
-
     if (
       error &&
       (
         error.message?.includes("music_id") ||
         error.message?.includes("filter") ||
+        error.message?.includes("sound_url") ||
+        error.message?.includes("sound_name") ||
         error.code === "PGRST204"
       )
     ) {
-      console.warn("Retrying post without optional columns.");
+      console.warn(
+        "Retrying post with basic columns."
+      );
 
-      ({ error } = await sb.from("posts").insert({
+      const basicPost = {
         user_id: user.id,
         media_url: mediaUrl,
         media_type: mediaType,
         caption
-      }));
+      };
+
+      ({ error } = await sb
+        .from("posts")
+        .insert(basicPost));
     }
 
     if (error) throw error;
@@ -1910,12 +1935,15 @@ async function publishPost() {
     toast("Post published successfully!");
 
     await renderView("home");
+
   } catch (error) {
     console.error("PUBLISH POST ERROR:", error);
 
     toast("Post failed: " + safeError(error));
   }
 }
+
+
 
 
 /* =========================================================
