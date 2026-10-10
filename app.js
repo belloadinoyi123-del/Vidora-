@@ -1647,22 +1647,35 @@ async function loadMusic() {
           : ""
       }
 
-      ${filtered.map(track => `
-        <button class="panel"
-          style="width:100%;text-align:left;cursor:pointer;margin-bottom:6px"
-          onclick="${story
-            ? `selectStoryMusic('${esc(track.id)}')`
-            : `selectMusic('${esc(track.id)}')`}">
+    
+${filtered.map(track => `
+  <div class="panel" style="margin-bottom:8px">
+    <div style="font-weight:700">
+      🎵 ${esc(track.title || "Track")}
+    </div>
 
-          🎵 <b>${esc(track.title || "Track")}</b>
+    <div class="muted" style="margin:4px 0 10px">
+      ${esc(track.artist || "Vidora")}
+      · ${esc(track.category || "Other")}
+    </div>
 
-          <div class="muted">
-            ${esc(track.artist || "Vidora")}
-          </div>
-        </button>
-      `).join("")}
-    `;
-  }
+    <div class="row wrap">
+      <button class="btn"
+        onclick="${story
+          ? `selectStoryMusic('${esc(track.id)}')`
+          : `selectMusic('${esc(track.id)}')`}">
+        ${story ? "Select for Story" : "Select for Post"}
+      </button>
+
+      <button class="btn"
+        onclick="previewMusic('${esc(track.id)}')">
+        ▶ Play Preview
+      </button>
+    </div>
+  </div>
+`).join("")}
+  
+          
 
   renderMusicList($("musicList"), false);
   renderMusicList($("storyMusicList"), true);
