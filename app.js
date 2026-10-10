@@ -1540,6 +1540,53 @@ function previewCreateMedia() {
   box.classList.remove("hidden");
 }
 
+/* =========================================================
+   MUSIC PREVIEW PLAYER
+========================================================= */
+
+let vidoraPreviewAudio = null;
+let vidoraPreviewTrackId = null;
+
+async function previewMusic(id) {
+  const track = findMusic(id);
+
+  if (!track || !track.audio_url) {
+    toast("This song has no audio URL.");
+    return;
+  }
+
+  if (
+    vidoraPreviewAudio &&
+    vidoraPreviewTrackId === String(id) &&
+    !vidoraPreviewAudio.paused
+  ) {
+    vidoraPreviewAudio.pause();
+    toast("Preview paused.");
+    return;
+  }
+
+  if (vidoraPreviewAudio) {
+    vidoraPreviewAudio.pause();
+  }
+
+  vidoraPreviewTrackId = String(id);
+  vidoraPreviewAudio = new Audio(track.audio_url);
+
+  vidoraPreviewAudio.addEventListener("error", () => {
+    toast("Song failed to load. Check the audio URL.");
+  }, { once: true });
+
+  try {
+    await vidoraPreviewAudio.play();
+    toast("Playing: " + (track.title || "Song"));
+  } catch (error) {
+    console.error("MUSIC PREVIEW ERROR:", error);
+    toast("Playback failed: " + error.message);
+  }
+}
+
+window.previewMusic = previewMusic;
+
 
 /* =========================================================
    20. MUSIC LIBRARY
