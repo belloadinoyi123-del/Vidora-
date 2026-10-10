@@ -1592,6 +1592,8 @@ window.previewMusic = previewMusic;
    20. MUSIC LIBRARY
 ========================================================= */
 
+
+
 async function loadMusic() {
   let tracks = [...BUILTIN_TRACKS];
 
@@ -1601,7 +1603,9 @@ async function loadMusic() {
       .select("id,title,artist,audio_url,category")
       .limit(100);
 
-    if (!error && data?.length) {
+    if (error) {
+      console.warn("TRACKS:", error);
+    } else if (data?.length) {
       tracks = [...data, ...BUILTIN_TRACKS];
     }
   } catch (error) {
@@ -1637,49 +1641,53 @@ async function loadMusic() {
 
       ${
         selectedMusic && !story
-          ? `<div class="muted">Selected post track: ${esc(selectedMusic.title)}</div>`
+          ? `<div class="muted">
+              Selected post track: ${esc(selectedMusic.title)}
+            </div>`
           : ""
       }
 
       ${
         selectedStoryMusic && story
-          ? `<div class="muted">Selected story track: ${esc(selectedStoryMusic.title)}</div>`
+          ? `<div class="muted">
+              Selected story track: ${esc(selectedStoryMusic.title)}
+            </div>`
           : ""
       }
 
-    
-${filtered.map(track => `
-  <div class="panel" style="margin-bottom:8px">
-    <div style="font-weight:700">
-      🎵 ${esc(track.title || "Track")}
-    </div>
+      ${filtered.map(track => `
+        <div class="panel" style="margin-bottom:8px">
+          <div style="font-weight:700">
+            🎵 ${esc(track.title || "Track")}
+          </div>
 
-    <div class="muted" style="margin:4px 0 10px">
-      ${esc(track.artist || "Vidora")}
-      · ${esc(track.category || "Other")}
-    </div>
+          <div class="muted" style="margin:4px 0 10px">
+            ${esc(track.artist || "Vidora")}
+            · ${esc(track.category || "Other")}
+          </div>
 
-    <div class="row wrap">
-      <button class="btn"
-        onclick="${story
-          ? `selectStoryMusic('${esc(track.id)}')`
-          : `selectMusic('${esc(track.id)}')`}">
-        ${story ? "Select for Story" : "Select for Post"}
-      </button>
+          <div class="row wrap">
+            <button class="btn"
+              onclick="${story
+                ? `selectStoryMusic('${esc(track.id)}')`
+                : `selectMusic('${esc(track.id)}')`}">
+              ${story ? "Select for Story" : "Select for Post"}
+            </button>
 
-      <button class="btn"
-        onclick="previewMusic('${esc(track.id)}')">
-        ▶ Play Preview
-      </button>
-    </div>
-  </div>
-`).join("")}
-  
-          
+            <button class="btn"
+              onclick="previewMusic('${esc(track.id)}')">
+              ▶ Play Preview
+            </button>
+          </div>
+        </div>
+      `).join("")}
+    `;
+  }
 
   renderMusicList($("musicList"), false);
   renderMusicList($("storyMusicList"), true);
 }
+  
 
 
 function setMusicCategory(category) {
