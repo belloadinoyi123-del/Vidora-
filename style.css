@@ -199,11 +199,19 @@ img, video { max-width: 100%; display: block; }
 .video-track {
   display: flex; height: 100%; transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); will-change: transform;
 }
+.video-track.mode-upward {
+  flex-direction: column;
+  width: 100%;
+}
+.video-track.mode-upward .video-slide {
+  flex: 0 0 100%;
+  width: 100%;
+}
 .video-slide {
   flex: 0 0 100%; height: 100%; position: relative; background: #000;
   display: flex; align-items: center; justify-content: center;
 }
-.video-slide video { width: 100%; height: 100%; object-fit: cover; }
+.video-slide video, .video-slide img { width: 100%; height: 100%; object-fit: cover; }
 
 .side-actions {
   position: absolute; right: 12px; bottom: 100px;
