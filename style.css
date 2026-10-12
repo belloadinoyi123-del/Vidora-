@@ -467,6 +467,25 @@ img, video { max-width: 100%; display: block; }
 .assistant-input { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border); }
 .assistant-input .field { margin: 0; flex: 1; }
 
+/* Settings rows */
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 14px;
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-row input[type="radio"],
+.setting-row input[type="checkbox"] {
+  accent-color: var(--purple);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
 /* Light mode */
 body.light-mode {
   --bg: #f4f4f7; --surface: #ffffff; --surface2: #f0f0f5; --surface3: #e4e4ec;
