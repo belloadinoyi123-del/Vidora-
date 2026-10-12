@@ -12,7 +12,7 @@
     "https://htnrqgzxkfktwoioscjr.supabase.co";
 
   const SUPABASE_KEY =
-    "YOUR_SUPABASE_ANON_KEY_HERE";
+    "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
 
   const STORAGE_BUCKET = "media";
   const MAX_FILE_SIZE = 50 * 1024 * 1024;
