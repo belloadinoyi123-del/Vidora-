@@ -2,109 +2,146 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#08080d">
+  <meta name="description"
+        content="Vidora — Watch, share, connect and create your avatar.">
+
   <title>Vidora — Watch. Share. Connect.</title>
+
   <link rel="stylesheet" href="style.css">
+
+  <!-- Supabase client required by app.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="app.js"></script>
 </head>
+
 <body>
-  <div id="toast" class="toast" role="status"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- AUTHENTICATION -->
   <section id="authScreen" class="auth-screen">
     <div class="auth-card">
-      <h1 class="logo">Vi<span>dora</span></h1>
-      <p class="muted">Watch. Share. Connect.</p>
+      <a href="#" id="brandHome" class="brand auth-brand">
+        <span class="brand-symbol">V</span>
+        <span>Vidora</span>
+      </a>
+
+      <p class="tagline">Watch. Share. Connect.</p>
 
       <div class="auth-tabs">
-        <button id="showLogin" class="active" type="button">Login</button>
-        <button id="showSignup" type="button">Create account</button>
+        <button id="showLogin" class="auth-tab active" type="button">
+          Log in
+        </button>
+        <button id="showSignup" class="auth-tab" type="button">
+          Sign up
+        </button>
       </div>
 
       <form id="authForm">
-        <label for="authEmail">Email address</label>
-        <input id="authEmail" type="email" required
-               autocomplete="email" placeholder="you@example.com">
-
-        <label for="authPassword">Password</label>
-        <input id="authPassword" type="password" required minlength="6"
-               autocomplete="current-password" placeholder="Your password">
-
         <div id="signupFields" class="hidden">
           <label for="authUsername">Username</label>
-          <input id="authUsername" maxlength="24"
-                 placeholder="your_username">
+          <input id="authUsername"
+                 class="field"
+                 type="text"
+                 maxlength="24"
+                 autocomplete="username"
+                 placeholder="Choose a username">
 
           <label for="authDisplayName">Display name</label>
-          <input id="authDisplayName" maxlength="40"
-                 placeholder="Your name">
+          <input id="authDisplayName"
+                 class="field"
+                 type="text"
+                 maxlength="60"
+                 autocomplete="name"
+                 placeholder="Your display name">
         </div>
 
-        <button id="authSubmit" class="primary full" type="submit">
+        <label for="authEmail">Email address</label>
+        <input id="authEmail"
+               class="field"
+               type="email"
+               required
+               autocomplete="email"
+               placeholder="you@example.com">
+
+        <label for="authPassword">Password</label>
+        <input id="authPassword"
+               class="field"
+               type="password"
+               required
+               minlength="6"
+               autocomplete="current-password"
+               placeholder="Enter your password">
+
+        <button id="authSubmit"
+                class="btn primary full"
+                type="submit">
           Login
         </button>
       </form>
 
-      <p class="fine-print">
-        Keep your password private. Never share secret API keys.
+      <p class="muted small">
+        Create an account to publish posts and customize your profile.
       </p>
     </div>
   </section>
 
   <!-- MAIN APP -->
-  <div id="appShell" class="hidden">
+  <div id="appShell" class="app-shell hidden">
     <header class="topbar">
-      <a href="#" id="brandHome" class="logo">Vi<span>dora</span></a>
+      <a href="#" id="brandHome" class="brand">
+        <span class="brand-symbol">V</span>
+        Vidora
+      </a>
 
-      <div class="top-actions">
-        <span id="timeGreeting" class="muted">Hello!</span>
-        <button id="themeToggle" class="icon-btn" type="button">☼</button>
-        <button id="logoutBtn" class="secondary" type="button">
-          Log out
-        </button>
+      <div class="topbar-right">
+        <span id="timeGreeting" class="greeting"></span>
+        <button id="themeToggle" class="icon-btn"
+                type="button" aria-label="Toggle theme">☼</button>
+        <button id="logoutBtn" class="btn secondary"
+                type="button">Log out</button>
       </div>
     </header>
 
-    <div class="layout">
+    <div class="app-layout">
       <aside class="sidebar">
-        <button class="nav-link active" data-view="feed" type="button">
-          🏠 Home
+        <button type="button" data-view="feed" class="nav-item active">
+          <span>⌂</span> Home
         </button>
-        <button class="nav-link" data-view="discover" type="button">
-          🔎 Discover
+        <button type="button" data-view="discover" class="nav-item">
+          <span>⌕</span> Discover
         </button>
-        <button class="nav-link" data-view="create" type="button">
-          ➕ Create post
+        <button type="button" data-view="create" class="nav-item">
+          <span>＋</span> Create post
         </button>
-        <button class="nav-link" data-view="assistant" type="button">
-          ✨ Premium avatar
+        <button type="button" data-view="assistant" class="nav-item">
+          <span>✧</span> Premium avatar
         </button>
-        <button class="nav-link" data-view="profile" type="button">
-          👤 My profile
+        <button type="button" data-view="profile" class="nav-item">
+          <span>◉</span> My profile
         </button>
       </aside>
 
       <main class="main-content">
-
         <!-- FEED -->
         <section id="view-feed" class="view">
-          <div class="heading">
+          <div class="page-heading">
             <div>
-              <span class="eyebrow">YOUR WORLD</span>
-              <h1 id="feedHeading">Welcome to Vidora</h1>
-              <p class="muted">Watch, share, and discover new moments.</p>
+              <p class="eyebrow">YOUR VIDORA</p>
+              <h1 id="feedHeading">Welcome 👋</h1>
+              <p class="muted">See what the community is sharing.</p>
             </div>
-            <button id="refreshFeed" class="secondary" type="button">
+            <button id="refreshFeed" class="btn secondary" type="button">
               ↻ Refresh
             </button>
           </div>
 
-          <p id="feedStatus" class="muted"></p>
-          <div id="feedList" class="feed-list"></div>
+          <p id="feedStatus" class="muted small" aria-live="polite"></p>
+          <div id="feedList" class="post-list"></div>
 
-          <button id="loadMoreBtn" class="secondary full hidden"
+          <button id="loadMoreBtn"
+                  class="btn secondary full hidden"
                   type="button">
             Load more
           </button>
@@ -112,38 +149,52 @@
 
         <!-- DISCOVER -->
         <section id="view-discover" class="view hidden">
-          <span class="eyebrow">EXPLORE</span>
-          <h1>Discover</h1>
-          <p class="muted">Search posts already loaded in your feed.</p>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">EXPLORE</p>
+              <h1>Discover</h1>
+            </div>
+          </div>
 
-          <input id="discoverSearch" type="search"
-                 placeholder="Search captions or creators...">
+          <input id="discoverSearch"
+                 class="field"
+                 type="search"
+                 placeholder="Search loaded posts and captions…">
 
-          <div id="discoverList" class="feed-list"></div>
+          <div id="discoverList" class="post-list"></div>
         </section>
 
-        <!-- CREATE -->
+        <!-- CREATE POST -->
         <section id="view-create" class="view hidden">
-          <span class="eyebrow">CREATE SOMETHING</span>
-          <h1>Publish to Vidora</h1>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">SHARE SOMETHING</p>
+              <h1>Create a post</h1>
+            </div>
+          </div>
 
-          <form id="createForm" class="panel">
-            <label for="createFile">Choose photo or video</label>
-            <input id="createFile" type="file"
-                   accept="image/*,video/*" required>
-
-            <p class="muted small">
-              Maximum file size: 50 MB. Your Supabase storage bucket
-              must be named media.
-            </p>
+          <form id="createForm" class="panel form-panel">
+            <label for="createFile">Choose a photo or video</label>
+            <input id="createFile"
+                   class="field"
+                   type="file"
+                   accept="image/*,video/*"
+                   required>
 
             <div id="mediaPreview" class="media-preview hidden"></div>
 
             <label for="createCaption">Caption</label>
-            <textarea id="createCaption" maxlength="2000" rows="4"
-                      placeholder="Share your moment..."></textarea>
+            <textarea id="createCaption"
+                      class="field"
+                      rows="4"
+                      maxlength="2000"
+                      placeholder="What would you like to share?"></textarea>
 
-            <button id="publishBtn" class="primary full" type="submit">
+            <p class="muted small">Maximum upload size: 50 MB.</p>
+
+            <button id="publishBtn"
+                    class="btn primary full"
+                    type="submit">
               🚀 Publish to Vidora
             </button>
           </form>
@@ -151,103 +202,176 @@
 
         <!-- PREMIUM AVATAR -->
         <section id="view-assistant" class="view hidden">
-          <span class="eyebrow">VIDORA STUDIO</span>
-          <h1>Premium avatar</h1>
-          <p class="muted">
-            Your animated Vidora companion.
-          </p>
-
-          <div class="avatar-panel">
-            <div id="avatarOrb" class="avatar-orb">
-              <div id="avatarFace" class="avatar-face">N</div>
-              <div class="avatar-ring"></div>
-            </div>
-
+          <div class="page-heading">
             <div>
-              <span class="premium-pill">✦ PREMIUM STYLE</span>
-              <h2 id="avatarName">Nova</h2>
-              <p id="avatarGreeting">Welcome to Vidora!</p>
+              <p class="eyebrow">YOUR DIGITAL IDENTITY</p>
+              <h1>Premium avatar</h1>
+              <p id="avatarGreeting" class="muted">
+                Welcome to your avatar studio.
+              </p>
             </div>
           </div>
 
-          <label for="avatarSelect">Choose your avatar</label>
-          <select id="avatarSelect">
-            <option>Nova</option>
-            <option>Kai</option>
-            <option>Luna</option>
-            <option>Ivy</option>
-            <option>Orion</option>
-            <option>Zeno</option>
-            <option>Sage</option>
-            <option>Rex</option>
-            <option>Pixel</option>
-            <option>Vexa</option>
-          </select>
+          <section class="panel avatar-panel">
+            <div class="avatar-stage">
+              <div id="avatarOrb" class="avatar-orb">
+                <div class="avatar-ring"></div>
+                <div id="avatarFace" class="avatar-face">N</div>
+              </div>
+            </div>
 
-          <div class="panel">
-            <h3>360° next-post transition</h3>
+            <h2 id="avatarName" class="avatar-name">Nova</h2>
             <p class="muted">
-              Press Next on a feed post to rotate its media frame
-              through 360 degrees and move to the next post.
+              Choose one of Vidora's existing avatar identities.
             </p>
-          </div>
+
+            <label for="avatarSelect">Select your avatar</label>
+            <select id="avatarSelect" class="field">
+              <option value="Nova">Nova</option>
+              <option value="Kai">Kai</option>
+              <option value="Luna">Luna</option>
+              <option value="Ivy">Ivy</option>
+              <option value="Orion">Orion</option>
+              <option value="Zeno">Zeno</option>
+              <option value="Sage">Sage</option>
+              <option value="Rex">Rex</option>
+              <option value="Pixel">Pixel</option>
+              <option value="Vexa">Vexa</option>
+            </select>
+
+            <p class="muted small">
+              Your selected name is saved on this device.
+            </p>
+          </section>
+
+          <section class="panel">
+            <h2>Create a realistic 3D avatar</h2>
+            <p class="muted">
+              Use the external creator to explore realistic 3D characters.
+              Provider export options may require an account.
+            </p>
+
+            <a class="btn primary full"
+               href="https://mobile.metaperson.avatarsdk.com/"
+               target="_blank"
+               rel="noopener noreferrer">
+              Open MetaPerson Creator ↗
+            </a>
+
+            <p class="muted small">
+              After exporting your model, Vidora will need a model-loading
+              integration to display it here.
+            </p>
+          </section>
+
+          <!-- Future 3D model viewport -->
+          <section class="panel">
+            <h2>Your 3D avatar preview</h2>
+            <div id="avatar3DStage" class="avatar-3d-stage">
+              <div class="avatar-3d-placeholder">
+                <span>✧</span>
+                <strong>3D preview</strong>
+                <p>
+                  An exported, compatible 3D model is required to display
+                  a real 3D avatar here.
+                </p>
+              </div>
+            </div>
+            <p id="avatar3DStatus" class="muted small" aria-live="polite">
+              No 3D model has been connected yet.
+            </p>
+          </section>
+
+          <section class="panel talking-panel">
+            <h2>Make your avatar speak</h2>
+            <label for="avatarSpeechText">Message</label>
+            <textarea id="avatarSpeechText"
+                      class="field"
+                      rows="3"
+                      maxlength="500"
+                      placeholder="Hello! Welcome to Vidora."></textarea>
+
+            <label for="avatarVoice">Voice preference</label>
+            <select id="avatarVoice" class="field">
+              <option value="default">Default device voice</option>
+              <option value="female">Female-sounding voice</option>
+              <option value="male">Male-sounding voice</option>
+            </select>
+
+            <div class="button-row">
+              <button id="avatarSpeakBtn"
+                      class="btn primary"
+                      type="button">▶ Speak</button>
+              <button id="avatarStopBtn"
+                      class="btn secondary"
+                      type="button">■ Stop</button>
+            </div>
+
+            <p id="avatarSpeechStatus"
+               class="muted small"
+               aria-live="polite">
+              Your avatar is ready.
+            </p>
+          </section>
         </section>
 
         <!-- PROFILE -->
         <section id="view-profile" class="view hidden">
-          <span class="eyebrow">YOUR SPACE</span>
-          <h1>My profile</h1>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">YOUR ACCOUNT</p>
+              <h1>My profile</h1>
+            </div>
+          </div>
 
-          <div class="profile-card">
+          <section class="panel profile-summary">
             <div id="profileAvatar" class="profile-avatar">V</div>
             <div>
               <h2 id="profileDisplayName">Vidora member</h2>
               <p id="profileUsername" class="muted">@member</p>
             </div>
-          </div>
+          </section>
 
-          <form id="profileForm" class="panel">
+          <form id="profileForm" class="panel form-panel">
             <label for="profileDisplayInput">Display name</label>
-            <input id="profileDisplayInput" maxlength="40">
+            <input id="profileDisplayInput"
+                   class="field"
+                   maxlength="60"
+                   required>
 
             <label for="profileUsernameInput">Username</label>
-            <input id="profileUsernameInput" maxlength="24"
-                   pattern="[A-Za-z0-9_]+">
+            <input id="profileUsernameInput"
+                   class="field"
+                   maxlength="24"
+                   required>
 
             <label for="profileBioInput">Bio</label>
-            <textarea id="profileBioInput" maxlength="160" rows="3"></textarea>
+            <textarea id="profileBioInput"
+                      class="field"
+                      rows="4"
+                      maxlength="300"
+                      placeholder="Tell people about yourself"></textarea>
 
-            <button class="primary full" type="submit">
+            <button class="btn primary full" type="submit">
               Save profile
             </button>
           </form>
 
-          <h2>Your posts</h2>
-          <div id="myPosts" class="feed-list"></div>
+          <h2 class="section-title">My posts</h2>
+          <div id="myPosts" class="post-list"></div>
         </section>
       </main>
     </div>
 
-    <!-- MOBILE NAVIGATION -->
-    <nav class="mobile-nav">
-      <button class="active" data-view="feed" type="button">
-        🏠<span>Home</span>
-      </button>
-      <button data-view="discover" type="button">
-        🔎<span>Discover</span>
-      </button>
-      <button data-view="create" type="button">
-        ➕<span>Create</span>
-      </button>
-      <button data-view="assistant" type="button">
-        ✨<span>Avatar</span>
-      </button>
-      <button data-view="profile" type="button">
-        👤<span>Profile</span>
-      </button>
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+      <button type="button" data-view="feed">⌂<small>Home</small></button>
+      <button type="button" data-view="discover">⌕<small>Discover</small></button>
+      <button type="button" data-view="create">＋<small>Create</small></button>
+      <button type="button" data-view="assistant">✧<small>Avatar</small></button>
+      <button type="button" data-view="profile">◉<small>Profile</small></button>
     </nav>
   </div>
+
   <script src="app.js"></script>
-  <script src="talking-avatar.js"></script>
 </body>
 </html>
