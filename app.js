@@ -1,13 +1,15 @@
-/* ==========================================
-   VIDORA UPGRADE
-   Authentication, profiles, feed, publishing,
-   comments, likes, premium avatar and 360° next.
-   ========================================== */
+
+/* =========================================================
+   VIDORA — APP.JS
+   Matches the new Vidora HTML and CSS.
+   No DiceBear dependency.
+   ========================================================= */
 
 (() => {
   "use strict";
 
-  // SUPABASE CONFIGURATION
+  /* ---------- CONFIGURATION ---------- */
+
   const SUPABASE_URL =
     "https://htnrqgzxkfktwoioscjr.supabase.co";
 
@@ -17,282 +19,430 @@
   const STORAGE_BUCKET = "media";
   const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
-  const $ = id => document.getElementById(id);
+  const AVATAR_CREATOR_URL =
+    "https://mobile.metaperson.avatarsdk.com/";
 
-  const state = {
-    db: null,
-    user: null,
-    profile: null,
-    authMode: "login",
-    posts: [],
-    avatar: localStorage.getItem("vidoraPremiumAvatar") || "Nova",
-    theme: localStorage.getItem("vidoraTheme") || "dark",
-    page: 0,
-    pageSize: 10,
-    hasMore: false,
-    previewURL: null,
-    search: ""
-  };
+  const AVATARS = [
+    "Nova", "Kai", "Luna", "Ivy", "Orion",
+    "Zeno", "Sage", "Rex", "Pixel", "Vexa"
+  ];
 
-  /* ---------- GENERAL HELPERS ---------- */
+  const $ = (id) => document.getElementById(id);
 
-  function notify(message) {
-    const el = $("toast");
-    el.textContent = message;
-    el.classList.add("show");
-
-    clearTimeout(notify.timer);
-
-    notify.timer = setTimeout(() => {
-      el.classList.remove("show");
-    }, 3500);
-  }
-
-  function escapeHTML(value = "") {
-    return String(value).replace(/[&<>"']/g, char => ({
+  const escapeHTML = (value = "") =>
+    String(value).replace(/[&<>"']/g, (char) => ({
       "&": "&amp;",
       "<": "&lt;",
       ">": "&gt;",
       '"': "&quot;",
       "'": "&#39;"
     })[char]);
+
+  const safeURL = (value) => {
+    try {
+      const url = new URL(value, window.location.origin);
+      if (["http:", "https:"].includes(url.protocol)) {
+        return url.href;
+      }
+    } catch (_) {}
+    return "";
+  };
+
+  const notify = (message) => {
+    const toast = $("toast");
+
+    if (toast) {
+      toast.textContent = message;
+      toast.classList.add("show");
+
+      clearTimeout(notify.timer);
+      notify.timer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    } else {
+      console.info("[Vidora]", message);
+    }
+  };
+
+  /* ---------- SUPABASE ---------- */
+
+  if (!window.supabase?.createClient) {
+    console.error("Supabase library did not load.");
+    notify("Vidora could not load Supabase. Refresh the page.");
+    return;
   }
 
-  function friendlyError(error) {
-    const message = error?.message || String(error);
+  const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
 
-    if (/Invalid login credentials/i.test(message)) {
-      return "Incorrect email or password.";
-    }
+  const state = {
+    user: null,
+    profile: null,
+    posts: [],
+    avatar: localStorage.getItem("vidoraPremiumAvatar") || "Nova",
+    theme: localStorage.getItem("vidoraTheme") || "dark",
+    currentView: "feed",
+    loadingFeed: false,
+    busy: false
+  };
 
-    if (/User already registered/i.test(message)) {
-      return "This email is registered already. Try logging in.";
-    }
+  /* ---------- GREETING ---------- */
 
-    if (/row-level security|permission denied/i.test(message)) {
-      return "Supabase permissions blocked this action. Check your RLS policies.";
-    }
-
-    if (/bucket not found/i.test(message)) {
-      return 'Create a Supabase Storage bucket named "media".';
-    }
-
-    if (/duplicate key/i.test(message)) {
-      return "That username may already be in use.";
-    }
-
-    return message;
-  }
-
-  function timeGreeting() {
+  function getGreeting() {
     const hour = new Date().getHours();
 
     if (hour < 12) return "Good morning";
     if (hour < 17) return "Good afternoon";
-
     return "Good evening";
   }
 
-  /* ---------- GREETINGS ---------- */
+  function updateGreeting() {
+    const greeting = getGreeting();
 
-  function updateGreetings() {
-    const greeting = timeGreeting();
+    if ($("greetingText")) {
+      $("greetingText").textContent =
+        `${greeting}${state.profile?.display_name
+          ? ", " + state.profile.display_name
+          : ""}!`;
+    }
 
-    const name =
-      state.profile?.display_name ||
-      state.profile?.username ||
-      "there";
-
-    $("timeGreeting").textContent =
-      `${greeting}, ${name}!`;
-
-    $("feedHeading").textContent =
-      `${greeting} 👋`;
-
-    $("avatarGreeting").textContent =
-      `${greeting}, ${name}! Ready to explore Vidora?`;
+    if ($("avatarGreeting")) {
+      $("avatarGreeting").textContent =
+        `${greeting}! I'm ${state.avatar}.`;
+    }
   }
 
-  /* ---------- AUTHENTICATION UI ---------- */
+  /* ---------- AVATAR ---------- */
 
-  function setAuthMode(mode) {
-    state.authMode = mode;
+  function renderAvatar() {
+    const name = state.avatar;
 
-    $("showLogin").classList.toggle(
-      "active", mode === "login"
-    );
+    if ($("avatarName")) {
+      $("avatarName").textContent = name;
+    }
 
-    $("showSignup").classList.toggle(
-      "active", mode === "signup"
-    );
+    if ($("avatarFace")) {
+      // This is a fallback avatar badge, not a 3D model.
+      $("avatarFace").textContent = name.slice(0, 1);
+      $("avatarFace").setAttribute("aria-label", `${name} avatar`);
+    }
 
-    $("signupFields").classList.toggle(
-      "hidden", mode !== "signup"
-    );
+    if ($("avatarSelect")) {
+      $("avatarSelect").value = name;
+    }
 
-    $("authSubmit").textContent =
-      mode === "login" ? "Login" : "Create account";
-
-    $("authPassword").autocomplete =
-      mode === "login" ? "current-password" : "new-password";
-
-    $("authUsername").required = mode === "signup";
+    updateGreeting();
   }
 
-  function showApp(signedIn) {
-    $("authScreen").classList.toggle("hidden", signedIn);
-    $("appShell").classList.toggle("hidden", !signedIn);
+  function selectAvatar() {
+    const selected = $("avatarSelect")?.value;
+
+    if (!AVATARS.includes(selected)) return;
+
+    state.avatar = selected;
+    localStorage.setItem("vidoraPremiumAvatar", selected);
+
+    renderAvatar();
+    notify(`${selected} selected.`);
   }
 
-  async function handleAuth(event) {
-    event.preventDefault();
+  function openAvatarCreator() {
+    window.open(
+      AVATAR_CREATOR_URL,
+      "_blank",
+      "noopener,noreferrer"
+    );
 
-    if (!state.db) {
-      notify("Add your Supabase public key in app.js first.");
+    if ($("avatar3DStatus")) {
+      $("avatar3DStatus").textContent =
+        "Create an avatar, export a compatible model, then connect its model URL to Vidora.";
+    }
+  }
+
+  /*
+   * A real 3D avatar requires an exported model and a renderer.
+   * No model file is invented or loaded automatically here.
+   */
+
+  /* ---------- AVATAR SPEECH ---------- */
+
+  function speakAvatar() {
+    const message = $("avatarSpeechText")?.value.trim();
+
+    if (!message) {
+      notify("Type a message first.");
       return;
     }
 
-    const email = $("authEmail").value.trim();
-    const password = $("authPassword").value;
-    const button = $("authSubmit");
+    if (!("speechSynthesis" in window)) {
+      notify("Speech is not supported in this browser.");
+      return;
+    }
 
-    button.disabled = true;
+    window.speechSynthesis.cancel();
 
-    try {
-      if (state.authMode === "login") {
-        const { data, error } =
-          await state.db.auth.signInWithPassword({
-            email,
-            password
-          });
+    const utterance = new SpeechSynthesisUtterance(message);
+    const preference = $("avatarVoice")?.value || "default";
+    const voices = window.speechSynthesis.getVoices();
 
-        if (error) throw error;
+    if (preference !== "default") {
+      const pattern = preference === "female"
+        ? /female|woman|jenny|aria|samantha/i
+        : /male|man|david|guy|mark/i;
 
-        state.user = data.user;
+      const voice = voices.find((item) =>
+        /^en/i.test(item.lang) && pattern.test(item.name)
+      );
 
-        await startApp();
+      if (voice) utterance.voice = voice;
+    }
 
-      } else {
-        const username =
-          $("authUsername").value.trim();
+    utterance.onstart = () => {
+      $("avatarFace")?.classList.add("avatar-talking");
 
-        const displayName =
-          $("authDisplayName").value.trim() || username;
-
-        if (!/^[A-Za-z0-9_]{2,24}$/.test(username)) {
-          throw new Error(
-            "Username must contain 2–24 letters, numbers or underscores."
-          );
-        }
-
-        const { data, error } =
-          await state.db.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                username,
-                display_name: displayName
-              }
-            }
-          });
-
-        if (error) throw error;
-
-        if (data.user && data.session) {
-          state.user = data.user;
-
-          await createProfile(
-            data.user,
-            username,
-            displayName
-          );
-
-          await startApp();
-
-        } else {
-          setAuthMode("login");
-
-          notify(
-            "Account created. Check your email to confirm your account, then log in."
-          );
-        }
+      if ($("avatarSpeechStatus")) {
+        $("avatarSpeechStatus").textContent =
+          `${state.avatar} is speaking…`;
       }
 
-    } catch (error) {
-      notify(friendlyError(error));
+      if ($("avatarSpeakBtn")) {
+        $("avatarSpeakBtn").disabled = true;
+      }
+    };
 
-    } finally {
-      button.disabled = false;
+    const finishSpeech = () => {
+      $("avatarFace")?.classList.remove("avatar-talking");
+
+      if ($("avatarSpeakBtn")) {
+        $("avatarSpeakBtn").disabled = false;
+      }
+    };
+
+    utterance.onend = () => {
+      finishSpeech();
+
+      if ($("avatarSpeechStatus")) {
+        $("avatarSpeechStatus").textContent =
+          "Finished speaking.";
+      }
+    };
+
+    utterance.onerror = () => {
+      finishSpeech();
+
+      if ($("avatarSpeechStatus")) {
+        $("avatarSpeechStatus").textContent =
+          "Speech playback failed.";
+      }
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function stopAvatarSpeech() {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+
+    $("avatarFace")?.classList.remove("avatar-talking");
+
+    if ($("avatarSpeakBtn")) {
+      $("avatarSpeakBtn").disabled = false;
+    }
+
+    if ($("avatarSpeechStatus")) {
+      $("avatarSpeechStatus").textContent = "Speech stopped.";
     }
   }
 
-  async function createProfile(user, username, displayName) {
-    const { error } = await state.db
-      .from("profiles")
-      .upsert({
-        id: user.id,
-        username,
-        display_name: displayName
-      }, {
-        onConflict: "id"
-      });
+  /* ---------- THEME ---------- */
 
-    if (error) {
-      console.error("Profile creation:", error.message);
+  function applyTheme() {
+    document.documentElement.dataset.theme = state.theme;
+
+    document.body.classList.toggle(
+      "light-theme",
+      state.theme === "light"
+    );
+
+    if ($("themeToggle")) {
+      $("themeToggle").textContent =
+        state.theme === "dark" ? "☀️" : "🌙";
     }
   }
 
-  /* ---------- APP STARTUP ---------- */
+  function toggleTheme() {
+    state.theme = state.theme === "dark" ? "light" : "dark";
 
-  async function startApp() {
-    showApp(true);
-
-    await loadProfile();
-
-    renderAvatar();
-    updateGreetings();
-
-    await loadFeed(true);
+    localStorage.setItem("vidoraTheme", state.theme);
+    applyTheme();
   }
 
   /* ---------- NAVIGATION ---------- */
 
   function setView(view) {
-    const allowed = [
-      "feed",
-      "discover",
-      "create",
-      "assistant",
-      "profile"
+    const validViews = [
+      "feed", "discover", "create", "assistant", "profile"
     ];
 
-    if (!allowed.includes(view)) return;
+    if (!validViews.includes(view)) return;
 
-    allowed.forEach(name => {
-      $("view-" + name).classList.toggle(
-        "hidden", name !== view
-      );
-    });
+    state.currentView = view;
 
-    document.querySelectorAll("[data-view]").forEach(button => {
+    document.querySelectorAll("[data-view]").forEach((button) => {
       button.classList.toggle(
-        "active", button.dataset.view === view
+        "active",
+        button.dataset.view === view
       );
     });
 
-    if (view === "profile") {
-      loadProfileAndPosts();
-    }
-
-    if (view === "discover") {
-      renderDiscover();
-    }
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
+    document.querySelectorAll(".app-view").forEach((section) => {
+      section.classList.toggle(
+        "active",
+        section.id === `view-${view}`
+      );
     });
+
+    if (view === "profile") loadProfile();
+    if (view === "discover") loadFeed();
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function showApp() {
+    if ($("authScreen")) $("authScreen").hidden = true;
+    if ($("appShell")) $("appShell").hidden = false;
+
+    updateGreeting();
+    renderAvatar();
+    setView("feed");
+    loadProfile();
+    loadFeed();
+  }
+
+  function showAuth() {
+    if ($("authScreen")) $("authScreen").hidden = false;
+    if ($("appShell")) $("appShell").hidden = true;
+  }
+
+  /* ---------- AUTHENTICATION ---------- */
+
+  function showAuthMode(mode) {
+    const signup = mode === "signup";
+
+    if ($("signupFields")) {
+      $("signupFields").hidden = !signup;
+    }
+
+    if ($("authSubmit")) {
+      $("authSubmit").textContent =
+        signup ? "Create account" : "Log in";
+    }
+
+    if ($("showLogin")) {
+      $("showLogin").classList.toggle("active", !signup);
+    }
+
+    if ($("showSignup")) {
+      $("showSignup").classList.toggle("active", signup);
+    }
+  }
+
+  async function handleAuth(event) {
+    event.preventDefault();
+
+    if (state.busy) return;
+
+    const email = $("authEmail")?.value.trim();
+    const password = $("authPassword")?.value;
+    const signup = $("signupFields") &&
+      !$("signupFields").hidden;
+
+    if (!email || !password) {
+      notify("Enter your email and password.");
+      return;
+    }
+
+    state.busy = true;
+
+    if ($("authSubmit")) {
+      $("authSubmit").disabled = true;
+      $("authSubmit").textContent = "Please wait…";
+    }
+
+    try {
+      let result;
+
+      if (signup) {
+        const username = $("authUsername")?.value.trim();
+        const displayName =
+          $("authDisplayName")?.value.trim() || username;
+
+        if (!username) {
+          notify("Enter a username.");
+          return;
+        }
+
+        result = await db.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              username,
+              display_name: displayName
+            }
+          }
+        });
+      } else {
+        result = await db.auth.signInWithPassword({
+          email,
+          password
+        });
+      }
+
+      if (result.error) throw result.error;
+
+      if (signup && !result.data.session) {
+        notify("Account created. Check your email if verification is required.");
+        showAuthMode("login");
+        return;
+      }
+
+      state.user = result.data.user;
+      notify(signup ? "Welcome to Vidora!" : "Welcome back!");
+      showApp();
+    } catch (error) {
+      console.error("Authentication error:", error);
+      notify(error.message || "Authentication failed.");
+    } finally {
+      state.busy = false;
+
+      if ($("authSubmit")) {
+        $("authSubmit").disabled = false;
+        $("authSubmit").textContent =
+          signup ? "Create account" : "Log in";
+      }
+    }
+  }
+
+  async function logout() {
+    stopAvatarSpeech();
+
+    const { error } = await db.auth.signOut();
+
+    if (error) {
+      notify(error.message || "Could not log out.");
+      return;
+    }
+
+    state.user = null;
+    state.profile = null;
+    state.posts = [];
+
+    showAuth();
+    notify("You have logged out.");
   }
 
   /* ---------- PROFILE ---------- */
@@ -300,927 +450,576 @@
   async function loadProfile() {
     if (!state.user) return;
 
-    const { data, error } = await state.db
+    const { data, error } = await db
       .from("profiles")
-      .select(
-        "id,username,display_name,avatar_url,bio,created_at"
-      )
+      .select("id, username, display_name, avatar_url, bio, created_at")
       .eq("id", state.user.id)
       .maybeSingle();
 
     if (error) {
-      console.error("Profile loading:", error.message);
+      console.error("Profile load error:", error);
+      return;
     }
 
     state.profile = data || {
       id: state.user.id,
-      username: state.user.email?.split("@")[0] || "member",
-      display_name: "Vidora member",
-      bio: ""
+      username: state.user.email?.split("@")[0] || "user",
+      display_name: state.user.user_metadata?.display_name || ""
     };
 
-    $("profileDisplayName").textContent =
-      state.profile.display_name ||
-      state.profile.username;
+    if ($("profileUsername")) {
+      $("profileUsername").textContent =
+        state.profile.username || "User";
+    }
 
-    $("profileUsername").textContent =
-      "@" + (state.profile.username || "member");
+    if ($("profileDisplayName")) {
+      $("profileDisplayName").textContent =
+        state.profile.display_name || state.profile.username || "User";
+    }
 
-    $("profileAvatar").textContent =
-      (state.profile.display_name || "V")
-        .slice(0, 1).toUpperCase();
+    if ($("profileBio")) {
+      $("profileBio").textContent = state.profile.bio || "";
+    }
 
-    $("profileDisplayInput").value =
-      state.profile.display_name || "";
+    if ($("profileAvatar")) {
+      const avatarURL = safeURL(state.profile.avatar_url || "");
 
-    $("profileUsernameInput").value =
-      state.profile.username || "";
+      if (avatarURL) {
+        $("profileAvatar").innerHTML =
+          `<img src="${escapeHTML(avatarURL)}" alt="Profile avatar">`;
+      }
+    }
 
-    $("profileBioInput").value =
-      state.profile.bio || "";
-
-    updateGreetings();
+    updateGreeting();
   }
 
-  async function saveProfile(event) {
-    event.preventDefault();
-
-    const username =
-      $("profileUsernameInput").value.trim();
-
-    const displayName =
-      $("profileDisplayInput").value.trim() || username;
-
-    const bio =
-      $("profileBioInput").value.trim();
-
-    if (!/^[A-Za-z0-9_]{2,24}$/.test(username)) {
-      notify("Enter a valid username.");
+  async function saveProfile() {
+    if (!state.user) {
+      notify("Log in first.");
       return;
     }
 
-    try {
-      const { error } = await state.db
-        .from("profiles")
-        .upsert({
-          id: state.user.id,
-          username,
-          display_name: displayName,
-          bio
-        }, {
-          onConflict: "id"
-        });
+    const username = $("profileUsernameInput")?.value.trim();
+    const displayName = $("profileDisplayNameInput")?.value.trim();
+    const bio = $("profileBioInput")?.value.trim();
 
-      if (error) throw error;
+    const update = { id: state.user.id };
 
-      await loadProfile();
+    if (username) update.username = username;
+    if (displayName) update.display_name = displayName;
+    if (bio !== undefined) update.bio = bio;
 
-      notify("Profile saved!");
-
-    } catch (error) {
-      notify(friendlyError(error));
-    }
-  }
-
-  async function loadProfileAndPosts() {
-    await loadProfile();
-
-    const { data, error } = await state.db
-      .from("posts")
-      .select(
-        "id,user_id,media_url,media_type,caption,created_at"
-      )
-      .eq("user_id", state.user.id)
-      .order("created_at", { ascending: false })
-      .limit(30);
+    const { error } = await db
+      .from("profiles")
+      .upsert(update, { onConflict: "id" });
 
     if (error) {
-      $("myPosts").innerHTML =
-        `<div class="empty-state">${escapeHTML(
-          friendlyError(error)
-        )}</div>`;
-
+      console.error("Profile save error:", error);
+      notify(error.message || "Could not save profile.");
       return;
     }
 
-    const mine = (data || []).map(post => ({
-      ...post,
-      username: state.profile?.username,
-      display_name: state.profile?.display_name
-    }));
+    notify("Profile saved.");
+    await loadProfile();
+  }
 
-    renderPosts("myPosts", mine, true);
+  /* ---------- MEDIA UPLOAD ---------- */
+
+  function getSelectedFile() {
+    return $("createFile")?.files?.[0] ||
+      $("mediaFile")?.files?.[0] ||
+      null;
+  }
+
+  function validateMediaFile(file) {
+    if (!file) {
+      notify("Choose a photo or video first.");
+      return false;
+    }
+
+    if (!file.type.startsWith("image/") &&
+        !file.type.startsWith("video/")) {
+      notify("Choose an image or video file.");
+      return false;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      notify("Media must be 50 MB or smaller.");
+      return false;
+    }
+
+    return true;
+  }
+
+  async function publishPost() {
+    if (!state.user) {
+      notify("Log in to publish.");
+      return;
+    }
+
+    const file = getSelectedFile();
+    const caption = (
+      $("createCaption")?.value ??
+      $("postCaption")?.value ??
+      ""
+    ).trim();
+
+    if (!validateMediaFile(file)) return;
+
+    const publishButton = document.querySelector(
+      "#publishBtn, #publishPostBtn, #createPublishBtn"
+    );
+
+    try {
+      if (publishButton) {
+        publishButton.disabled = true;
+        publishButton.textContent = "Publishing…";
+      }
+
+      const extension = file.name.includes(".")
+        ? file.name.split(".").pop().toLowerCase()
+        : "bin";
+
+      const path =
+        `${state.user.id}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+
+      const { error: uploadError } = await db.storage
+        .from(STORAGE_BUCKET)
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = db.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(path);
+
+      const mediaURL = publicData?.publicUrl;
+
+      if (!mediaURL) {
+        throw new Error("Could not obtain the uploaded media URL.");
+      }
+
+      const { error: insertError } = await db
+        .from("posts")
+        .insert({
+          user_id: state.user.id,
+          media_url: mediaURL,
+          media_type: file.type.startsWith("video/") ? "video" : "image",
+          caption
+        });
+
+      if (insertError) throw insertError;
+
+      if ($("createCaption")) $("createCaption").value = "";
+      if ($("postCaption")) $("postCaption").value = "";
+
+      const fileInput = $("createFile") || $("mediaFile");
+      if (fileInput) fileInput.value = "";
+
+      notify("Your post is published!");
+      setView("feed");
+      await loadFeed();
+    } catch (error) {
+      console.error("Publish error:", error);
+      notify(error.message || "Could not publish post. Check storage permissions.");
+    } finally {
+      if (publishButton) {
+        publishButton.disabled = false;
+        publishButton.textContent = "🚀 Publish to Vidora";
+      }
+    }
   }
 
   /* ---------- FEED ---------- */
 
-  async function loadFeed(reset = true) {
-    if (!state.db || !state.user) return;
+  async function loadFeed() {
+    if (state.loadingFeed) return;
 
-    if (reset) {
-      state.page = 0;
-      state.posts = [];
-    }
+    const feed = $("feedContainer") ||
+      $("feedPosts") ||
+      $("feed");
 
-    $("feedStatus").textContent = "Loading posts…";
+    if (!feed) return;
+
+    state.loadingFeed = true;
+    feed.innerHTML = "<p class='empty-state'>Loading Vidora…</p>";
 
     try {
-      const start = state.page * state.pageSize;
-      const end = start + state.pageSize - 1;
-
-      const { data, error } = await state.db
+      const { data, error } = await db
         .from("posts")
-        .select(
-          "id,user_id,media_url,media_type,caption,created_at"
-        )
+        .select("id, user_id, media_url, media_type, caption, created_at")
         .order("created_at", { ascending: false })
-        .range(start, end);
+        .limit(50);
 
       if (error) throw error;
 
-      const posts = data || [];
-
-      const userIds = [
-        ...new Set(posts.map(post => post.user_id))
-      ].filter(Boolean);
-
-      let profiles = [];
-
-      if (userIds.length) {
-        const result = await state.db
-          .from("profiles")
-          .select("id,username,display_name,avatar_url")
-          .in("id", userIds);
-
-        if (!result.error) {
-          profiles = result.data || [];
-        }
-      }
-
-      const profileMap = new Map(
-        profiles.map(profile => [profile.id, profile])
-      );
-
-      const prepared = posts.map(post => ({
-        ...post,
-        ...(profileMap.get(post.user_id) || {})
-      }));
-
-      state.posts = reset
-        ? prepared
-        : state.posts.concat(prepared);
-
-      state.hasMore = posts.length === state.pageSize;
-
-      renderPosts("feedList", state.posts);
-
-      $("feedStatus").textContent =
-        state.posts.length
-          ? `${state.posts.length} posts loaded`
-          : "";
-
-      $("loadMoreBtn").classList.toggle(
-        "hidden", !state.hasMore
-      );
-
+      state.posts = data || [];
+      renderFeed(feed);
     } catch (error) {
-      $("feedStatus").textContent =
-        friendlyError(error);
-
-      if (reset) {
-        $("feedList").innerHTML =
-          `<div class="empty-state">Could not load posts.<br>${escapeHTML(
-            friendlyError(error)
-          )}</div>`;
-      }
+      console.error("Feed error:", error);
+      feed.innerHTML =
+        "<p class='empty-state'>Could not load posts. Check your posts table and permissions.</p>";
+    } finally {
+      state.loadingFeed = false;
     }
   }
 
-  /* ---------- POST RENDERING ---------- */
-
-  function makeMedia(post) {
-    const url = escapeHTML(post.media_url || "");
-    const type = String(post.media_type || "").toLowerCase();
-
-    if (!url) {
-      return '<div class="empty-state">Media unavailable.</div>';
+  function renderFeed(feed) {
+    if (!state.posts.length) {
+      feed.innerHTML =
+        "<p class='empty-state'>No posts yet. Be the first to share something!</p>";
+      return;
     }
 
-    if (type.startsWith("video")) {
+    feed.innerHTML = state.posts.map((post, index) => {
+      const mediaURL = safeURL(post.media_url);
+
+      const media = mediaURL
+        ? post.media_type === "video"
+          ? `<video class="post-media" controls playsinline preload="metadata" src="${escapeHTML(mediaURL)}"></video>`
+          : `<img class="post-media" loading="lazy" alt="Vidora post" src="${escapeHTML(mediaURL)}">`
+        : "<p>Media unavailable.</p>";
+
+      const caption = escapeHTML(post.caption || "");
+      const date = post.created_at
+        ? new Date(post.created_at).toLocaleDateString()
+        : "";
+
       return `
-        <video
-          class="post-media"
-          src="${url}"
-          controls
-          playsinline
-          preload="metadata">
-        </video>`;
-    }
-
-    return `
-      <img
-        class="post-media"
-        src="${url}"
-        alt="Vidora post"
-        loading="lazy">`;
-  }
-
-  function makePost(post, mine = false) {
-    const id = escapeHTML(post.id);
-    const username = post.username || "member";
-    const displayName = post.display_name || username;
-
-    const date = post.created_at
-      ? new Date(post.created_at).toLocaleDateString()
-      : "";
-
-    const isVideo =
-      String(post.media_type || "").startsWith("video");
-
-    return `
-      <article class="post-card" data-post-id="${id}">
-
-        <div class="post-header">
-          <div class="post-avatar">
-            ${escapeHTML(displayName.slice(0, 1).toUpperCase())}
-          </div>
-
-          <div>
-            <div class="post-author">
-              ${escapeHTML(displayName)}
-              <span class="muted">@${escapeHTML(username)}</span>
+        <article class="postCard" data-post-id="${escapeHTML(post.id)}">
+          <div class="post-header">
+            <div class="post-user-avatar">V</div>
+            <div>
+              <strong>Vidora creator</strong>
+              <small>${escapeHTML(date)}</small>
             </div>
-
-            <div class="post-time">${escapeHTML(date)}</div>
           </div>
-        </div>
 
-        <div class="post-media-wrap" data-media-wrap>
-          ${makeMedia(post)}
-          <span class="media-label">
-            ${isVideo ? "▶ VIDEO" : "✦ PHOTO"}
-          </span>
-        </div>
-
-        <div class="post-body">
-          <p class="post-caption">${escapeHTML(post.caption || "")}</p>
+          <div class="post-media-wrap" data-media-index="${index}">
+            ${media}
+          </div>
 
           <div class="post-actions">
-            <button class="action-btn"
-                    type="button"
-                    data-action="like"
-                    data-id="${id}">
-              ♡ Like
-            </button>
-
-            <button class="action-btn"
-                    type="button"
-                    data-action="comments"
-                    data-id="${id}">
-              ▤ Comments
-            </button>
-
-            <button class="action-btn next-btn"
-                    type="button"
-                    data-action="next"
-                    data-id="${id}">
-              Next ↻
-            </button>
-
-            ${mine ? `
-              <button class="action-btn"
-                      type="button"
-                      data-action="delete"
-                      data-id="${id}">
-                Delete
-              </button>` : ""}
+            <button type="button" data-action="like"
+              data-id="${escapeHTML(post.id)}">♡ Like</button>
+            <button type="button" data-action="comment"
+              data-id="${escapeHTML(post.id)}">💬 Comment</button>
+            <button type="button" data-action="next"
+              data-index="${index}">↻ Next video</button>
           </div>
 
-          <div class="comments hidden"
-               data-comments="${id}">
-            <div class="comment-list"></div>
+          <p class="post-caption">${caption}</p>
 
-            <form class="comment-form"
-                  data-comment-form="${id}">
-              <input name="comment"
-                     maxlength="500"
-                     required
-                     placeholder="Write a comment…">
+          <form class="comment-form" data-comment-form="${escapeHTML(post.id)}">
+            <input name="comment" maxlength="500"
+              placeholder="Write a comment…" required>
+            <button type="submit">Send</button>
+          </form>
 
-              <button class="action-btn" type="submit">
-                Send
-              </button>
-            </form>
-          </div>
-        </div>
-      </article>`;
+          <div class="post-comments" id="comments-${escapeHTML(post.id)}"></div>
+        </article>
+      `;
+    }).join("");
   }
 
-  function renderPosts(target, posts, mine = false) {
-    const container = $(target);
+  /* ---------- NEXT POST: 360° ROTATION ---------- */
 
-    if (!posts.length) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <h3>No posts yet</h3>
-          <p>Publish something to get started.</p>
-        </div>`;
+  function nextPost(index) {
+    const current = state.posts[index];
+    const nextIndex = index + 1;
 
+    if (!current || nextIndex >= state.posts.length) {
+      notify("You've reached the end of the feed.");
       return;
     }
 
-    container.innerHTML =
-      posts.map(post => makePost(post, mine)).join("");
-  }
+    const currentCard = document.querySelector(
+      `[data-post-id="${CSS.escape(String(current.id))}"]`
+    );
 
-  /* ---------- 360° NEXT-POST EFFECT ---------- */
+    const mediaWrap = currentCard?.querySelector(".post-media-wrap");
 
-  function nextPost(card) {
-    const wrap = card.querySelector("[data-media-wrap]");
+    if (mediaWrap) {
+      mediaWrap.classList.remove("rotating");
+      void mediaWrap.offsetWidth;
+      mediaWrap.classList.add("rotating");
 
-    if (!wrap) return;
-
-    wrap.classList.remove("rotating");
-
-    // Restart the animation cleanly.
-    void wrap.offsetWidth;
-
-    wrap.classList.add("rotating");
-
-    const cards = [
-      ...document.querySelectorAll("#feedList .post-card")
-    ];
-
-    const currentIndex = cards.indexOf(card);
-
-    const next =
-      cards[currentIndex + 1] || cards[0];
-
-    if (next && next !== card) {
       setTimeout(() => {
-        next.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-      }, 400);
+        mediaWrap.classList.remove("rotating");
+      }, 900);
     }
+
+    const nextCard = document.querySelector(
+      `[data-post-id="${CSS.escape(String(state.posts[nextIndex].id))}"]`
+    );
 
     setTimeout(() => {
-      wrap.classList.remove("rotating");
-    }, 850);
-  }
-
-  /* ---------- CREATE POST ---------- */
-
-  function previewMedia() {
-    const file = $("createFile").files[0];
-    const box = $("mediaPreview");
-
-    if (state.previewURL) {
-      URL.revokeObjectURL(state.previewURL);
-      state.previewURL = null;
-    }
-
-    if (!file) {
-      box.innerHTML = "";
-      box.classList.add("hidden");
-      return;
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      box.innerHTML = "";
-      box.classList.add("hidden");
-      notify("File is too large. Maximum size is 50 MB.");
-      return;
-    }
-
-    if (!file.type.startsWith("image/") &&
-        !file.type.startsWith("video/")) {
-      notify("Choose an image or video.");
-      return;
-    }
-
-    state.previewURL = URL.createObjectURL(file);
-
-    box.innerHTML = file.type.startsWith("video/")
-      ? `<video src="${state.previewURL}" controls playsinline></video>`
-      : `<img src="${state.previewURL}" alt="Preview">`;
-
-    box.classList.remove("hidden");
-  }
-
-  async function publishPost(event) {
-    event.preventDefault();
-
-    if (!state.user) {
-      notify("Log in before publishing.");
-      return;
-    }
-
-    const file = $("createFile").files[0];
-    const caption = $("createCaption").value.trim();
-
-    if (!file) {
-      notify("Choose a photo or video.");
-      return;
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      notify("Maximum file size is 50 MB.");
-      return;
-    }
-
-    if (!file.type.startsWith("image/") &&
-        !file.type.startsWith("video/")) {
-      notify("Unsupported file type.");
-      return;
-    }
-
-    const button = $("publishBtn");
-
-    button.disabled = true;
-    button.textContent = "Uploading…";
-
-    let storagePath = null;
-
-    try {
-      const safeName = file.name.replace(
-        /[^A-Za-z0-9._-]/g, "_"
-      );
-
-      storagePath =
-        `${state.user.id}/${Date.now()}-${safeName}`;
-
-      const { error: uploadError } =
-        await state.db.storage
-          .from(STORAGE_BUCKET)
-          .upload(storagePath, file, {
-            contentType: file.type,
-            upsert: false
-          });
-
-      if (uploadError) throw uploadError;
-
-      const { data: publicData } =
-        state.db.storage
-          .from(STORAGE_BUCKET)
-          .getPublicUrl(storagePath);
-
-      const { error: postError } =
-        await state.db.from("posts").insert({
-          user_id: state.user.id,
-          media_url: publicData.publicUrl,
-          media_type: file.type,
-          caption
-        });
-
-      if (postError) {
-        await state.db.storage
-          .from(STORAGE_BUCKET)
-          .remove([storagePath]);
-
-        throw postError;
-      }
-
-      $("createForm").reset();
-
-      if (state.previewURL) {
-        URL.revokeObjectURL(state.previewURL);
-        state.previewURL = null;
-      }
-
-      $("mediaPreview").innerHTML = "";
-      $("mediaPreview").classList.add("hidden");
-
-      notify("Post published successfully!");
-
-      setView("feed");
-      await loadFeed(true);
-
-    } catch (error) {
-      notify(friendlyError(error));
-
-    } finally {
-      button.disabled = false;
-      button.textContent = "🚀 Publish to Vidora";
-    }
+      nextCard?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }, 250);
   }
 
   /* ---------- LIKES ---------- */
 
   async function toggleLike(postId, button) {
-    /*
-      This function expects a table named post_likes
-      with user_id and post_id columns.
+    if (!state.user) {
+      notify("Log in to like posts.");
+      return;
+    }
 
-      Its post_id type must match posts.id.
-    */
+    /*
+     * This expects a "likes" table with user_id and post_id.
+     * Create that table and its RLS policies before using likes.
+     */
 
     try {
-      const { data: existing, error: readError } =
-        await state.db.from("post_likes")
-          .select("user_id")
-          .eq("post_id", postId)
-          .eq("user_id", state.user.id)
-          .maybeSingle();
+      const { data: existing, error: findError } = await db
+        .from("likes")
+        .select("id")
+        .eq("post_id", postId)
+        .eq("user_id", state.user.id)
+        .maybeSingle();
 
-      if (readError) throw readError;
+      if (findError) throw findError;
 
       if (existing) {
-        const { error } = await state.db
-          .from("post_likes")
+        const { error } = await db
+          .from("likes")
           .delete()
-          .eq("post_id", postId)
+          .eq("id", existing.id)
           .eq("user_id", state.user.id);
 
         if (error) throw error;
 
-        button.classList.remove("liked");
-        button.textContent = "♡ Like";
-
+        if (button) button.textContent = "♡ Like";
       } else {
-        const { error } = await state.db
-          .from("post_likes")
-          .insert({
-            post_id: postId,
-            user_id: state.user.id
-          });
+        const { error } = await db.from("likes").insert({
+          post_id: postId,
+          user_id: state.user.id
+        });
 
         if (error) throw error;
 
-        button.classList.add("liked");
-        button.textContent = "♥ Like";
+        if (button) button.textContent = "♥ Liked";
       }
-
     } catch (error) {
-      if (/does not exist|schema cache/i.test(error.message || "")) {
-        notify("Likes need a post_likes table in Supabase.");
-      } else {
-        notify(friendlyError(error));
-      }
+      console.error("Like error:", error);
+      notify("Like failed. Check your likes table and RLS policies.");
     }
   }
 
   /* ---------- COMMENTS ---------- */
 
-  async function loadComments(postId, container) {
-    const list = container.querySelector(".comment-list");
+  async function submitComment(postId, textValue) {
+    if (!state.user) {
+      notify("Log in to comment.");
+      return;
+    }
 
-    list.textContent = "Loading comments…";
+    const content = textValue.trim();
+
+    if (!content || content.length > 500) {
+      notify("Comments must be between 1 and 500 characters.");
+      return;
+    }
+
+    /*
+     * This expects a "comments" table with:
+     * id, post_id, user_id, content, created_at.
+     */
 
     try {
-      const { data, error } = await state.db
+      const { error } = await db.from("comments").insert({
+        post_id: postId,
+        user_id: state.user.id,
+        content
+      });
+
+      if (error) throw error;
+
+      notify("Comment added.");
+      await loadComments(postId);
+    } catch (error) {
+      console.error("Comment error:", error);
+      notify("Comment failed. Check your comments table and permissions.");
+    }
+  }
+
+  async function loadComments(postId) {
+    const container = $(`comments-${postId}`);
+    if (!container) return;
+
+    try {
+      const { data, error } = await db
         .from("comments")
-        .select("*")
+        .select("id, user_id, content, created_at")
         .eq("post_id", postId)
         .order("created_at", { ascending: true })
-        .limit(50);
+        .limit(100);
 
       if (error) throw error;
 
-      const comments = data || [];
-
-      if (!comments.length) {
-        list.innerHTML =
-          '<p class="muted">No comments yet.</p>';
-
-        return;
-      }
-
-      const userIds = [
-        ...new Set(comments.map(c => c.user_id).filter(Boolean))
-      ];
-
-      let profiles = [];
-
-      if (userIds.length) {
-        const result = await state.db
-          .from("profiles")
-          .select("id,username,display_name")
-          .in("id", userIds);
-
-        if (!result.error) {
-          profiles = result.data || [];
-        }
-      }
-
-      const map = new Map(
-        profiles.map(profile => [profile.id, profile])
-      );
-
-      list.innerHTML = comments.map(comment => {
-        const profile = map.get(comment.user_id);
-
-        const name =
-          profile?.username ||
-          profile?.display_name ||
-          "member";
-
-        return `
-          <div class="comment-line">
-            <strong>${escapeHTML(name)}</strong>
-            ${escapeHTML(
-              comment.content || comment.comment || ""
-            )}
-          </div>`;
-      }).join("");
-
+      container.innerHTML = (data || []).map((comment) => `
+        <div class="comment">
+          <strong>${comment.user_id === state.user?.id ? "You" : "Creator"}</strong>
+          <p>${escapeHTML(comment.content)}</p>
+          ${comment.user_id === state.user?.id
+            ? `<button type="button" data-action="delete-comment" data-id="${escapeHTML(comment.id)}" data-post-id="${escapeHTML(postId)}">Delete</button>`
+            : ""}
+        </div>
+      `).join("");
     } catch (error) {
-      list.innerHTML = `
-        <p class="muted">
-          ${escapeHTML(friendlyError(error))}
-        </p>`;
+      console.error("Load comments error:", error);
     }
   }
 
-  async function submitComment(event, form) {
-    event.preventDefault();
-
-    const postId = form.dataset.commentForm;
-    const input = form.elements.comment;
-    const content = input.value.trim();
-
-    if (!content) return;
+  async function deleteComment(commentId, postId) {
+    if (!state.user) return;
 
     try {
-      const { error } = await state.db
+      const { error } = await db
         .from("comments")
-        .insert({
-          post_id: postId,
-          user_id: state.user.id,
-          content
-        });
-
-      if (error) throw error;
-
-      input.value = "";
-
-      const container = document.querySelector(
-        `[data-comments="${CSS.escape(postId)}"]`
-      );
-
-      if (container) {
-        await loadComments(postId, container);
-      }
-
-      notify("Comment added!");
-
-    } catch (error) {
-      notify(friendlyError(error));
-    }
-  }
-
-  /* ---------- DELETE YOUR OWN POSTS ---------- */
-
-  async function deletePost(postId, card) {
-    if (!confirm("Delete this post permanently?")) return;
-
-    try {
-      const { error } = await state.db
-        .from("posts")
         .delete()
-        .eq("id", postId)
+        .eq("id", commentId)
         .eq("user_id", state.user.id);
 
       if (error) throw error;
 
-      card.remove();
-
-      state.posts = state.posts.filter(
-        post => String(post.id) !== String(postId)
-      );
-
-      notify("Post deleted.");
-
+      notify("Comment deleted.");
+      await loadComments(postId);
     } catch (error) {
-      notify(friendlyError(error));
+      console.error("Delete comment error:", error);
+      notify("Could not delete comment.");
     }
   }
 
-  /* ---------- DISCOVER ---------- */
-
-  function renderDiscover() {
-    const term = state.search.toLowerCase().trim();
-
-    const results = state.posts.filter(post => {
-      const searchable =
-        `${post.caption || ""} ${post.username || ""} ${post.display_name || ""}`
-          .toLowerCase();
-
-      return searchable.includes(term);
-    });
-
-    renderPosts("discoverList", results);
-  }
-
-  /* ---------- PREMIUM AVATAR ---------- */
-
-  function renderAvatar() {
-    const available = [
-      "Nova", "Kai", "Luna", "Ivy", "Orion",
-      "Zeno", "Sage", "Rex", "Pixel", "Vexa"
-    ];
-
-    if (!available.includes(state.avatar)) {
-      state.avatar = "Nova";
-    }
-
-    $("avatarSelect").value = state.avatar;
-    $("avatarName").textContent = state.avatar;
-    $("avatarFace").textContent = state.avatar[0];
-
-    localStorage.setItem(
-      "vidoraPremiumAvatar",
-      state.avatar
-    );
-  }
-
-  /* ---------- THEME ---------- */
-
-  function applyTheme() {
-    document.body.classList.toggle(
-      "light-theme",
-      state.theme === "light"
-    );
-
-    $("themeToggle").textContent =
-      state.theme === "light" ? "☾" : "☼";
-
-    localStorage.setItem("vidoraTheme", state.theme);
-  }
-
-  /* ---------- EVENTS ---------- */
+  /* ---------- EVENT HANDLERS ---------- */
 
   function attachEvents() {
-    $("showLogin").addEventListener("click", () => {
-      setAuthMode("login");
+    $("authForm")?.addEventListener("submit", handleAuth);
+
+    $("showLogin")?.addEventListener("click", () => {
+      showAuthMode("login");
     });
 
-    $("showSignup").addEventListener("click", () => {
-      setAuthMode("signup");
+    $("showSignup")?.addEventListener("click", () => {
+      showAuthMode("signup");
     });
 
-    $("authForm").addEventListener("submit", handleAuth);
+    $("logoutBtn")?.addEventListener("click", logout);
+    $("themeToggle")?.addEventListener("click", toggleTheme);
 
-    $("brandHome").addEventListener("click", event => {
+    $("avatarSelect")?.addEventListener("change", selectAvatar);
+
+    $("avatarCreatorLink")?.addEventListener("click", (event) => {
       event.preventDefault();
-      setView("feed");
+      openAvatarCreator();
     });
 
-    document.querySelectorAll("[data-view]").forEach(button => {
+    $("avatarSpeakBtn")?.addEventListener("click", speakAvatar);
+    $("avatarStopBtn")?.addEventListener("click", stopAvatarSpeech);
+
+    $("saveProfileBtn")?.addEventListener("click", saveProfile);
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
       button.addEventListener("click", () => {
         setView(button.dataset.view);
       });
     });
 
-    $("logoutBtn").addEventListener("click", async () => {
-      const { error } = await state.db.auth.signOut();
-
-      if (error) {
-        notify(friendlyError(error));
-        return;
-      }
-
-      state.user = null;
-      state.profile = null;
-      state.posts = [];
-
-      showApp(false);
-      setAuthMode("login");
+    $("brandHome")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      setView("feed");
     });
 
-    $("refreshFeed").addEventListener("click", () => {
-      loadFeed(true);
+    $("brandHomeTop")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      setView("feed");
     });
 
-    $("loadMoreBtn").addEventListener("click", async () => {
-      if (!state.hasMore) return;
-
-      state.page += 1;
-      await loadFeed(false);
+    /*
+     * Supports the new create button and the older button IDs.
+     * Change these selectors if your HTML uses a different ID.
+     */
+    ["publishBtn", "publishPostBtn", "createPublishBtn"].forEach((id) => {
+      $(id)?.addEventListener("click", publishPost);
     });
 
-    $("createFile").addEventListener("change", previewMedia);
+    document.addEventListener("submit", async (event) => {
+      const form = event.target.closest("[data-comment-form]");
+      if (!form) return;
 
-    $("createForm").addEventListener("submit", publishPost);
+      event.preventDefault();
 
-    $("profileForm").addEventListener("submit", saveProfile);
+      const postId = form.dataset.commentForm;
+      const input = form.querySelector('[name="comment"]');
 
-    $("avatarSelect").addEventListener("change", () => {
-      state.avatar = $("avatarSelect").value;
-      renderAvatar();
+      await submitComment(postId, input?.value || "");
+
+      if (input) input.value = "";
     });
 
-    $("themeToggle").addEventListener("click", () => {
-      state.theme =
-        state.theme === "dark" ? "light" : "dark";
-
-      applyTheme();
-    });
-
-    $("discoverSearch").addEventListener("input", () => {
-      state.search = $("discoverSearch").value;
-      renderDiscover();
-    });
-
-    // Post action buttons.
-    document.body.addEventListener("click", async event => {
+    document.addEventListener("click", async (event) => {
       const button = event.target.closest("[data-action]");
+      if (!button) return;
 
-      if (!button || !state.user) return;
-
-      const card = button.closest(".post-card");
-      const id = button.dataset.id;
       const action = button.dataset.action;
+      const postId = button.dataset.id;
 
       if (action === "like") {
-        await toggleLike(id, button);
-      }
-
-      if (action === "comments") {
-        const box = card.querySelector(
-          `[data-comments="${CSS.escape(id)}"]`
-        );
-
-        box.classList.toggle("hidden");
-
-        if (!box.classList.contains("hidden")) {
-          await loadComments(id, box);
-        }
+        await toggleLike(postId, button);
       }
 
       if (action === "next") {
-        nextPost(card);
+        nextPost(Number(button.dataset.index));
       }
 
-      if (action === "delete") {
-        await deletePost(id, card);
+      if (action === "comment") {
+        const card = button.closest(".postCard");
+        card?.querySelector('[name="comment"]')?.focus();
       }
-    });
 
-    document.body.addEventListener("submit", event => {
-      const form = event.target.closest("[data-comment-form]");
-
-      if (form) {
-        submitComment(event, form);
+      if (action === "delete-comment") {
+        await deleteComment(button.dataset.id, button.dataset.postId);
       }
     });
   }
 
-  /* ---------- INITIALIZATION ---------- */
+  /* ---------- STARTUP ---------- */
 
   async function init() {
-    attachEvents();
     applyTheme();
     renderAvatar();
-    setAuthMode("login");
+    attachEvents();
 
-    if (SUPABASE_KEY === "YOUR_SUPABASE_ANON_KEY_HERE") {
-      notify("Add your Supabase public key in app.js.");
-
-      return;
-    }
-
-    if (!window.supabase?.createClient) {
-      notify("Supabase failed to load. Check your connection.");
-
-      return;
-    }
-
-    state.db = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
-
-    const { data, error } =
-      await state.db.auth.getSession();
+    const { data, error } = await db.auth.getSession();
 
     if (error) {
-      notify(friendlyError(error));
+      console.error("Session error:", error);
     }
 
-    if (data?.session?.user) {
-      state.user = data.session.user;
-      await startApp();
+    state.user = data?.session?.user || null;
+
+    if (state.user) {
+      showApp();
+    } else {
+      showAuth();
+      showAuthMode("login");
     }
 
-    state.db.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user && !state.user) {
-          state.user = session.user;
-
-          // Avoid awaiting network calls inside the auth callback.
-          setTimeout(() => startApp(), 0);
-        }
-
-        if (!session) {
-          state.user = null;
-          showApp(false);
-        }
-      }
-    );
+    // Update the greeting if the page remains open across a time change.
+    setInterval(updateGreeting, 60_000);
   }
 
-  document.addEventListener("DOMContentLoaded", init);
+  init().catch((error) => {
+    console.error("Vidora startup error:", error);
+    notify("Vidora could not start. Check the browser console.");
+  });
 
 })();
