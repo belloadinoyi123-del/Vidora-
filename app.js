@@ -1,16 +1,18 @@
 /* =========================================================
-   VIDORA – COMPLETE REBUILD
+   VIDORA – COMPLETE APP.JS
    Features:
    • Facebook-style Sign Up
-   • Horizontal swipe video player (sideways)
+   • Video swipe modes: sideways / upward / rotational
    • Compact music button only
-   • Create (filters + music categories)
+   • Create (filters + music)
    • WhatsApp-style Stories
    • TikTok-style Chat
    • Avatars + Avatar Creator
-   • Likes / Comments / Views (owner-only views)
+   • Likes / Comments / Views (owner-only, only when > 0)
    • Delete own posts / stories / comments / messages
-   • Vidora AI Assistant (theme, messages, sign out)
+   • Vidora AI (WhatsApp-style – answers questions, helps with settings)
+   • Settings: swipe mode, notification sound, AI notifications
+   • Abdulhamid included as demo user
    ========================================================= */
 
 const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
@@ -56,6 +58,46 @@ function timeAgo(date) {
   return Math.floor(s / 86400) + "d";
 }
 
+/* ================= SETTINGS (persisted) ================= */
+const defaultSettings = {
+  swipeMode: "sideways",       // sideways | upward | rotational
+  notificationSound: true,
+  aiMessageNotify: true,
+  darkMode: true
+};
+
+function loadSettings() {
+  try {
+    const saved = localStorage.getItem("vidora_settings");
+    if (saved) return { ...defaultSettings, ...JSON.parse(saved) };
+  } catch (e) {}
+  return { ...defaultSettings };
+}
+
+function saveSettings() {
+  localStorage.setItem("vidora_settings", JSON.stringify(settings));
+}
+
+let settings = loadSettings();
+
+/* ================= NOTIFICATION SOUND ================= */
+function playNotifySound() {
+  if (!settings.notificationSound) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    osc.type = "sine";
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) {}
+}
+
 /* ================= STATE ================= */
 let user = null;
 let profile = null;
@@ -85,7 +127,7 @@ const FILTERS = [
   { id: "golden", name: "Golden", css: "sepia(.4) saturate(1.35) brightness(1.08)" }
 ];
 
-/* ================= MUSIC LIBRARY ================= */
+/* ================= MUSIC ================= */
 const MUSIC = {
   Beats: [
     { id: "b1", title: "Night Pulse", artist: "Vidora Beatz" },
@@ -113,7 +155,8 @@ const MUSIC = {
 const AVATARS = [
   "Nova","Kai","Luna","Ivy","Orion","Zeno","Sage","Rex","Pixel","Vexa",
   "Aero","Mika","Juno","Kairo","Nia","Zara","Axel","Riven","Sora","Nyx",
-  "Aria","Dax","Milo","Zuri","Kira","Echo","Tari","Vio","Onyx","Cleo"
+  "Aria","Dax","Milo","Zuri","Kira","Echo","Tari","Vio","Onyx","Cleo",
+  "Abdulhamid"
 ];
 
 /* ================= AUTH ================= */
@@ -222,6 +265,10 @@ async function enterApp(authUser) {
     profile = data;
   } catch (e) { console.warn(e); }
 
+  // Apply theme
+  if (!settings.darkMode) document.body.classList.add("light-mode");
+  else document.body.classList.remove("light-mode");
+
   $$(".nav-btn").forEach(btn => {
     btn.onclick = () => switchView(btn.dataset.view);
   });
@@ -248,29 +295,29 @@ function switchView(view) {
   else if (view === "create") renderCreate();
   else if (view === "inbox") renderInbox();
   else if (view === "profile") renderProfile();
+  else if (view === "settings") renderSettings();
 }
 
-/* ================= HOME (Stories + Horizontal Video) ================= */
+/* ================= HOME + VIDEO PLAYER ================= */
 function renderHome() {
   const main = $("main");
+  const mode = settings.swipeMode || "sideways";
+
   main.innerHTML = `
     <div class="home-wrap">
-      <!-- WhatsApp-style Stories -->
       <div class="stories-bar" id="storiesBar">
         <button class="story-item your-story" onclick="openCreateStory()">
           <div class="story-ring add"><span>+</span></div>
           <small>Your Story</small>
         </button>
-        ${["Sofia","Arjun","Maya","Noah","Luna"].map(n => `
+        ${["Sofia","Arjun","Maya","Abdulhamid","Noah","Luna"].map(n => `
           <button class="story-item" onclick="openStory('${n}')">
             <div class="story-ring"><div class="story-avatar">${n[0]}</div></div>
             <small>${n}</small>
           </button>
         `).join("")}
       </div>
-
-      <!-- Horizontal Video Feed -->
-      <div class="video-feed" id="videoFeed">
+      <div class="video-feed" id="videoFeed" data-mode="${mode}">
         <div class="video-track" id="videoTrack"></div>
         <div class="swipe-hint left">‹</div>
         <div class="swipe-hint right">›</div>
@@ -278,11 +325,13 @@ function renderHome() {
     </div>
   `;
 
+  // Demo posts – views stay 0 until real uploads
   videoList = [
-    { id:1, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", user:"Sofia", avatar:"S", likes:12800, comments:256, shares:1200, views:45200, music:"Night Pulse – Vidora Beatz", caption:"Feeling the vibe 🔥", isOwner:false },
-    { id:2, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", user:"Arjun", avatar:"A", likes:8900, comments:142, shares:670, views:23100, music:"Chrome Drive – Vidora Beatz", caption:"New drop", isOwner:false },
-    { id:3, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", user:"Maya", avatar:"M", likes:21400, comments:512, shares:2300, views:89100, music:"Electric Soul – Vidora Funk", caption:"Dance challenge", isOwner:false },
-    { id:4, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", user: profile?.display_name?.split(" ")[0] || "You", avatar:"Y", likes:320, comments:18, shares:45, views:890, music:"UK Slide – Vidora Drills", caption:"My first Vidora post", isOwner:true }
+    { id:1, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", user:"Sofia", avatar:"S", likes:24, comments:5, shares:2, views:0, music:"Night Pulse – Vidora Beatz", caption:"Feeling the vibe 🔥", isOwner:false },
+    { id:2, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", user:"Arjun", avatar:"A", likes:18, comments:3, shares:1, views:0, music:"Chrome Drive – Vidora Beatz", caption:"New drop", isOwner:false },
+    { id:3, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", user:"Maya", avatar:"M", likes:31, comments:7, shares:4, views:0, music:"Electric Soul – Vidora Funk", caption:"Dance challenge", isOwner:false },
+    { id:4, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", user:"Abdulhamid", avatar:"A", likes:12, comments:2, shares:1, views:0, music:"UK Slide – Vidora Drills", caption:"Welcome to Vidora 🚀", isOwner:false },
+    { id:5, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4", user: profile?.display_name?.split(" ")[0] || "You", avatar:"Y", likes:6, comments:1, shares:0, views:0, music:"Night Vibes – Charts", caption:"My first Vidora post", isOwner:true }
   ];
 
   const track = $("videoTrack");
@@ -312,7 +361,7 @@ function renderHome() {
       <div class="video-info">
         <div class="user-row">@${esc(v.user)}</div>
         <div class="caption">${esc(v.caption)}</div>
-        ${v.isOwner ? `<div class="views-owner">👁 ${formatCount(v.views)} views (only you see this)</div>` : ""}
+        ${v.isOwner && v.views > 0 ? `<div class="views-owner">👁 ${formatCount(v.views)} views (only you see this)</div>` : ""}
       </div>
       <div class="vidora-watermark"><div class="v-logo">V</div><span>Vidora</span></div>
     </div>
@@ -321,12 +370,24 @@ function renderHome() {
   currentVideoIndex = 0;
   updateVideoPosition();
   playCurrentVideo();
-  setupHorizontalSwipe();
+  setupSwipe(mode);
 }
 
 function updateVideoPosition() {
   const track = $("videoTrack");
-  if (track) track.style.transform = `translateX(-${currentVideoIndex * 100}%)`;
+  if (!track) return;
+  const mode = settings.swipeMode || "sideways";
+
+  if (mode === "sideways") {
+    track.style.flexDirection = "row";
+    track.style.transform = `translateX(-${currentVideoIndex * 100}%)`;
+  } else if (mode === "upward") {
+    track.style.flexDirection = "column";
+    track.style.transform = `translateY(-${currentVideoIndex * 100}%)`;
+  } else if (mode === "rotational") {
+    track.style.flexDirection = "row";
+    track.style.transform = `translateX(-${currentVideoIndex * 100}%) rotate(${currentVideoIndex * 2}deg)`;
+  }
 }
 
 function playCurrentVideo() {
@@ -343,31 +404,53 @@ function goToVideo(index) {
   playCurrentVideo();
 }
 
-function setupHorizontalSwipe() {
+function setupSwipe(mode) {
   const feed = $("videoFeed");
   if (!feed) return;
-  let startX = 0, isDragging = false;
+  let startX = 0, startY = 0, isDragging = false;
 
-  feed.ontouchstart = (e) => { startX = e.touches[0].clientX; isDragging = true; };
+  feed.ontouchstart = (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isDragging = true;
+  };
   feed.ontouchend = (e) => {
     if (!isDragging) return;
     isDragging = false;
-    const diff = startX - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) goToVideo(currentVideoIndex + 1);
-      else goToVideo(currentVideoIndex - 1);
+    const dx = startX - e.changedTouches[0].clientX;
+    const dy = startY - e.changedTouches[0].clientY;
+
+    if (mode === "sideways" || mode === "rotational") {
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) goToVideo(currentVideoIndex + 1);
+        else goToVideo(currentVideoIndex - 1);
+      }
+    } else if (mode === "upward") {
+      if (Math.abs(dy) > 50 && Math.abs(dy) > Math.abs(dx)) {
+        if (dy > 0) goToVideo(currentVideoIndex + 1);
+        else goToVideo(currentVideoIndex - 1);
+      }
     }
   };
-  // Desktop
+
+  // Desktop mouse support
   let mouseDown = false;
-  feed.onmousedown = (e) => { startX = e.clientX; mouseDown = true; };
+  feed.onmousedown = (e) => { startX = e.clientX; startY = e.clientY; mouseDown = true; };
   feed.onmouseup = (e) => {
     if (!mouseDown) return;
     mouseDown = false;
-    const diff = startX - e.clientX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) goToVideo(currentVideoIndex + 1);
-      else goToVideo(currentVideoIndex - 1);
+    const dx = startX - e.clientX;
+    const dy = startY - e.clientY;
+    if (mode === "sideways" || mode === "rotational") {
+      if (Math.abs(dx) > 50) {
+        if (dx > 0) goToVideo(currentVideoIndex + 1);
+        else goToVideo(currentVideoIndex - 1);
+      }
+    } else {
+      if (Math.abs(dy) > 50) {
+        if (dy > 0) goToVideo(currentVideoIndex + 1);
+        else goToVideo(currentVideoIndex - 1);
+      }
     }
   };
 }
@@ -401,8 +484,8 @@ function openComments(postId) {
     </div>
     <div class="comments-list" id="commentsList">
       <div class="comment"><strong>Sofia</strong> Amazing! 🔥 <button class="del-btn" onclick="this.parentElement.remove();toast('Comment deleted')">Delete</button></div>
-      <div class="comment"><strong>Arjun</strong> Fire edit</div>
-      <div class="comment"><strong>You</strong> Thanks everyone! <button class="del-btn" onclick="this.parentElement.remove();toast('Your comment deleted')">Delete</button></div>
+      <div class="comment"><strong>Abdulhamid</strong> Fire edit 👏</div>
+      <div class="comment"><strong>You</strong> Thanks! <button class="del-btn" onclick="this.parentElement.remove();toast('Your comment deleted')">Delete</button></div>
     </div>
     <form class="comment-form" onsubmit="addComment(event)">
       <input class="field" id="commentInput" placeholder="Add a comment..." maxlength="300" />
@@ -461,20 +544,16 @@ function renderCreate() {
         <h2>Create</h2>
         <button class="btn primary sm" onclick="publishPost()">Post</button>
       </div>
-
       <div class="create-preview" id="createPreview">
         <div class="preview-placeholder">
           <span style="font-size:48px">📷</span>
           <p>Tap to add photo or video</p>
         </div>
       </div>
-
       <div class="create-actions">
         <button class="btn secondary" onclick="toast('Camera')">Record</button>
         <button class="btn secondary" onclick="toast('Gallery')">Gallery</button>
       </div>
-
-      <!-- Filters -->
       <div class="section">
         <h4>Filters</h4>
         <div class="filter-scroll" id="filterScroll">
@@ -486,8 +565,6 @@ function renderCreate() {
           `).join("")}
         </div>
       </div>
-
-      <!-- Music -->
       <div class="section">
         <h4>Music</h4>
         <div class="music-tabs">
@@ -495,7 +572,6 @@ function renderCreate() {
         </div>
         <div class="music-list" id="musicList"></div>
       </div>
-
       <div class="section">
         <input class="field" id="captionInput" placeholder="Write a caption..." maxlength="2200" />
       </div>
@@ -524,7 +600,6 @@ function showMusicCat(cat) {
 function selectMusic(id, title, artist) {
   selectedMusic = { id, title, artist };
   toast(`Music: ${title}`);
-  // re-render current category to show active
   const activeTab = document.querySelector(".music-tab.active");
   if (activeTab) showMusicCat(activeTab.textContent);
 }
@@ -546,7 +621,7 @@ function renderDiscover() {
         `).join("")}
       </div>
       <h3 style="margin:24px 0 12px">Suggested for you</h3>
-      ${["Kai","Luna","Rex","Nova","Pixel"].map(n => `
+      ${["Abdulhamid","Kai","Luna","Rex","Nova","Pixel"].map(n => `
         <div class="user-row-card">
           <div class="avatar-circle">${n[0]}</div>
           <div><strong>${n}</strong><br><small class="muted">@${n.toLowerCase()}</small></div>
@@ -567,10 +642,10 @@ function renderInbox() {
       </div>
       <div class="chat-list">
         ${[
+          {name:"Abdulhamid", last:"Welcome to Vidora!", time:"1m", unread:1},
           {name:"Sofia", last:"Did you see the new video?", time:"2m", unread:2},
           {name:"Arjun", last:"Loved your edit 🔥", time:"1h", unread:0},
-          {name:"Maya", last:"Let's collab!", time:"3h", unread:1},
-          {name:"Noah", last:"Check this sound", time:"Yesterday", unread:0}
+          {name:"Maya", last:"Let's collab!", time:"3h", unread:1}
         ].map(c => `
           <button class="chat-row" onclick="openChat('${c.name}')">
             <div class="avatar-circle">${c.name[0]}</div>
@@ -596,9 +671,9 @@ function openChat(name) {
         <button class="icon-btn" onclick="toast('Options')">⋯</button>
       </div>
       <div class="chat-bubbles" id="chatBubbles">
-        <div class="bubble them">Hey! Did you see the new video?</div>
-        <div class="bubble me">Yes! Just watched it. So good 🔥</div>
-        <div class="bubble them">Right? The ending 😮</div>
+        <div class="bubble them">Hey! How are you?</div>
+        <div class="bubble me">I'm good, thanks!</div>
+        <div class="bubble them">Check out my latest post 🔥</div>
       </div>
       <form class="chat-input-row" onsubmit="sendMessage(event)">
         <input class="field" id="msgInput" placeholder="Message..." autocomplete="off" />
@@ -621,15 +696,21 @@ function sendMessage(e) {
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
   input.value = "";
-  // Simulate assistant notification
-  setTimeout(() => {
-    if ($("assistantBox") && !$("assistantBox").classList.contains("hidden")) {
-      addAssistantMsg(`New reply from ${chatUser || "someone"}`);
-    }
-  }, 1500);
+
+  // AI message notification
+  if (settings.aiMessageNotify) {
+    setTimeout(() => {
+      playNotifySound();
+      if ($("assistantBox") && !$("assistantBox").classList.contains("hidden")) {
+        addAssistantMsg(`📩 New reply from ${chatUser || "someone"}`);
+      } else {
+        toast(`📩 New message from ${chatUser || "someone"}`);
+      }
+    }, 1800);
+  }
 }
 
-/* ================= PROFILE + AVATARS ================= */
+/* ================= PROFILE ================= */
 function renderProfile() {
   const name = profile?.display_name || user?.email || "User";
   const uname = profile?.username || "user";
@@ -645,6 +726,7 @@ function renderProfile() {
           <div><strong>340</strong><br><span class="muted">Following</span></div>
         </div>
         <button class="btn secondary" onclick="openAvatarCreator()">Edit Avatar</button>
+        <button class="btn secondary" style="margin-top:8px" onclick="switchView('settings')">⚙️ Settings</button>
       </div>
       <div class="profile-tabs">
         <button class="active">Posts</button>
@@ -685,6 +767,88 @@ function selectAvatar(name) {
   toast("Selected: " + name);
 }
 
+/* ================= SETTINGS ================= */
+function renderSettings() {
+  $("main").innerHTML = `
+    <div style="padding:16px 16px 80px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button onclick="switchView('profile')" class="icon-btn">←</button>
+        <h2 style="margin:0">Settings</h2>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <h4 style="margin:0 0 12px">Video Swipe Style</h4>
+        <p class="muted small" style="margin:0 0 12px">Choose how you move between videos</p>
+        <label class="setting-row">
+          <input type="radio" name="swipeMode" value="sideways" ${settings.swipeMode==='sideways'?'checked':''} onchange="setSwipeMode('sideways')" />
+          <span>↔ Sideways (left / right)</span>
+        </label>
+        <label class="setting-row">
+          <input type="radio" name="swipeMode" value="upward" ${settings.swipeMode==='upward'?'checked':''} onchange="setSwipeMode('upward')" />
+          <span>↕ Upward (up / down like TikTok)</span>
+        </label>
+        <label class="setting-row">
+          <input type="radio" name="swipeMode" value="rotational" ${settings.swipeMode==='rotational'?'checked':''} onchange="setSwipeMode('rotational')" />
+          <span>🔄 Rotational movement</span>
+        </label>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <h4 style="margin:0 0 12px">Notifications & Sound</h4>
+        <label class="setting-row">
+          <input type="checkbox" id="notifSound" ${settings.notificationSound?'checked':''} onchange="toggleNotifSound(this.checked)" />
+          <span>Notification sound</span>
+        </label>
+        <label class="setting-row">
+          <input type="checkbox" id="aiNotify" ${settings.aiMessageNotify?'checked':''} onchange="toggleAiNotify(this.checked)" />
+          <span>Vidora AI notifies me of new messages</span>
+        </label>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <h4 style="margin:0 0 12px">Appearance</h4>
+        <label class="setting-row">
+          <input type="checkbox" id="darkMode" ${settings.darkMode?'checked':''} onchange="toggleDarkMode(this.checked)" />
+          <span>Dark mode</span>
+        </label>
+      </div>
+
+      <div class="card">
+        <h4 style="margin:0 0 12px">Account</h4>
+        <button class="btn secondary full" style="margin-bottom:8px" onclick="handleSignOut()">Sign Out</button>
+        <button class="btn danger full" onclick="toast('Account deletion requires confirmation')">Delete Account</button>
+      </div>
+    </div>
+  `;
+}
+
+function setSwipeMode(mode) {
+  settings.swipeMode = mode;
+  saveSettings();
+  toast("Swipe mode: " + mode);
+}
+
+function toggleNotifSound(on) {
+  settings.notificationSound = on;
+  saveSettings();
+  toast(on ? "Notification sound ON" : "Notification sound OFF");
+  if (on) playNotifySound();
+}
+
+function toggleAiNotify(on) {
+  settings.aiMessageNotify = on;
+  saveSettings();
+  toast(on ? "AI message notifications ON" : "AI message notifications OFF");
+}
+
+function toggleDarkMode(on) {
+  settings.darkMode = on;
+  saveSettings();
+  if (on) document.body.classList.remove("light-mode");
+  else document.body.classList.add("light-mode");
+  toast(on ? "Dark mode" : "Light mode");
+}
+
 /* ================= SHEET / MODAL ================= */
 function openSheet(html) {
   $("sheet").innerHTML = html;
@@ -700,11 +864,11 @@ $("modal")?.addEventListener("click", (e) => {
   if (e.target.id === "modal") closeSheet();
 });
 
-/* ================= ASSISTANT ================= */
+/* ================= VIDORA AI (WhatsApp-style) ================= */
 function openAssistant() {
   $("assistantBox")?.classList.remove("hidden");
   if ($("assistantMessages") && !$("assistantMessages").children.length) {
-    addAssistantMsg("Hi! I'm Vidora AI. I can toggle theme, check messages, or help you sign out.");
+    addAssistantMsg("Hi! I'm Vidora AI 👋\nI can help you with:\n• Toggle theme\n• Check messages\n• Sign out\n• Change swipe mode\n• Notification sound\n• Delete posts\n• Answer questions\n\nJust ask me anything!");
   }
 }
 
@@ -716,7 +880,7 @@ function addAssistantMsg(text, isUser = false) {
   const box = $("assistantMessages");
   if (!box) return;
   const div = document.createElement("div");
-  div.style.cssText = `align-self:${isUser?"flex-end":"flex-start"};max-width:85%;padding:10px 14px;border-radius:16px;background:${isUser?"linear-gradient(135deg,var(--purple),var(--pink))":"var(--surface2)"};font-size:14px;`;
+  div.style.cssText = `align-self:${isUser?"flex-end":"flex-start"};max-width:85%;padding:10px 14px;border-radius:16px;background:${isUser?"linear-gradient(135deg,var(--purple),var(--pink))":"var(--surface2)"};font-size:14px;white-space:pre-wrap;`;
   div.textContent = text;
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
@@ -730,24 +894,94 @@ function handleAssistant(e) {
   addAssistantMsg(text, true);
   input.value = "";
   const low = text.toLowerCase();
+
   setTimeout(() => {
-    if (low.includes("theme") || low.includes("dark") || low.includes("light")) {
+    // Theme
+    if (low.includes("theme") || low.includes("dark") || low.includes("light") || low.includes("mode")) {
       document.body.classList.toggle("light-mode");
-      addAssistantMsg("Theme toggled!");
-    } else if (low.includes("sign out") || low.includes("logout")) {
-      addAssistantMsg("Signing you out...");
-      setTimeout(handleSignOut, 700);
-    } else if (low.includes("message") || low.includes("inbox") || low.includes("notify")) {
-      addAssistantMsg("You have 3 unread messages. Open Inbox to see them.");
-    } else {
-      addAssistantMsg("Try: “toggle theme”, “messages”, or “sign out”.");
+      settings.darkMode = !document.body.classList.contains("light-mode");
+      saveSettings();
+      addAssistantMsg("Done! Theme toggled.");
+      return;
     }
+    // Sign out
+    if (low.includes("sign out") || low.includes("logout") || low.includes("log out")) {
+      addAssistantMsg("Okay, signing you out now...");
+      setTimeout(handleSignOut, 800);
+      return;
+    }
+    // Messages
+    if (low.includes("message") || low.includes("inbox") || low.includes("notify") || low.includes("notification")) {
+      addAssistantMsg("You have messages in your Inbox.\nI can also notify you when new ones arrive.\nOpen Inbox or say “turn on notifications”.");
+      return;
+    }
+    // Notification sound
+    if (low.includes("sound") || low.includes("notification sound")) {
+      if (low.includes("off") || low.includes("disable") || low.includes("mute")) {
+        settings.notificationSound = false;
+        saveSettings();
+        addAssistantMsg("Notification sound turned OFF.");
+      } else {
+        settings.notificationSound = true;
+        saveSettings();
+        playNotifySound();
+        addAssistantMsg("Notification sound turned ON.");
+      }
+      return;
+    }
+    // Swipe mode
+    if (low.includes("swipe") || low.includes("scroll") || low.includes("sideways") || low.includes("upward") || low.includes("rotational") || low.includes("vertical") || low.includes("horizontal")) {
+      if (low.includes("up") || low.includes("vertical") || low.includes("tiktok")) {
+        settings.swipeMode = "upward";
+        saveSettings();
+        addAssistantMsg("Swipe mode set to Upward (up/down).\nGo to Home to try it.");
+      } else if (low.includes("rotat") || low.includes("spin")) {
+        settings.swipeMode = "rotational";
+        saveSettings();
+        addAssistantMsg("Swipe mode set to Rotational.\nGo to Home to try it.");
+      } else {
+        settings.swipeMode = "sideways";
+        saveSettings();
+        addAssistantMsg("Swipe mode set to Sideways (left/right).\nGo to Home to try it.");
+      }
+      return;
+    }
+    // Delete post
+    if (low.includes("delete post") || low.includes("remove post")) {
+      addAssistantMsg("To delete a post: go to Home, swipe to your own post, and tap the 🗑️ button.\nOnly you can delete your own posts.");
+      return;
+    }
+    // Settings
+    if (low.includes("setting") || low.includes("preference")) {
+      addAssistantMsg("Opening Settings for you...");
+      setTimeout(() => { switchView("settings"); closeAssistant(); }, 600);
+      return;
+    }
+    // Help / what can you do
+    if (low.includes("help") || low.includes("what can you") || low.includes("how do") || low.includes("features")) {
+      addAssistantMsg("I can help with:\n• Toggle dark/light theme\n• Sign you out\n• Check messages & notifications\n• Change video swipe style (sideways / upward / rotational)\n• Turn notification sound on/off\n• Guide you to delete posts\n• Open Settings\n• Answer general questions about Vidora\n\nJust type what you need!");
+      return;
+    }
+    // Greeting
+    if (low.includes("hello") || low.includes("hi") || low.includes("hey") || low.includes("good morning") || low.includes("good evening")) {
+      addAssistantMsg("Hey! 👋 How can I help you today?");
+      return;
+    }
+    // About Vidora
+    if (low.includes("vidora") || low.includes("what is this") || low.includes("about")) {
+      addAssistantMsg("Vidora is a social video app.\nWatch, swipe, create, chat, and connect.\nYou can change how videos swipe in Settings, and I’m here to help anytime — just like WhatsApp AI.");
+      return;
+    }
+    // Default intelligent-ish reply
+    addAssistantMsg("I understand you're asking about: \"" + text + "\".\n\nI can help with theme, messages, sign out, swipe mode, notification sound, deleting posts, and Settings.\n\nTry asking one of those, or say “help” to see everything I can do.");
   }, 400);
 }
 
 function handleQuickAction(action) {
   if (action === "toggle-theme") {
     document.body.classList.toggle("light-mode");
+    settings.darkMode = !document.body.classList.contains("light-mode");
+    saveSettings();
     toast("Theme toggled");
   } else if (action === "messages") {
     switchView("inbox");
@@ -776,6 +1010,9 @@ async function init() {
   $("showSignupBtn")?.addEventListener("click", showSignup);
   $("showLoginBtn")?.addEventListener("click", showLogin);
 
+  // Apply saved theme early
+  if (!settings.darkMode) document.body.classList.add("light-mode");
+
   try {
     const { data } = await sb.auth.getSession();
     if (data?.session?.user) await enterApp(data.session.user);
@@ -799,7 +1036,7 @@ async function init() {
 
 document.addEventListener("DOMContentLoaded", init);
 
-// Make some functions global for onclick handlers
+/* Expose functions for onclick handlers */
 window.toggleLike = toggleLike;
 window.deletePost = deletePost;
 window.openComments = openComments;
@@ -816,3 +1053,8 @@ window.openAvatarCreator = openAvatarCreator;
 window.selectAvatar = selectAvatar;
 window.closeSheet = closeSheet;
 window.handleSignOut = handleSignOut;
+window.setSwipeMode = setSwipeMode;
+window.toggleNotifSound = toggleNotifSound;
+window.toggleAiNotify = toggleAiNotify;
+window.toggleDarkMode = toggleDarkMode;
+window.switchView = switchView;
