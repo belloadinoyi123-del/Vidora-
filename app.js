@@ -1,31 +1,19 @@
 /* =========================================================
-   VIDORA – COMPLETE APP.JS
-   Features:
-   • Facebook-style Sign Up
-   • Video swipe modes: sideways / upward / rotational
-   • Compact music button only
-   • Create (filters + music)
-   • WhatsApp-style Stories
-   • TikTok-style Chat
-   • Avatars + Avatar Creator
-   • Likes / Comments / Views (owner-only, only when > 0)
-   • Delete own posts / stories / comments / messages
-   • Vidora AI (WhatsApp-style – answers questions, helps with settings)
-   • Settings: swipe mode, notification sound, AI notifications
-   • Abdulhamid included as demo user
+   VIDORA – FULL WORKING APP
+   Auth, feed, create, filters, music, stories, chat,
+   avatars, profile photo, settings, AI assistant
    ========================================================= */
 
 const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
 const SUPABASE_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ================= HELPERS ================= */
 const $ = (id) => document.getElementById(id);
 const $$ = (sel) => document.querySelectorAll(sel);
 
 function toast(msg) {
   const el = $("toast");
-  if (!el) return console.log("VIDORA:", msg);
+  if (!el) return console.log(msg);
   el.textContent = msg;
   el.classList.remove("hidden");
   clearTimeout(window.__toastTimer);
@@ -50,17 +38,9 @@ function formatCount(n) {
   return String(n || 0);
 }
 
-function timeAgo(date) {
-  const s = Math.floor((Date.now() - new Date(date)) / 1000);
-  if (s < 60) return "just now";
-  if (s < 3600) return Math.floor(s / 60) + "m";
-  if (s < 86400) return Math.floor(s / 3600) + "h";
-  return Math.floor(s / 86400) + "d";
-}
-
-/* ================= SETTINGS (persisted) ================= */
+/* ================= SETTINGS ================= */
 const defaultSettings = {
-  swipeMode: "sideways",       // sideways | upward | rotational
+  swipeMode: "sideways",
   notificationSound: true,
   aiMessageNotify: true,
   darkMode: true
@@ -68,8 +48,8 @@ const defaultSettings = {
 
 function loadSettings() {
   try {
-    const saved = localStorage.getItem("vidora_settings");
-    if (saved) return { ...defaultSettings, ...JSON.parse(saved) };
+    const s = localStorage.getItem("vidora_settings");
+    if (s) return { ...defaultSettings, ...JSON.parse(s) };
   } catch (e) {}
   return { ...defaultSettings };
 }
@@ -80,21 +60,18 @@ function saveSettings() {
 
 let settings = loadSettings();
 
-/* ================= NOTIFICATION SOUND ================= */
 function playNotifySound() {
   if (!settings.notificationSound) return;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 880;
-    osc.type = "sine";
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.3);
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880;
+    g.gain.value = 0.08;
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    o.stop(ctx.currentTime + 0.25);
   } catch (e) {}
 }
 
@@ -108,31 +85,54 @@ let selectedFilter = "none";
 let selectedMusic = null;
 let selectedAvatar = null;
 let chatUser = null;
-let storyItems = [];
-let assistantHistory = [];
+let createFile = null;
+let createPreviewUrl = null;
+let storyFile = null;
+let userPosts = [];
 
-/* ================= FILTERS ================= */
+try {
+  userPosts = JSON.parse(localStorage.getItem("vidora_user_posts") || "[]");
+} catch (e) { userPosts = []; }
+
+/* ================= FILTERS (Snapchat / CapCut style color effects) ================= */
 const FILTERS = [
   { id: "none", name: "Original", css: "none" },
-  { id: "vivid", name: "Vivid", css: "saturate(1.6) contrast(1.1)" },
-  { id: "warm", name: "Warm", css: "sepia(.25) saturate(1.3) brightness(1.05)" },
-  { id: "cool", name: "Cool", css: "hue-rotate(15deg) saturate(1.2)" },
-  { id: "noir", name: "Noir", css: "grayscale(1) contrast(1.2)" },
-  { id: "vintage", name: "Vintage", css: "sepia(.45) contrast(1.1) brightness(.95)" },
-  { id: "neon", name: "Neon", css: "saturate(1.8) contrast(1.2) hue-rotate(300deg)" },
-  { id: "beauty", name: "Beauty", css: "brightness(1.12) contrast(1.05) saturate(1.15)" },
-  { id: "cinema", name: "Cinema", css: "contrast(1.25) saturate(.9) brightness(.95)" },
-  { id: "glow", name: "Glow", css: "brightness(1.15) contrast(1.05) saturate(1.3)" },
-  { id: "moody", name: "Moody", css: "contrast(1.35) brightness(.9) saturate(.85)" },
-  { id: "golden", name: "Golden", css: "sepia(.4) saturate(1.35) brightness(1.08)" }
+  { id: "vivid", name: "Vivid", css: "saturate(1.7) contrast(1.12)" },
+  { id: "warm", name: "Warm", css: "sepia(.28) saturate(1.35) brightness(1.05)" },
+  { id: "cool", name: "Cool", css: "hue-rotate(18deg) saturate(1.25) brightness(1.02)" },
+  { id: "noir", name: "Noir", css: "grayscale(1) contrast(1.25)" },
+  { id: "vintage", name: "Vintage", css: "sepia(.5) contrast(1.1) brightness(.95)" },
+  { id: "neon", name: "Neon", css: "saturate(2) contrast(1.2) hue-rotate(295deg)" },
+  { id: "beauty", name: "Beauty", css: "brightness(1.14) contrast(1.04) saturate(1.12)" },
+  { id: "cinema", name: "Cinema", css: "contrast(1.28) saturate(.88) brightness(.94)" },
+  { id: "glow", name: "Glow", css: "brightness(1.18) contrast(1.05) saturate(1.3)" },
+  { id: "moody", name: "Moody", css: "contrast(1.4) brightness(.88) saturate(.8)" },
+  { id: "golden", name: "Golden", css: "sepia(.4) saturate(1.4) brightness(1.08)" },
+  { id: "soft", name: "Soft", css: "brightness(1.1) contrast(.92) saturate(1.08)" },
+  { id: "sharp", name: "Sharp", css: "contrast(1.55) saturate(1.1)" },
+  { id: "pastel", name: "Pastel", css: "saturate(.75) brightness(1.12) contrast(.95)" },
+  { id: "sunset", name: "Sunset", css: "sepia(.35) saturate(1.5) hue-rotate(-10deg)" },
+  { id: "ocean", name: "Ocean", css: "hue-rotate(175deg) saturate(1.25) brightness(1.05)" },
+  { id: "rose", name: "Rose", css: "sepia(.2) hue-rotate(310deg) saturate(1.35)" },
+  { id: "film", name: "Film", css: "sepia(.22) contrast(1.15) saturate(.85)" },
+  { id: "dream", name: "Dream", css: "brightness(1.12) saturate(1.2) contrast(.92)" },
+  { id: "electric", name: "Electric", css: "saturate(2.1) contrast(1.18) hue-rotate(25deg)" },
+  { id: "arctic", name: "Arctic", css: "hue-rotate(190deg) brightness(1.12) saturate(.85)" },
+  { id: "candy", name: "Candy", css: "saturate(1.85) brightness(1.1) contrast(1.05)" },
+  { id: "midnight", name: "Midnight", css: "brightness(.78) contrast(1.35) saturate(1.15)" }
 ];
+
+function getFilterCss(id) {
+  return FILTERS.find(f => f.id === id)?.css || "none";
+}
 
 /* ================= MUSIC ================= */
 const MUSIC = {
   Beats: [
     { id: "b1", title: "Night Pulse", artist: "Vidora Beatz" },
     { id: "b2", title: "Chrome Drive", artist: "Vidora Beatz" },
-    { id: "b3", title: "Low Rider", artist: "Vidora Beatz" }
+    { id: "b3", title: "Low Rider", artist: "Vidora Beatz" },
+    { id: "b4", title: "Bass Hit", artist: "Vidora Beatz" }
   ],
   Funk: [
     { id: "f1", title: "Groovy Lane", artist: "Vidora Funk" },
@@ -145,13 +145,12 @@ const MUSIC = {
     { id: "d3", title: "Cold Blocks", artist: "Vidora Drills" }
   ],
   Popular: [
-    { id: "p1", title: "Summer Hits 2026", artist: "Various" },
+    { id: "p1", title: "Summer Hits", artist: "Charts" },
     { id: "p2", title: "Viral Dance", artist: "Trending" },
     { id: "p3", title: "Night Vibes", artist: "Charts" }
   ]
 };
 
-/* ================= AVATARS ================= */
 const AVATARS = [
   "Nova","Kai","Luna","Ivy","Orion","Zeno","Sage","Rex","Pixel","Vexa",
   "Aero","Mika","Juno","Kairo","Nia","Zara","Axel","Riven","Sora","Nyx",
@@ -164,6 +163,7 @@ function populateBirthdaySelects() {
   const daySel = $("signupDay");
   const yearSel = $("signupYear");
   if (!daySel || !yearSel) return;
+  if (daySel.options.length > 1) return;
   for (let d = 1; d <= 31; d++) {
     const o = document.createElement("option");
     o.value = d; o.textContent = d;
@@ -237,13 +237,15 @@ async function handleSignup(e) {
     });
     if (error) throw error;
     if (data.user) {
-      await sb.from("profiles").upsert({
-        id: data.user.id, display_name: displayName, username,
-        first_name: firstName, last_name: lastName, birthday, gender,
-        avatar_url: null, created_at: new Date().toISOString()
-      });
-      showStatus($("authStatus"), "Account created! You can now log in.", true);
-      setTimeout(showLogin, 2000);
+      try {
+        await sb.from("profiles").upsert({
+          id: data.user.id, display_name: displayName, username,
+          first_name: firstName, last_name: lastName, birthday, gender,
+          avatar_url: null, created_at: new Date().toISOString()
+        });
+      } catch (e) {}
+      showStatus($("authStatus"), "Account created! You can log in now.", true);
+      setTimeout(showLogin, 1800);
     }
   } catch (err) {
     showStatus($("authStatus"), err.message || "Sign up failed.");
@@ -260,14 +262,23 @@ async function enterApp(authUser) {
   $("app")?.classList.remove("hidden");
   $("assistantFab")?.classList.remove("hidden");
 
+  if (!settings.darkMode) document.body.classList.add("light-mode");
+  else document.body.classList.remove("light-mode");
+
   try {
     const { data } = await sb.from("profiles").select("*").eq("id", user.id).single();
     profile = data;
-  } catch (e) { console.warn(e); }
+  } catch (e) {
+    profile = {
+      display_name: user.user_metadata?.display_name || user.email,
+      username: user.user_metadata?.username || "user",
+      avatar_url: localStorage.getItem("vidora_avatar_" + user.id) || null
+    };
+  }
 
-  // Apply theme
-  if (!settings.darkMode) document.body.classList.add("light-mode");
-  else document.body.classList.remove("light-mode");
+  // Restore local avatar
+  const localAv = localStorage.getItem("vidora_avatar_" + user.id);
+  if (localAv && profile) profile.avatar_url = localAv;
 
   $$(".nav-btn").forEach(btn => {
     btn.onclick = () => switchView(btn.dataset.view);
@@ -283,7 +294,7 @@ async function enterApp(authUser) {
   switchView("home");
 }
 
-/* ================= NAVIGATION ================= */
+/* ================= NAV ================= */
 function switchView(view) {
   currentView = view;
   $$(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.view === view));
@@ -298,11 +309,10 @@ function switchView(view) {
   else if (view === "settings") renderSettings();
 }
 
-/* ================= HOME + VIDEO PLAYER ================= */
+/* ================= HOME ================= */
 function renderHome() {
-  const main = $("main");
   const mode = settings.swipeMode || "sideways";
-
+  const main = $("main");
   main.innerHTML = `
     <div class="home-wrap">
       <div class="stories-bar" id="storiesBar">
@@ -317,33 +327,50 @@ function renderHome() {
           </button>
         `).join("")}
       </div>
-      <div class="video-feed" id="videoFeed" data-mode="${mode}">
+      <div class="video-feed mode-${mode}" id="videoFeed">
         <div class="video-track" id="videoTrack"></div>
-        <div class="swipe-hint left">‹</div>
-        <div class="swipe-hint right">›</div>
       </div>
     </div>
   `;
 
-  // Demo posts – views stay 0 until real uploads
-  videoList = [
-    { id:1, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", user:"Sofia", avatar:"S", likes:24, comments:5, shares:2, views:0, music:"Night Pulse – Vidora Beatz", caption:"Feeling the vibe 🔥", isOwner:false },
-    { id:2, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", user:"Arjun", avatar:"A", likes:18, comments:3, shares:1, views:0, music:"Chrome Drive – Vidora Beatz", caption:"New drop", isOwner:false },
-    { id:3, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", user:"Maya", avatar:"M", likes:31, comments:7, shares:4, views:0, music:"Electric Soul – Vidora Funk", caption:"Dance challenge", isOwner:false },
-    { id:4, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", user:"Abdulhamid", avatar:"A", likes:12, comments:2, shares:1, views:0, music:"UK Slide – Vidora Drills", caption:"Welcome to Vidora 🚀", isOwner:false },
-    { id:5, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4", user: profile?.display_name?.split(" ")[0] || "You", avatar:"Y", likes:6, comments:1, shares:0, views:0, music:"Night Vibes – Charts", caption:"My first Vidora post", isOwner:true }
+  const demo = [
+    { id:1, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", user:"Sofia", avatar:"S", likes:24, comments:5, shares:2, views:0, music:"Night Pulse", caption:"Feeling the vibe", isOwner:false },
+    { id:2, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", user:"Arjun", avatar:"A", likes:18, comments:3, shares:1, views:0, music:"Chrome Drive", caption:"New drop", isOwner:false },
+    { id:3, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", user:"Maya", avatar:"M", likes:31, comments:7, shares:4, views:0, music:"Electric Soul", caption:"Dance challenge", isOwner:false },
+    { id:4, url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", user:"Abdulhamid", avatar:"A", likes:12, comments:2, shares:1, views:0, music:"UK Slide", caption:"Welcome to Vidora", isOwner:false }
   ];
 
+  const own = userPosts.map((p, i) => ({
+    id: 1000 + i,
+    url: p.url,
+    user: profile?.display_name?.split(" ")[0] || "You",
+    avatar: (profile?.display_name || "Y")[0],
+    likes: p.likes || 0,
+    comments: p.comments || 0,
+    shares: 0,
+    views: p.views || 0,
+    music: p.music || "Original",
+    caption: p.caption || "",
+    isOwner: true,
+    filter: p.filter || "none"
+  }));
+
+  videoList = [...own, ...demo];
+
   const track = $("videoTrack");
-  track.innerHTML = videoList.map((v,i) => `
+  track.className = "video-track mode-" + mode;
+  track.innerHTML = videoList.map((v, i) => `
     <div class="video-slide" data-index="${i}">
-      <video src="${v.url}" loop muted playsinline></video>
+      ${v.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) || v.url.startsWith("data:image")
+        ? `<img src="${v.url}" style="width:100%;height:100%;object-fit:cover;filter:${getFilterCss(v.filter||'none')}" />`
+        : `<video src="${v.url}" loop muted playsinline style="filter:${getFilterCss(v.filter||'none')}"></video>`
+      }
       <div class="side-actions">
-        <button class="action-btn" onclick="toast('Follow @${esc(v.user)}')">
+        <button class="action-btn" onclick="toast('Following @${esc(v.user)}')">
           <div class="icon avatar-sm">${v.avatar}</div>
           <span class="count">+</span>
         </button>
-        <button class="action-btn like-btn" data-id="${v.id}" onclick="toggleLike(this, ${v.likes})">
+        <button class="action-btn like-btn" onclick="toggleLike(this, ${v.likes})">
           <div class="icon">♡</div>
           <span class="count">${formatCount(v.likes)}</span>
         </button>
@@ -351,7 +378,7 @@ function renderHome() {
           <div class="icon">💬</div>
           <span class="count">${formatCount(v.comments)}</span>
         </button>
-        <button class="action-btn" onclick="toast('Shared!')">
+        <button class="action-btn" onclick="toast('Shared')">
           <div class="icon">↗</div>
           <span class="count">${formatCount(v.shares)}</span>
         </button>
@@ -361,7 +388,7 @@ function renderHome() {
       <div class="video-info">
         <div class="user-row">@${esc(v.user)}</div>
         <div class="caption">${esc(v.caption)}</div>
-        ${v.isOwner && v.views > 0 ? `<div class="views-owner">👁 ${formatCount(v.views)} views (only you see this)</div>` : ""}
+        ${v.isOwner && v.views > 0 ? `<div class="views-owner">👁 ${formatCount(v.views)} views</div>` : ""}
       </div>
       <div class="vidora-watermark"><div class="v-logo">V</div><span>Vidora</span></div>
     </div>
@@ -370,30 +397,31 @@ function renderHome() {
   currentVideoIndex = 0;
   updateVideoPosition();
   playCurrentVideo();
-  setupSwipe(mode);
+  setupSwipe();
 }
 
 function updateVideoPosition() {
   const track = $("videoTrack");
   if (!track) return;
   const mode = settings.swipeMode || "sideways";
-
-  if (mode === "sideways") {
-    track.style.flexDirection = "row";
-    track.style.transform = `translateX(-${currentVideoIndex * 100}%)`;
-  } else if (mode === "upward") {
-    track.style.flexDirection = "column";
+  if (mode === "upward") {
     track.style.transform = `translateY(-${currentVideoIndex * 100}%)`;
   } else if (mode === "rotational") {
-    track.style.flexDirection = "row";
     track.style.transform = `translateX(-${currentVideoIndex * 100}%) rotate(${currentVideoIndex * 2}deg)`;
+  } else {
+    track.style.transform = `translateX(-${currentVideoIndex * 100}%)`;
   }
 }
 
 function playCurrentVideo() {
   $$(".video-slide video").forEach((vid, i) => {
-    if (i === currentVideoIndex) { vid.muted = false; vid.play().catch(()=>{}); }
-    else { vid.pause(); vid.currentTime = 0; }
+    if (i === currentVideoIndex) {
+      vid.muted = false;
+      vid.play().catch(() => {});
+    } else {
+      vid.pause();
+      try { vid.currentTime = 0; } catch (e) {}
+    }
   });
 }
 
@@ -404,36 +432,35 @@ function goToVideo(index) {
   playCurrentVideo();
 }
 
-function setupSwipe(mode) {
+function setupSwipe() {
   const feed = $("videoFeed");
   if (!feed) return;
-  let startX = 0, startY = 0, isDragging = false;
+  let startX = 0, startY = 0, dragging = false;
+  const mode = settings.swipeMode || "sideways";
 
   feed.ontouchstart = (e) => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-    isDragging = true;
+    dragging = true;
   };
   feed.ontouchend = (e) => {
-    if (!isDragging) return;
-    isDragging = false;
+    if (!dragging) return;
+    dragging = false;
     const dx = startX - e.changedTouches[0].clientX;
     const dy = startY - e.changedTouches[0].clientY;
-
-    if (mode === "sideways" || mode === "rotational") {
-      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 0) goToVideo(currentVideoIndex + 1);
+    if (mode === "upward") {
+      if (Math.abs(dy) > 50) {
+        if (dy > 0) goToVideo(currentVideoIndex + 1);
         else goToVideo(currentVideoIndex - 1);
       }
-    } else if (mode === "upward") {
-      if (Math.abs(dy) > 50 && Math.abs(dy) > Math.abs(dx)) {
-        if (dy > 0) goToVideo(currentVideoIndex + 1);
+    } else {
+      if (Math.abs(dx) > 50) {
+        if (dx > 0) goToVideo(currentVideoIndex + 1);
         else goToVideo(currentVideoIndex - 1);
       }
     }
   };
 
-  // Desktop mouse support
   let mouseDown = false;
   feed.onmousedown = (e) => { startX = e.clientX; startY = e.clientY; mouseDown = true; };
   feed.onmouseup = (e) => {
@@ -441,14 +468,14 @@ function setupSwipe(mode) {
     mouseDown = false;
     const dx = startX - e.clientX;
     const dy = startY - e.clientY;
-    if (mode === "sideways" || mode === "rotational") {
-      if (Math.abs(dx) > 50) {
-        if (dx > 0) goToVideo(currentVideoIndex + 1);
+    if (mode === "upward") {
+      if (Math.abs(dy) > 50) {
+        if (dy > 0) goToVideo(currentVideoIndex + 1);
         else goToVideo(currentVideoIndex - 1);
       }
     } else {
-      if (Math.abs(dy) > 50) {
-        if (dy > 0) goToVideo(currentVideoIndex + 1);
+      if (Math.abs(dx) > 50) {
+        if (dx > 0) goToVideo(currentVideoIndex + 1);
         else goToVideo(currentVideoIndex - 1);
       }
     }
@@ -470,7 +497,12 @@ function toggleLike(btn, base) {
 }
 
 function deletePost(id) {
-  if (!confirm("Delete this post? Only you can delete your own posts.")) return;
+  if (!confirm("Delete this post?")) return;
+  if (id >= 1000) {
+    const idx = id - 1000;
+    userPosts.splice(idx, 1);
+    localStorage.setItem("vidora_user_posts", JSON.stringify(userPosts));
+  }
   videoList = videoList.filter(v => v.id !== id);
   toast("Post deleted");
   renderHome();
@@ -483,9 +515,9 @@ function openComments(postId) {
       <button class="icon-btn" onclick="closeSheet()">×</button>
     </div>
     <div class="comments-list" id="commentsList">
-      <div class="comment"><strong>Sofia</strong> Amazing! 🔥 <button class="del-btn" onclick="this.parentElement.remove();toast('Comment deleted')">Delete</button></div>
-      <div class="comment"><strong>Abdulhamid</strong> Fire edit 👏</div>
-      <div class="comment"><strong>You</strong> Thanks! <button class="del-btn" onclick="this.parentElement.remove();toast('Your comment deleted')">Delete</button></div>
+      <div class="comment"><strong>Sofia</strong> Amazing! <button class="del-btn" onclick="this.parentElement.remove();toast('Comment deleted')">Delete</button></div>
+      <div class="comment"><strong>Abdulhamid</strong> Fire 👏</div>
+      <div class="comment"><strong>You</strong> Thanks <button class="del-btn" onclick="this.parentElement.remove();toast('Comment deleted')">Delete</button></div>
     </div>
     <form class="comment-form" onsubmit="addComment(event)">
       <input class="field" id="commentInput" placeholder="Add a comment..." maxlength="300" />
@@ -512,19 +544,41 @@ function addComment(e) {
 function openCreateStory() {
   openSheet(`
     <div class="sheet-header"><h3>Add Story</h3><button class="icon-btn" onclick="closeSheet()">×</button></div>
-    <p class="muted">Stories disappear after 24 hours (WhatsApp style)</p>
-    <button class="btn primary full" style="margin:12px 0" onclick="toast('Camera opened');closeSheet()">📷 Take Photo / Video</button>
-    <button class="btn secondary full" onclick="toast('Gallery opened');closeSheet()">🖼️ Choose from Gallery</button>
+    <p class="muted small">Stories disappear after 24 hours</p>
+    <input type="file" id="storyFileInput" accept="image/*,video/*" style="display:none" onchange="onStoryFile(event)" />
+    <button class="btn primary full" style="margin:12px 0" onclick="document.getElementById('storyFileInput').click()">📷 Take or choose photo / video</button>
+    <div id="storyPreview" style="margin:12px 0;text-align:center"></div>
+    <button class="btn secondary full" id="storyPublishBtn" style="display:none" onclick="publishStory()">Share to Story</button>
   `);
+}
+
+function onStoryFile(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  storyFile = file;
+  const url = URL.createObjectURL(file);
+  const prev = $("storyPreview");
+  if (file.type.startsWith("video/")) {
+    prev.innerHTML = `<video src="${url}" controls style="max-width:100%;max-height:280px;border-radius:12px"></video>`;
+  } else {
+    prev.innerHTML = `<img src="${url}" style="max-width:100%;max-height:280px;border-radius:12px" />`;
+  }
+  $("storyPublishBtn").style.display = "block";
+}
+
+function publishStory() {
+  toast("Story shared");
+  closeSheet();
+  if (settings.notificationSound) playNotifySound();
 }
 
 function openStory(name) {
   openSheet(`
     <div class="story-viewer">
-      <div class="story-progress"><div class="bar" style="width:70%"></div></div>
+      <div class="story-progress"><div class="bar" style="width:60%"></div></div>
       <div class="story-user">@${esc(name)}</div>
       <div class="story-content">
-        <div style="font-size:48px;margin:40px 0">🌟</div>
+        <div style="font-size:48px;margin:30px 0">🌟</div>
         <p>${esc(name)}'s story</p>
       </div>
       <button class="btn secondary" onclick="closeSheet()">Close</button>
@@ -537,23 +591,30 @@ function openStory(name) {
 function renderCreate() {
   selectedFilter = "none";
   selectedMusic = null;
+  createFile = null;
+  createPreviewUrl = null;
+
   $("main").innerHTML = `
     <div class="create-screen">
       <div class="create-header">
-        <button onclick="switchView('home')">←</button>
+        <button onclick="switchView('home')" class="icon-btn">←</button>
         <h2>Create</h2>
         <button class="btn primary sm" onclick="publishPost()">Post</button>
       </div>
-      <div class="create-preview" id="createPreview">
-        <div class="preview-placeholder">
+
+      <div class="create-preview" id="createPreview" onclick="document.getElementById('createFileInput').click()">
+        <div class="preview-placeholder" id="previewPlaceholder">
           <span style="font-size:48px">📷</span>
           <p>Tap to add photo or video</p>
         </div>
       </div>
+      <input type="file" id="createFileInput" accept="image/*,video/*" style="display:none" onchange="onCreateFile(event)" />
+
       <div class="create-actions">
-        <button class="btn secondary" onclick="toast('Camera')">Record</button>
-        <button class="btn secondary" onclick="toast('Gallery')">Gallery</button>
+        <button class="btn secondary" onclick="document.getElementById('createFileInput').click()">Gallery</button>
+        <button class="btn secondary" onclick="document.getElementById('createFileInput').click()">Record</button>
       </div>
+
       <div class="section">
         <h4>Filters</h4>
         <div class="filter-scroll" id="filterScroll">
@@ -565,6 +626,7 @@ function renderCreate() {
           `).join("")}
         </div>
       </div>
+
       <div class="section">
         <h4>Music</h4>
         <div class="music-tabs">
@@ -572,6 +634,7 @@ function renderCreate() {
         </div>
         <div class="music-list" id="musicList"></div>
       </div>
+
       <div class="section">
         <input class="field" id="captionInput" placeholder="Write a caption..." maxlength="2200" />
       </div>
@@ -580,15 +643,33 @@ function renderCreate() {
   showMusicCat("Beats");
 }
 
+function onCreateFile(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  createFile = file;
+  if (createPreviewUrl) URL.revokeObjectURL(createPreviewUrl);
+  createPreviewUrl = URL.createObjectURL(file);
+  const box = $("createPreview");
+  const filter = getFilterCss(selectedFilter);
+  if (file.type.startsWith("video/")) {
+    box.innerHTML = `<video src="${createPreviewUrl}" controls style="width:100%;height:100%;object-fit:cover;filter:${filter}" id="createMedia"></video>`;
+  } else {
+    box.innerHTML = `<img src="${createPreviewUrl}" style="width:100%;height:100%;object-fit:cover;filter:${filter}" id="createMedia" />`;
+  }
+}
+
 function selectFilter(id) {
   selectedFilter = id;
   $$(".filter-chip").forEach(c => c.classList.toggle("active", c.dataset.id === id));
-  toast("Filter: " + (FILTERS.find(f => f.id === id)?.name || "Original"));
+  const media = $("createMedia");
+  if (media) media.style.filter = getFilterCss(id);
+  toast(FILTERS.find(f => f.id === id)?.name || "Original");
 }
 
 function showMusicCat(cat) {
   $$(".music-tab").forEach(t => t.classList.toggle("active", t.textContent === cat));
   const list = $("musicList");
+  if (!list) return;
   list.innerHTML = MUSIC[cat].map(m => `
     <button class="music-item ${selectedMusic?.id===m.id?'active':''}" onclick="selectMusic('${m.id}','${esc(m.title)}','${esc(m.artist)}')">
       <span class="music-icon">🎵</span>
@@ -599,13 +680,31 @@ function showMusicCat(cat) {
 
 function selectMusic(id, title, artist) {
   selectedMusic = { id, title, artist };
-  toast(`Music: ${title}`);
+  toast(title);
   const activeTab = document.querySelector(".music-tab.active");
   if (activeTab) showMusicCat(activeTab.textContent);
 }
 
 function publishPost() {
-  toast("Post published! 🎉");
+  if (!createFile && !createPreviewUrl) {
+    toast("Add a photo or video first");
+    return;
+  }
+  const caption = $("captionInput")?.value.trim() || "";
+  const post = {
+    url: createPreviewUrl,
+    caption,
+    music: selectedMusic ? selectedMusic.title : "Original",
+    filter: selectedFilter,
+    likes: 0,
+    comments: 0,
+    views: 0,
+    created: Date.now()
+  };
+  userPosts.unshift(post);
+  localStorage.setItem("vidora_user_posts", JSON.stringify(userPosts));
+  toast("Posted!");
+  if (settings.notificationSound) playNotifySound();
   switchView("home");
 }
 
@@ -613,14 +712,14 @@ function publishPost() {
 function renderDiscover() {
   $("main").innerHTML = `
     <div style="padding:16px">
-      <input class="field" placeholder="Search users, sounds, hashtags..." />
+      <input class="field" placeholder="Search users, sounds, hashtags..." id="searchInput" />
       <h3 style="margin:20px 0 12px">Trending</h3>
       <div class="trending-grid">
-        ${["#VidoraDance","#NightVibes","#FunkChallenge","#NewMusic","#StoryTime","#AvatarDrop"].map(t => `
+        ${["#VidoraDance","#NightVibes","#NewMusic","#StoryTime","#AvatarDrop","#Create"].map(t => `
           <button class="trend-chip" onclick="toast('${t}')">${t}</button>
         `).join("")}
       </div>
-      <h3 style="margin:24px 0 12px">Suggested for you</h3>
+      <h3 style="margin:24px 0 12px">Suggested</h3>
       ${["Abdulhamid","Kai","Luna","Rex","Nova","Pixel"].map(n => `
         <div class="user-row-card">
           <div class="avatar-circle">${n[0]}</div>
@@ -632,19 +731,19 @@ function renderDiscover() {
   `;
 }
 
-/* ================= INBOX / CHAT ================= */
+/* ================= INBOX ================= */
 function renderInbox() {
   $("main").innerHTML = `
     <div class="inbox-screen">
       <div class="inbox-header">
         <h2>Inbox</h2>
-        <button class="icon-btn" onclick="toast('New message')">✎</button>
+        <button class="icon-btn" onclick="toast('New chat')">✎</button>
       </div>
       <div class="chat-list">
         ${[
           {name:"Abdulhamid", last:"Welcome to Vidora!", time:"1m", unread:1},
-          {name:"Sofia", last:"Did you see the new video?", time:"2m", unread:2},
-          {name:"Arjun", last:"Loved your edit 🔥", time:"1h", unread:0},
+          {name:"Sofia", last:"Did you see the video?", time:"2m", unread:2},
+          {name:"Arjun", last:"Loved your edit", time:"1h", unread:0},
           {name:"Maya", last:"Let's collab!", time:"3h", unread:1}
         ].map(c => `
           <button class="chat-row" onclick="openChat('${c.name}')">
@@ -672,14 +771,14 @@ function openChat(name) {
       </div>
       <div class="chat-bubbles" id="chatBubbles">
         <div class="bubble them">Hey! How are you?</div>
-        <div class="bubble me">I'm good, thanks!</div>
-        <div class="bubble them">Check out my latest post 🔥</div>
+        <div class="bubble me">Good, just posted something new</div>
+        <div class="bubble them">Nice, I'll check it out</div>
       </div>
       <form class="chat-input-row" onsubmit="sendMessage(event)">
         <input class="field" id="msgInput" placeholder="Message..." autocomplete="off" />
         <button type="submit" class="btn primary">Send</button>
       </form>
-      <button class="btn danger sm" style="margin-top:8px" onclick="toast('Message deleted (only your messages)')">Delete last message</button>
+      <button class="btn danger sm" style="margin-top:8px" onclick="deleteLastMessage()">Delete last message</button>
     </div>
   `);
 }
@@ -696,17 +795,20 @@ function sendMessage(e) {
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
   input.value = "";
-
-  // AI message notification
   if (settings.aiMessageNotify) {
     setTimeout(() => {
-      playNotifySound();
-      if ($("assistantBox") && !$("assistantBox").classList.contains("hidden")) {
-        addAssistantMsg(`📩 New reply from ${chatUser || "someone"}`);
-      } else {
-        toast(`📩 New message from ${chatUser || "someone"}`);
-      }
-    }, 1800);
+      if (settings.notificationSound) playNotifySound();
+      addAssistantMsg("New reply from " + (chatUser || "someone"));
+    }, 2000);
+  }
+}
+
+function deleteLastMessage() {
+  const box = $("chatBubbles");
+  const mine = box?.querySelectorAll(".bubble.me");
+  if (mine?.length) {
+    mine[mine.length - 1].remove();
+    toast("Message deleted");
   }
 }
 
@@ -714,16 +816,21 @@ function sendMessage(e) {
 function renderProfile() {
   const name = profile?.display_name || user?.email || "User";
   const uname = profile?.username || "user";
+  const av = profile?.avatar_url;
+
   $("main").innerHTML = `
     <div class="profile-screen">
       <div class="profile-header">
-        <div class="avatar-large" onclick="openAvatarCreator()">${(name[0]||"U").toUpperCase()}</div>
+        <div class="avatar-large" id="profileAvatar" onclick="document.getElementById('profilePhotoInput').click()">
+          ${av ? `<img src="${av}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />` : (name[0]||"U").toUpperCase()}
+        </div>
+        <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="onProfilePhoto(event)" />
         <h2>${esc(name)}</h2>
         <p class="muted">@${esc(uname)}</p>
         <div class="profile-stats">
-          <div><strong>12</strong><br><span class="muted">Posts</span></div>
-          <div><strong>1.2K</strong><br><span class="muted">Followers</span></div>
-          <div><strong>340</strong><br><span class="muted">Following</span></div>
+          <div><strong>${userPosts.length}</strong><br><span class="muted">Posts</span></div>
+          <div><strong>0</strong><br><span class="muted">Followers</span></div>
+          <div><strong>0</strong><br><span class="muted">Following</span></div>
         </div>
         <button class="btn secondary" onclick="openAvatarCreator()">Edit Avatar</button>
         <button class="btn secondary" style="margin-top:8px" onclick="switchView('settings')">⚙️ Settings</button>
@@ -733,19 +840,58 @@ function renderProfile() {
         <button>Liked</button>
       </div>
       <div class="posts-grid">
-        ${[1,2,3,4,5,6].map(i => `<div class="grid-item" onclick="toast('Open post')">▶</div>`).join("")}
+        ${userPosts.length ? userPosts.map((p,i) => `
+          <div class="grid-item" onclick="toast('Open post')">
+            ${p.url && (p.url.match(/image|data:image/) || p.url.match(/\.(jpg|png|webp)/i))
+              ? `<img src="${p.url}" style="width:100%;height:100%;object-fit:cover" />`
+              : "▶"}
+          </div>
+        `).join("") : `<div class="grid-item" style="grid-column:1/-1;aspect-ratio:auto;padding:30px;color:var(--muted)">No posts yet</div>`}
       </div>
-      <button class="btn secondary full" style="margin-top:20px" onclick="handleSignOut()">Sign Out</button>
     </div>
   `;
 }
 
+function onProfilePhoto(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  if (profile) profile.avatar_url = url;
+  if (user) localStorage.setItem("vidora_avatar_" + user.id, url);
+  const el = $("profileAvatar");
+  if (el) el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
+  toast("Profile photo updated");
+
+  // Try upload to Supabase if possible
+  uploadProfilePhoto(file).catch(() => {});
+}
+
+async function uploadProfilePhoto(file) {
+  if (!user) return;
+  try {
+    const path = `avatars/${user.id}/${Date.now()}.jpg`;
+    const { error } = await sb.storage.from("media").upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { data } = sb.storage.from("media").getPublicUrl(path);
+    if (data?.publicUrl) {
+      profile.avatar_url = data.publicUrl;
+      localStorage.setItem("vidora_avatar_" + user.id, data.publicUrl);
+      await sb.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", user.id);
+    }
+  } catch (e) {
+    console.warn("Avatar upload:", e);
+  }
+}
+
 function openAvatarCreator() {
   openSheet(`
-    <div class="sheet-header"><h3>Create Your Avatar</h3><button class="icon-btn" onclick="closeSheet()">×</button></div>
-    <div class="avatar-preview-large" id="avatarPreview">👤</div>
+    <div class="sheet-header"><h3>Choose Avatar</h3><button class="icon-btn" onclick="closeSheet()">×</button></div>
+    <div class="avatar-preview-large" id="avatarPreview">${selectedAvatar ? selectedAvatar[0] : "👤"}</div>
     <div class="avatar-categories">
-      <button class="active">Face</button><button>Hair</button><button>Clothes</button><button>Costumes</button><button>Accessories</button>
+      <button class="active">All</button>
+      <button>Face</button>
+      <button>Style</button>
+      <button>Costume</button>
     </div>
     <div class="avatar-grid">
       ${AVATARS.map(a => `
@@ -755,8 +901,7 @@ function openAvatarCreator() {
         </button>
       `).join("")}
     </div>
-    <p class="muted small" style="margin:12px 0">Tap an avatar or customize with costumes</p>
-    <button class="btn primary full" onclick="toast('Avatar saved!');closeSheet()">Save Avatar</button>
+    <button class="btn primary full" style="margin-top:14px" onclick="saveAvatar()">Save Avatar</button>
   `);
 }
 
@@ -764,7 +909,18 @@ function selectAvatar(name) {
   selectedAvatar = name;
   const prev = $("avatarPreview");
   if (prev) prev.textContent = name[0];
-  toast("Selected: " + name);
+  toast(name);
+}
+
+function saveAvatar() {
+  if (selectedAvatar && profile) {
+    const letter = selectedAvatar[0];
+    // Use letter avatar as data
+    localStorage.setItem("vidora_avatar_name_" + (user?.id || ""), selectedAvatar);
+    toast("Avatar saved: " + selectedAvatar);
+  }
+  closeSheet();
+  if (currentView === "profile") renderProfile();
 }
 
 /* ================= SETTINGS ================= */
@@ -776,47 +932,47 @@ function renderSettings() {
         <h2 style="margin:0">Settings</h2>
       </div>
 
-      <div class="card" style="margin-bottom:14px">
-        <h4 style="margin:0 0 12px">Video Swipe Style</h4>
-        <p class="muted small" style="margin:0 0 12px">Choose how you move between videos</p>
+      <div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border)"><strong>Video</strong></div>
         <label class="setting-row">
+          <span>Sideways swipe</span>
           <input type="radio" name="swipeMode" value="sideways" ${settings.swipeMode==='sideways'?'checked':''} onchange="setSwipeMode('sideways')" />
-          <span>↔ Sideways (left / right)</span>
         </label>
         <label class="setting-row">
+          <span>Upward swipe</span>
           <input type="radio" name="swipeMode" value="upward" ${settings.swipeMode==='upward'?'checked':''} onchange="setSwipeMode('upward')" />
-          <span>↕ Upward (up / down like TikTok)</span>
         </label>
         <label class="setting-row">
+          <span>Rotational movement</span>
           <input type="radio" name="swipeMode" value="rotational" ${settings.swipeMode==='rotational'?'checked':''} onchange="setSwipeMode('rotational')" />
-          <span>🔄 Rotational movement</span>
         </label>
       </div>
 
-      <div class="card" style="margin-bottom:14px">
-        <h4 style="margin:0 0 12px">Notifications & Sound</h4>
+      <div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border)"><strong>Notifications</strong></div>
         <label class="setting-row">
-          <input type="checkbox" id="notifSound" ${settings.notificationSound?'checked':''} onchange="toggleNotifSound(this.checked)" />
           <span>Notification sound</span>
+          <input type="checkbox" ${settings.notificationSound?'checked':''} onchange="toggleNotifSound(this.checked)" />
         </label>
         <label class="setting-row">
-          <input type="checkbox" id="aiNotify" ${settings.aiMessageNotify?'checked':''} onchange="toggleAiNotify(this.checked)" />
-          <span>Vidora AI notifies me of new messages</span>
+          <span>Message alerts from Vidora AI</span>
+          <input type="checkbox" ${settings.aiMessageNotify?'checked':''} onchange="toggleAiNotify(this.checked)" />
         </label>
       </div>
 
-      <div class="card" style="margin-bottom:14px">
-        <h4 style="margin:0 0 12px">Appearance</h4>
+      <div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border)"><strong>Appearance</strong></div>
         <label class="setting-row">
-          <input type="checkbox" id="darkMode" ${settings.darkMode?'checked':''} onchange="toggleDarkMode(this.checked)" />
           <span>Dark mode</span>
+          <input type="checkbox" ${settings.darkMode?'checked':''} onchange="toggleDarkMode(this.checked)" />
         </label>
       </div>
 
-      <div class="card">
-        <h4 style="margin:0 0 12px">Account</h4>
-        <button class="btn secondary full" style="margin-bottom:8px" onclick="handleSignOut()">Sign Out</button>
-        <button class="btn danger full" onclick="toast('Account deletion requires confirmation')">Delete Account</button>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border)"><strong>Account</strong></div>
+        <button class="setting-row" style="width:100%;text-align:left;background:none;border:none;color:var(--text)" onclick="handleSignOut()">
+          <span>Sign out</span>
+        </button>
       </div>
     </div>
   `;
@@ -825,20 +981,20 @@ function renderSettings() {
 function setSwipeMode(mode) {
   settings.swipeMode = mode;
   saveSettings();
-  toast("Swipe mode: " + mode);
+  toast("Swipe: " + mode);
 }
 
 function toggleNotifSound(on) {
   settings.notificationSound = on;
   saveSettings();
-  toast(on ? "Notification sound ON" : "Notification sound OFF");
+  toast(on ? "Sound on" : "Sound off");
   if (on) playNotifySound();
 }
 
 function toggleAiNotify(on) {
   settings.aiMessageNotify = on;
   saveSettings();
-  toast(on ? "AI message notifications ON" : "AI message notifications OFF");
+  toast(on ? "AI alerts on" : "AI alerts off");
 }
 
 function toggleDarkMode(on) {
@@ -849,33 +1005,29 @@ function toggleDarkMode(on) {
   toast(on ? "Dark mode" : "Light mode");
 }
 
-/* ================= SHEET / MODAL ================= */
+/* ================= MODAL ================= */
 function openSheet(html) {
   $("sheet").innerHTML = html;
   $("modal").classList.remove("hidden");
 }
-
 function closeSheet() {
   $("modal").classList.add("hidden");
   $("sheet").innerHTML = "";
 }
-
-$("modal")?.addEventListener("click", (e) => {
-  if (e.target.id === "modal") closeSheet();
+document.addEventListener("click", (e) => {
+  if (e.target?.id === "modal") closeSheet();
 });
 
-/* ================= VIDORA AI (WhatsApp-style) ================= */
+/* ================= AI ASSISTANT ================= */
 function openAssistant() {
   $("assistantBox")?.classList.remove("hidden");
   if ($("assistantMessages") && !$("assistantMessages").children.length) {
-    addAssistantMsg("Hi! I'm Vidora AI 👋\nI can help you with:\n• Toggle theme\n• Check messages\n• Sign out\n• Change swipe mode\n• Notification sound\n• Delete posts\n• Answer questions\n\nJust ask me anything!");
+    addAssistantMsg("Hi! I can help with theme, messages, sign out, swipe mode, sound, and more. Ask me anything.");
   }
 }
-
 function closeAssistant() {
   $("assistantBox")?.classList.add("hidden");
 }
-
 function addAssistantMsg(text, isUser = false) {
   const box = $("assistantMessages");
   if (!box) return;
@@ -896,85 +1048,70 @@ function handleAssistant(e) {
   const low = text.toLowerCase();
 
   setTimeout(() => {
-    // Theme
-    if (low.includes("theme") || low.includes("dark") || low.includes("light") || low.includes("mode")) {
+    if (low.includes("theme") || low.includes("dark") || low.includes("light")) {
       document.body.classList.toggle("light-mode");
       settings.darkMode = !document.body.classList.contains("light-mode");
       saveSettings();
-      addAssistantMsg("Done! Theme toggled.");
+      addAssistantMsg("Theme updated.");
       return;
     }
-    // Sign out
     if (low.includes("sign out") || low.includes("logout") || low.includes("log out")) {
-      addAssistantMsg("Okay, signing you out now...");
-      setTimeout(handleSignOut, 800);
+      addAssistantMsg("Signing you out...");
+      setTimeout(handleSignOut, 700);
       return;
     }
-    // Messages
-    if (low.includes("message") || low.includes("inbox") || low.includes("notify") || low.includes("notification")) {
-      addAssistantMsg("You have messages in your Inbox.\nI can also notify you when new ones arrive.\nOpen Inbox or say “turn on notifications”.");
+    if (low.includes("message") || low.includes("inbox") || low.includes("notify")) {
+      addAssistantMsg("Check your Inbox for messages. I can alert you when new ones arrive — turn that on in Settings.");
       return;
     }
-    // Notification sound
-    if (low.includes("sound") || low.includes("notification sound")) {
-      if (low.includes("off") || low.includes("disable") || low.includes("mute")) {
+    if (low.includes("sound")) {
+      if (low.includes("off") || low.includes("mute") || low.includes("disable")) {
         settings.notificationSound = false;
         saveSettings();
-        addAssistantMsg("Notification sound turned OFF.");
+        addAssistantMsg("Notification sound is off.");
       } else {
         settings.notificationSound = true;
         saveSettings();
         playNotifySound();
-        addAssistantMsg("Notification sound turned ON.");
+        addAssistantMsg("Notification sound is on.");
       }
       return;
     }
-    // Swipe mode
     if (low.includes("swipe") || low.includes("scroll") || low.includes("sideways") || low.includes("upward") || low.includes("rotational") || low.includes("vertical") || low.includes("horizontal")) {
-      if (low.includes("up") || low.includes("vertical") || low.includes("tiktok")) {
+      if (low.includes("up") || low.includes("vertical")) {
         settings.swipeMode = "upward";
         saveSettings();
-        addAssistantMsg("Swipe mode set to Upward (up/down).\nGo to Home to try it.");
+        addAssistantMsg("Swipe set to upward. Open Home to try it.");
       } else if (low.includes("rotat") || low.includes("spin")) {
         settings.swipeMode = "rotational";
         saveSettings();
-        addAssistantMsg("Swipe mode set to Rotational.\nGo to Home to try it.");
+        addAssistantMsg("Swipe set to rotational. Open Home to try it.");
       } else {
         settings.swipeMode = "sideways";
         saveSettings();
-        addAssistantMsg("Swipe mode set to Sideways (left/right).\nGo to Home to try it.");
+        addAssistantMsg("Swipe set to sideways. Open Home to try it.");
       }
       return;
     }
-    // Delete post
     if (low.includes("delete post") || low.includes("remove post")) {
-      addAssistantMsg("To delete a post: go to Home, swipe to your own post, and tap the 🗑️ button.\nOnly you can delete your own posts.");
+      addAssistantMsg("On Home, go to your post and tap the trash icon. Only your own posts can be deleted.");
       return;
     }
-    // Settings
-    if (low.includes("setting") || low.includes("preference")) {
-      addAssistantMsg("Opening Settings for you...");
-      setTimeout(() => { switchView("settings"); closeAssistant(); }, 600);
+    if (low.includes("setting")) {
+      addAssistantMsg("Opening Settings...");
+      setTimeout(() => { switchView("settings"); closeAssistant(); }, 500);
       return;
     }
-    // Help / what can you do
-    if (low.includes("help") || low.includes("what can you") || low.includes("how do") || low.includes("features")) {
-      addAssistantMsg("I can help with:\n• Toggle dark/light theme\n• Sign you out\n• Check messages & notifications\n• Change video swipe style (sideways / upward / rotational)\n• Turn notification sound on/off\n• Guide you to delete posts\n• Open Settings\n• Answer general questions about Vidora\n\nJust type what you need!");
+    if (low.includes("help") || low.includes("what can")) {
+      addAssistantMsg("I can help with:\n• Dark / light theme\n• Sign out\n• Messages\n• Swipe mode (sideways, upward, rotational)\n• Notification sound\n• Opening Settings\n• Deleting posts\n\nJust ask.");
       return;
     }
-    // Greeting
-    if (low.includes("hello") || low.includes("hi") || low.includes("hey") || low.includes("good morning") || low.includes("good evening")) {
-      addAssistantMsg("Hey! 👋 How can I help you today?");
+    if (low.includes("hello") || low.includes("hi ") || low === "hi" || low.includes("hey")) {
+      addAssistantMsg("Hey! How can I help?");
       return;
     }
-    // About Vidora
-    if (low.includes("vidora") || low.includes("what is this") || low.includes("about")) {
-      addAssistantMsg("Vidora is a social video app.\nWatch, swipe, create, chat, and connect.\nYou can change how videos swipe in Settings, and I’m here to help anytime — just like WhatsApp AI.");
-      return;
-    }
-    // Default intelligent-ish reply
-    addAssistantMsg("I understand you're asking about: \"" + text + "\".\n\nI can help with theme, messages, sign out, swipe mode, notification sound, deleting posts, and Settings.\n\nTry asking one of those, or say “help” to see everything I can do.");
-  }, 400);
+    addAssistantMsg("I can help with theme, messages, sign out, swipe mode, sound, and Settings. Say “help” for the full list.");
+  }, 350);
 }
 
 function handleQuickAction(action) {
@@ -982,7 +1119,7 @@ function handleQuickAction(action) {
     document.body.classList.toggle("light-mode");
     settings.darkMode = !document.body.classList.contains("light-mode");
     saveSettings();
-    toast("Theme toggled");
+    toast("Theme updated");
   } else if (action === "messages") {
     switchView("inbox");
     closeAssistant();
@@ -1010,9 +1147,6 @@ async function init() {
   $("showSignupBtn")?.addEventListener("click", showSignup);
   $("showLoginBtn")?.addEventListener("click", showLogin);
 
-  // Apply saved theme early
-  if (!settings.darkMode) document.body.classList.add("light-mode");
-
   try {
     const { data } = await sb.auth.getSession();
     if (data?.session?.user) await enterApp(data.session.user);
@@ -1036,21 +1170,27 @@ async function init() {
 
 document.addEventListener("DOMContentLoaded", init);
 
-/* Expose functions for onclick handlers */
+/* Global handlers */
 window.toggleLike = toggleLike;
 window.deletePost = deletePost;
 window.openComments = openComments;
 window.addComment = addComment;
 window.openCreateStory = openCreateStory;
 window.openStory = openStory;
+window.onStoryFile = onStoryFile;
+window.publishStory = publishStory;
 window.selectFilter = selectFilter;
 window.showMusicCat = showMusicCat;
 window.selectMusic = selectMusic;
 window.publishPost = publishPost;
+window.onCreateFile = onCreateFile;
 window.openChat = openChat;
 window.sendMessage = sendMessage;
+window.deleteLastMessage = deleteLastMessage;
 window.openAvatarCreator = openAvatarCreator;
 window.selectAvatar = selectAvatar;
+window.saveAvatar = saveAvatar;
+window.onProfilePhoto = onProfilePhoto;
 window.closeSheet = closeSheet;
 window.handleSignOut = handleSignOut;
 window.setSwipeMode = setSwipeMode;
