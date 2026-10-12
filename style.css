@@ -510,3 +510,31 @@ body.light-mode .auth-form { background: #fff; }
     border-radius: 16px 16px 0 0;
   }
 }
+
+
+/* ===== Vidora premium avatars, inbox and WhatsApp-inspired chat ===== */
+.avatar-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; max-height:360px; overflow-y:auto; padding:4px 0 12px; }
+.avatar-choice { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; min-width:0; padding:10px 5px; border:1px solid var(--border); border-radius:14px; background:var(--surface); color:var(--text); }
+.avatar-choice img { display:block; width:64px; height:64px; object-fit:cover; border-radius:50%; background:var(--surface2); }
+.avatar-choice span { font-size:12px; overflow-wrap:anywhere; text-align:center; }
+.avatar-preview-large { display:flex; align-items:center; justify-content:center; width:112px; height:112px; margin:14px auto; border-radius:50%; overflow:hidden; background:var(--surface2); font-size:42px; }
+.avatar-preview-large img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+.avatar-customizer { padding:14px; margin:14px 0; }
+.avatar-customizer .field { width:100%; margin:6px 0 12px; }
+.inbox-section-title { margin:20px 0 10px; }
+.people-results { margin-top:8px; border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+.chat-avatar { width:42px; height:42px; flex:0 0 42px; object-fit:cover; border-radius:50%; background:var(--surface2); }
+.chat-person-header { display:flex; align-items:center; gap:10px; }
+.chat-person-header > div:last-child { min-width:0; }
+.whatsapp-chat { display:flex; flex-direction:column; min-height:60vh; }
+.whatsapp-chat .chat-bubbles { display:flex; flex:1; flex-direction:column; gap:8px; min-height:35vh; max-height:55vh; overflow-y:auto; padding:14px 8px; background:var(--surface); border-radius:12px; }
+.whatsapp-chat .bubble { position:relative; display:flex; flex-direction:column; gap:3px; max-width:84%; padding:9px 12px; border-radius:14px; overflow-wrap:anywhere; }
+.whatsapp-chat .bubble.me { align-self:flex-end; border-bottom-right-radius:4px; }
+.whatsapp-chat .bubble.them { align-self:flex-start; border-bottom-left-radius:4px; }
+.whatsapp-chat .bubble small { align-self:flex-end; font-size:10px; opacity:.7; }
+.message-delete { border:0; background:transparent; color:inherit; cursor:pointer; align-self:flex-end; font-size:14px; }
+.whatsapp-chat .chat-input-row { display:flex; gap:8px; align-items:center; padding-top:10px; }
+.whatsapp-chat .chat-input-row .field { flex:1; min-width:0; }
+.chat-empty { text-align:center; margin:auto; padding:24px 8px; }
+@media (max-width:360px) { .avatar-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
