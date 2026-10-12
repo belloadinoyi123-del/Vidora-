@@ -1,485 +1,159 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#08080d">
-  <meta name="description" content="Vidora — Watch, share and connect.">
   <title>Vidora — Watch. Share. Connect.</title>
+  <link rel="stylesheet" href="style.css">
 
-  <link rel="stylesheet" href="./style.css">
-
-  <!-- Supabase must load before app.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #08080d;
-      --surface: #11111a;
-      --surface2: #191927;
-      --purple: #8b5cf6;
-      --pink: #ff2d75;
-      --text: #f8f7ff;
-      --muted: #a7a4b8;
-      --border: #292638;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-
-    button, input, textarea, select {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: .6;
-      cursor: wait;
-    }
-
-    [hidden] {
-      display: none !important;
-    }
-
-    .brand {
-      color: var(--text);
-      font-size: 27px;
-      font-weight: 850;
-      letter-spacing: -1px;
-      cursor: pointer;
-    }
-
-    .brand span {
-      color: var(--purple);
-    }
-
-    .muted {
-      color: var(--muted);
-    }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 18px;
-      margin-bottom: 16px;
-    }
-
-    .primary {
-      width: 100%;
-      border: 0;
-      border-radius: 12px;
-      padding: 13px 16px;
-      color: white;
-      font-weight: 750;
-      background: linear-gradient(110deg, var(--purple), var(--pink));
-    }
-
-    .secondary {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 10px;
-      padding: 10px 13px;
-    }
-
-    .field {
-      width: 100%;
-      display: block;
-      margin: 8px 0 15px;
-      padding: 13px;
-      border: 1px solid var(--border);
-      border-radius: 11px;
-      background: #0b0b12;
-      color: white;
-    }
-
-    .auth-wrap {
-      width: min(100% - 28px, 440px);
-      margin: 0 auto;
-      padding: 35px 0;
-    }
-
-    .auth-card {
-      padding: 24px;
-      border-radius: 22px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      box-shadow: 0 15px 55px #0005;
-    }
-
-    .auth-card h1 {
-      margin-bottom: 5px;
-    }
-
-    .auth-switch {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .auth-switch button {
-      flex: 1;
-    }
-
-    #appScreen {
-      width: min(100% - 24px, 900px);
-      margin: auto;
-      padding-bottom: 100px;
-    }
-
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 13px 0;
-      background: #08080df2;
-      backdrop-filter: blur(12px);
-    }
-
-    .avatar-stage {
-      position: relative;
-      height: 350px;
-      width: 100%;
-      overflow: hidden;
-      border: 1px solid #8b5cf655;
-      border-radius: 18px;
-      background:
-        radial-gradient(ellipse at 50% 30%, #49266b, transparent 65%),
-        #0b0a13;
-    }
-
-    #vidoraPremiumAvatar {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    #avatar3DStatus {
-      position: absolute;
-      z-index: 2;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      padding: 18px;
-      text-align: center;
-      color: #d8c9ff;
-      pointer-events: none;
-    }
-
-    .postCard {
-      overflow: hidden;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 17px;
-      padding: 15px;
-      margin-bottom: 17px;
-    }
-
-    .postCard img,
-    .postCard video {
-      display: block;
-      width: 100%;
-      max-height: 600px;
-      object-fit: contain;
-      border-radius: 12px;
-      background: #000;
-      margin: 12px 0;
-    }
-
-    .bottom-nav {
-      position: fixed;
-      z-index: 20;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: space-around;
-      gap: 4px;
-      padding: 10px 4px calc(10px + env(safe-area-inset-bottom));
-      background: #11111af5;
-      border-top: 1px solid var(--border);
-      backdrop-filter: blur(12px);
-    }
-
-    .bottom-nav button {
-      flex: 1;
-      padding: 10px 3px;
-      color: var(--muted);
-      background: transparent;
-      border: 0;
-      border-radius: 10px;
-      font-size: 12px;
-    }
-
-    .bottom-nav button.active {
-      color: white;
-      background: #8b5cf622;
-    }
-
-    .status-message {
-      min-height: 20px;
-      overflow-wrap: anywhere;
-      color: #d5c5ff;
-      font-size: 14px;
-    }
-
-    @media (min-width: 650px) {
-      .avatar-stage {
-        height: 420px;
-      }
-    }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 </head>
-
 <body>
+  <section id="authScreen" class="auth-screen">
+    <div class="brand">Vi<span>dora</span></div>
+    <p>Watch. Share. Connect.</p>
 
-  <!-- =========================================
-       LOGIN AND SIGN-UP
-       ========================================= -->
+    <form id="authForm" class="panel">
+      <h2 id="authTitle">Welcome back</h2>
 
-  <section id="authScreen">
-    <div class="auth-wrap">
-      <header style="text-align:center; margin-bottom:24px;">
-        <div class="brand">Vi<span>dora</span></div>
-        <p class="muted">Watch. Share. Connect.</p>
-      </header>
-
-      <div class="auth-card">
-        <div class="auth-switch">
-          <button id="showLogin" class="secondary" type="button">
-            Log in
-          </button>
-          <button id="showSignup" class="secondary" type="button">
-            Sign up
-          </button>
-        </div>
-
-        <h1 id="authTitle">Welcome back</h1>
-        <p class="muted">Your world. Your videos. Your community.</p>
-
-        <form id="authForm">
-          <div id="signupFields" hidden>
-            <label for="authUsername">Username</label>
-            <input
-              id="authUsername"
-              class="field"
-              type="text"
-              placeholder="Choose a username"
-              minlength="3"
-              maxlength="30"
-              autocomplete="username"
-            >
-
-            <label for="authDisplayName">Display name</label>
-            <input
-              id="authDisplayName"
-              class="field"
-              type="text"
-              placeholder="Your display name"
-              maxlength="60"
-              autocomplete="name"
-            >
-          </div>
-
-          <label for="authEmail">Email address</label>
-          <input
-            id="authEmail"
-            class="field"
-            type="email"
-            placeholder="you@example.com"
-            autocomplete="email"
-            required
-          >
-
-          <label for="authPassword">Password</label>
-          <input
-            id="authPassword"
-            class="field"
-            type="password"
-            placeholder="Enter your password"
-            autocomplete="current-password"
-            minlength="6"
-            required
-          >
-
-          <button id="authSubmit" class="primary" type="submit">
-            Log in
-          </button>
-
-          <p id="authMessage" class="status-message" role="status"></p>
-        </form>
-
-        <p class="muted" style="font-size:12px;">
-          If email confirmation is enabled, check your inbox after signing up.
-        </p>
+      <div id="signupFields" hidden>
+        <input id="authUsername" placeholder="Username"
+          minlength="3" maxlength="24" autocomplete="username">
+        <input id="authDisplayName" placeholder="Display name"
+          maxlength="40">
       </div>
-    </div>
+
+      <input id="authEmail" type="email" placeholder="Email address"
+        autocomplete="email" required>
+
+      <input id="authPassword" type="password" placeholder="Password"
+        minlength="6" autocomplete="current-password" required>
+
+      <button id="authSubmit" class="primary" type="submit">Log in</button>
+
+      <p id="authMessage" class="message" aria-live="polite"></p>
+      <button id="showSignup" type="button" class="text-button">
+        Create an account
+      </button>
+      <button id="showLogin" type="button" class="text-button" hidden>
+        Back to login
+      </button>
+    </form>
   </section>
 
-  <!-- =========================================
-       MAIN VIDORA APP
-       ========================================= -->
-
-  <main id="appScreen" hidden>
+  <div id="appShell" hidden>
     <header class="topbar">
-      <div id="brandHomeTop" class="brand">Vi<span>dora</span></div>
-      <button id="logoutBtn" class="secondary" type="button">
-        Log out
-      </button>
+      <div class="brand">Vi<span>dora</span></div>
+      <div class="top-actions">
+        <button id="notificationsBtn" class="round-button"
+          aria-label="Notifications">♧</button>
+        <button id="logoutBtn" class="round-button"
+          aria-label="Log out">↪</button>
+      </div>
     </header>
 
-    <!-- FEED -->
-    <section data-view="feed">
-      <div class="panel">
-        <h2>Welcome to Vidora</h2>
-        <p class="muted">Watch something new and share your moments.</p>
-      </div>
-
-      <div id="feed">
-        <p class="muted">Your feed will appear here.</p>
-      </div>
-    </section>
-
-    <!-- DISCOVER -->
-    <section data-view="discover" hidden>
-      <div class="panel">
-        <h2>Discover</h2>
-        <p class="muted">
-          Explore posts from the Vidora community.
-        </p>
-        <button
-          class="primary"
-          type="button"
-          onclick="window.vidoraApp && window.vidoraApp.loadFeed()"
-        >
-          Refresh feed
-        </button>
-      </div>
-    </section>
-
-    <!-- CREATE POST -->
-    <section data-view="create" hidden>
-      <div class="panel">
-        <h2>Create a post</h2>
-        <p class="muted">Share a photo or video with your community.</p>
-
-        <form id="createForm">
-          <label for="createFile">Choose image or video</label>
-          <input
-            id="createFile"
-            class="field"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
-            required
-          >
-
-          <label for="createCaption">Caption</label>
-          <textarea
-            id="createCaption"
-            class="field"
-            rows="4"
-            maxlength="2000"
-            placeholder="Write a caption..."
-          ></textarea>
-
-          <button
-            id="createPublishBtn"
-            class="primary"
-            type="button"
-          >
-            🚀 Publish to Vidora
-          </button>
-        </form>
-      </div>
-    </section>
-
-    <!-- ASSISTANT AND PREMIUM AVATAR -->
-    <section data-view="assistant" hidden>
-      <div class="panel">
-        <h2>Vidora Assistant</h2>
-        <p id="avatarGreeting" aria-live="polite">
-          Welcome to Vidora!
-        </p>
-        <p class="muted">
-          Your personal Vidora avatar space.
-        </p>
-
-        <div class="avatar-stage" id="avatar3DStage">
-          <div id="avatar3DStatus" role="status">
-            Preparing your 3D avatar...
+    <main class="main-content">
+      <section class="assistant panel">
+        <div class="avatar-wrap">
+          <div id="avatarCanvas" aria-label="Animated 3D assistant avatar"></div>
+        </div>
+        <div class="assistant-copy">
+          <span class="eyebrow">YOUR VIDORA ASSISTANT</span>
+          <h2 id="greetingText">Welcome to Vidora!</h2>
+          <p id="assistantReply">Ready to watch and share?</p>
+          <div class="assistant-actions">
+            <button id="speakBtn" class="small-button">🔊 Speak</button>
+            <button id="assistantHelpBtn" class="small-button">Help</button>
           </div>
         </div>
+      </section>
 
-        <label for="avatarSelect">Choose your avatar</label>
-        <select id="avatarSelect" class="field">
-          <option value="Nova">Nova</option>
-          <option value="Luna">Luna</option>
-        </select>
+      <section id="homeView" class="view">
+        <div class="section-heading">
+          <h2>Your feed</h2>
+          <button id="refreshFeedBtn" class="text-button">Refresh</button>
+        </div>
+        <div id="feed" class="feed">
+          <p class="muted">Your videos will appear here.</p>
+        </div>
+      </section>
 
-        <p>
-          Selected avatar:
-          <strong id="avatarName">Nova</strong>
-        </p>
-      </div>
-    </section>
+      <section id="discoverView" class="view" hidden>
+        <h2>Discover people</h2>
+        <div id="discoverList"></div>
+      </section>
 
-    <!-- PROFILE -->
-    <section data-view="profile" hidden>
-      <div class="panel">
+      <section id="createView" class="view" hidden>
+        <h2>Create a post</h2>
+        <form id="createForm" class="panel create-form">
+          <label for="createFile">Choose a photo or video</label>
+          <input id="createFile" type="file"
+            accept="image/*,video/*" required>
+          <textarea id="createCaption" maxlength="2000"
+            placeholder="Write a caption..."></textarea>
+          <button id="publishBtn" class="primary" type="submit">
+            🚀 Publish to Vidora
+          </button>
+          <p id="createMessage" class="message" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="inboxView" class="view" hidden>
+        <h2>Messages</h2>
+        <p class="muted">Chat is available with mutual followers.</p>
+        <div id="inboxList"></div>
+
+        <div id="chatPanel" class="panel" hidden>
+          <div class="chat-heading">
+            <button id="backToInboxBtn" class="text-button">← Back</button>
+            <strong id="chatName">Chat</strong>
+          </div>
+          <div id="chatMessages" class="chat-messages"></div>
+          <form id="messageForm" class="message-form">
+            <input id="messageInput" maxlength="2000"
+              placeholder="Write a message..." required>
+            <button class="primary" type="submit">Send</button>
+          </form>
+          <p id="chatMessage" class="message"></p>
+        </div>
+      </section>
+
+      <section id="notificationsView" class="view" hidden>
+        <div class="section-heading">
+          <h2>Notifications</h2>
+          <button id="backHomeBtn" class="text-button">Home</button>
+        </div>
+        <div id="notificationList"></div>
+      </section>
+
+      <section id="profileView" class="view" hidden>
         <h2>Your profile</h2>
-        <div class="brand" id="profileName">Vidora user</div>
-        <p id="profileUsername" class="muted"></p>
-        <p class="muted">
-          Your account is connected to Vidora.
-        </p>
+        <div class="panel profile-panel">
+          <div id="profileAvatar" class="profile-avatar">V</div>
+          <h3 id="profileDisplayName">Vidora user</h3>
+          <p id="profileUsername" class="muted">@username</p>
+          <div class="profile-stats">
+            <span><strong id="postCount">0</strong> Posts</span>
+            <span><strong id="followerCount">0</strong> Followers</span>
+            <span><strong id="followingCount">0</strong> Following</span>
+          </div>
+        </div>
+        <h3>Your posts</h3>
+        <div id="myPosts" class="feed"></div>
+      </section>
+    </main>
 
-        <button id="logoutButton" class="secondary" type="button">
-          Log out
-        </button>
-      </div>
-    </section>
-  </main>
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button data-view="homeView" class="nav-button active">⌂<span>Home</span></button>
+      <button data-view="discoverView" class="nav-button">⌕<span>Discover</span></button>
+      <button data-view="createView" class="nav-button">＋<span>Create</span></button>
+      <button data-view="inboxView" class="nav-button">✉<span>Inbox</span></button>
+      <button data-view="profileView" class="nav-button">◎<span>Profile</span></button>
+    </nav>
+  </div>
 
-  <!-- BOTTOM NAVIGATION -->
-  <nav class="bottom-nav" aria-label="Main navigation">
-    <button data-nav="feed" type="button" class="active">
-      🏠<br>Home
-    </button>
-    <button data-nav="discover" type="button">
-      🔎<br>Discover
-    </button>
-    <button data-nav="create" type="button">
-      ➕<br>Create
-    </button>
-    <button data-nav="assistant" type="button">
-      ✨<br>Avatar
-    </button>
-    <button data-nav="profile" type="button">
-      👤<br>Profile
-    </button>
-  </nav>
-
-  <!-- Your main JavaScript must load last -->
-  <script src="./app.js"></script>
-
+  <script src="app.js"></script>
 </body>
 </html>
