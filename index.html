@@ -1,63 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
-  <meta name="theme-color" content="#0a0a0f" />
-  <meta name="description" content="Vidora — Watch. Swipe. Connect." />
-  <title>Vidora</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08080d">
+  <title>Vidora — Watch. Share. Connect.</title>
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="app.js"></script>
 </head>
 <body>
-  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status"></div>
+
+  <!-- AUTHENTICATION -->
   <section id="authScreen" class="auth-screen">
-    <div class="auth-container">
-      <div class="auth-logo"><span class="logo-text">Vidora</span><p class="tagline">Watch. Swipe. Connect.</p></div>
-      <form id="loginForm" class="auth-form">
-        <h2>Log in to Vidora</h2>
-        <input id="loginEmail" class="field" type="email" placeholder="Email address" autocomplete="email" required />
-        <input id="loginPassword" class="field" type="password" placeholder="Password" autocomplete="current-password" required />
-        <button type="submit" class="btn primary full" id="loginBtn">Log In</button>
-        <div class="auth-links"><button type="button" class="text-link" id="forgotPasswordBtn">Forgotten password?</button></div>
-        <div class="divider"><span>or</span></div>
-        <button type="button" class="btn secondary full" id="showSignupBtn">Create new account</button>
+    <div class="auth-card">
+      <h1 class="logo">Vi<span>dora</span></h1>
+      <p class="muted">Watch. Share. Connect.</p>
+
+      <div class="auth-tabs">
+        <button id="showLogin" class="active" type="button">Login</button>
+        <button id="showSignup" type="button">Create account</button>
+      </div>
+
+      <form id="authForm">
+        <label for="authEmail">Email address</label>
+        <input id="authEmail" type="email" required
+               autocomplete="email" placeholder="you@example.com">
+
+        <label for="authPassword">Password</label>
+        <input id="authPassword" type="password" required minlength="6"
+               autocomplete="current-password" placeholder="Your password">
+
+        <div id="signupFields" class="hidden">
+          <label for="authUsername">Username</label>
+          <input id="authUsername" maxlength="24"
+                 placeholder="your_username">
+
+          <label for="authDisplayName">Display name</label>
+          <input id="authDisplayName" maxlength="40"
+                 placeholder="Your name">
+        </div>
+
+        <button id="authSubmit" class="primary full" type="submit">
+          Login
+        </button>
       </form>
-      <form id="signupForm" class="auth-form hidden">
-        <h2>Create a new account</h2><p class="muted small">It's quick and easy.</p>
-        <div class="name-row"><input id="signupFirstName" class="field half" type="text" placeholder="First name" autocomplete="given-name" required maxlength="40" /><input id="signupLastName" class="field half" type="text" placeholder="Surname" autocomplete="family-name" required maxlength="40" /></div>
-        <input id="signupEmail" class="field" type="email" placeholder="Email address" autocomplete="email" required />
-        <input id="signupPassword" class="field" type="password" placeholder="New password" autocomplete="new-password" minlength="6" required />
-        <label class="field-label">Date of birth</label>
-        <div class="birthday-row"><select id="signupDay" class="field select" required><option value="">Day</option></select><select id="signupMonth" class="field select" required><option value="">Month</option><option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option></select><select id="signupYear" class="field select" required><option value="">Year</option></select></div>
-        <label class="field-label">Gender</label>
-        <div class="gender-row"><label class="gender-option"><span>Female</span><input type="radio" name="gender" value="female" required /></label><label class="gender-option"><span>Male</span><input type="radio" name="gender" value="male" /></label><label class="gender-option"><span>Custom</span><input type="radio" name="gender" value="custom" /></label></div>
-        <p class="terms muted small">By clicking Sign Up, you agree to our Terms, Privacy Policy and Cookies Policy.</p>
-        <button type="submit" class="btn signup-green full" id="signupBtn">Sign Up</button>
-        <div class="auth-links"><button type="button" class="text-link" id="showLoginBtn">Already have an account?</button></div>
-      </form>
-      <div id="authStatus" class="status" role="status"></div>
+
+      <p class="fine-print">
+        Keep your password private. Never share secret API keys.
+      </p>
     </div>
   </section>
-  <div id="app" class="app hidden">
-    <header id="topbar" class="topbar hidden"><div class="logo-small">Vidora</div><div class="top-actions"><button id="openNotificationsBtn" class="icon-btn" aria-label="Notifications">🔔</button><button id="openAvatarBtn" class="icon-btn" aria-label="Avatar">👤</button></div></header>
-    <main id="main" class="main-content"></main>
-    <nav class="bottom-nav" aria-label="Main navigation">
-      <button data-view="home" class="nav-btn active"><span class="nav-icon">🏠</span><small>Home</small></button>
-      <button data-view="discover" class="nav-btn"><span class="nav-icon">🔍</span><small>Discover</small></button>
-      <button data-view="create" class="nav-btn create-btn"><span class="nav-icon">＋</span></button>
-      <button data-view="inbox" class="nav-btn"><span class="nav-icon">💬</span><small>Inbox</small><span id="inboxBadge" class="badge hidden">0</span></button>
-      <button data-view="profile" class="nav-btn"><span class="nav-icon">👤</span><small>Profile</small></button>
+
+  <!-- MAIN APP -->
+  <div id="appShell" class="hidden">
+    <header class="topbar">
+      <a href="#" id="brandHome" class="logo">Vi<span>dora</span></a>
+
+      <div class="top-actions">
+        <span id="timeGreeting" class="muted">Hello!</span>
+        <button id="themeToggle" class="icon-btn" type="button">☼</button>
+        <button id="logoutBtn" class="secondary" type="button">
+          Log out
+        </button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <button class="nav-link active" data-view="feed" type="button">
+          🏠 Home
+        </button>
+        <button class="nav-link" data-view="discover" type="button">
+          🔎 Discover
+        </button>
+        <button class="nav-link" data-view="create" type="button">
+          ➕ Create post
+        </button>
+        <button class="nav-link" data-view="assistant" type="button">
+          ✨ Premium avatar
+        </button>
+        <button class="nav-link" data-view="profile" type="button">
+          👤 My profile
+        </button>
+      </aside>
+
+      <main class="main-content">
+
+        <!-- FEED -->
+        <section id="view-feed" class="view">
+          <div class="heading">
+            <div>
+              <span class="eyebrow">YOUR WORLD</span>
+              <h1 id="feedHeading">Welcome to Vidora</h1>
+              <p class="muted">Watch, share, and discover new moments.</p>
+            </div>
+            <button id="refreshFeed" class="secondary" type="button">
+              ↻ Refresh
+            </button>
+          </div>
+
+          <p id="feedStatus" class="muted"></p>
+          <div id="feedList" class="feed-list"></div>
+
+          <button id="loadMoreBtn" class="secondary full hidden"
+                  type="button">
+            Load more
+          </button>
+        </section>
+
+        <!-- DISCOVER -->
+        <section id="view-discover" class="view hidden">
+          <span class="eyebrow">EXPLORE</span>
+          <h1>Discover</h1>
+          <p class="muted">Search posts already loaded in your feed.</p>
+
+          <input id="discoverSearch" type="search"
+                 placeholder="Search captions or creators...">
+
+          <div id="discoverList" class="feed-list"></div>
+        </section>
+
+        <!-- CREATE -->
+        <section id="view-create" class="view hidden">
+          <span class="eyebrow">CREATE SOMETHING</span>
+          <h1>Publish to Vidora</h1>
+
+          <form id="createForm" class="panel">
+            <label for="createFile">Choose photo or video</label>
+            <input id="createFile" type="file"
+                   accept="image/*,video/*" required>
+
+            <p class="muted small">
+              Maximum file size: 50 MB. Your Supabase storage bucket
+              must be named media.
+            </p>
+
+            <div id="mediaPreview" class="media-preview hidden"></div>
+
+            <label for="createCaption">Caption</label>
+            <textarea id="createCaption" maxlength="2000" rows="4"
+                      placeholder="Share your moment..."></textarea>
+
+            <button id="publishBtn" class="primary full" type="submit">
+              🚀 Publish to Vidora
+            </button>
+          </form>
+        </section>
+
+        <!-- PREMIUM AVATAR -->
+        <section id="view-assistant" class="view hidden">
+          <span class="eyebrow">VIDORA STUDIO</span>
+          <h1>Premium avatar</h1>
+          <p class="muted">
+            Your animated Vidora companion.
+          </p>
+
+          <div class="avatar-panel">
+            <div id="avatarOrb" class="avatar-orb">
+              <div id="avatarFace" class="avatar-face">N</div>
+              <div class="avatar-ring"></div>
+            </div>
+
+            <div>
+              <span class="premium-pill">✦ PREMIUM STYLE</span>
+              <h2 id="avatarName">Nova</h2>
+              <p id="avatarGreeting">Welcome to Vidora!</p>
+            </div>
+          </div>
+
+          <label for="avatarSelect">Choose your avatar</label>
+          <select id="avatarSelect">
+            <option>Nova</option>
+            <option>Kai</option>
+            <option>Luna</option>
+            <option>Ivy</option>
+            <option>Orion</option>
+            <option>Zeno</option>
+            <option>Sage</option>
+            <option>Rex</option>
+            <option>Pixel</option>
+            <option>Vexa</option>
+          </select>
+
+          <div class="panel">
+            <h3>360° next-post transition</h3>
+            <p class="muted">
+              Press Next on a feed post to rotate its media frame
+              through 360 degrees and move to the next post.
+            </p>
+          </div>
+        </section>
+
+        <!-- PROFILE -->
+        <section id="view-profile" class="view hidden">
+          <span class="eyebrow">YOUR SPACE</span>
+          <h1>My profile</h1>
+
+          <div class="profile-card">
+            <div id="profileAvatar" class="profile-avatar">V</div>
+            <div>
+              <h2 id="profileDisplayName">Vidora member</h2>
+              <p id="profileUsername" class="muted">@member</p>
+            </div>
+          </div>
+
+          <form id="profileForm" class="panel">
+            <label for="profileDisplayInput">Display name</label>
+            <input id="profileDisplayInput" maxlength="40">
+
+            <label for="profileUsernameInput">Username</label>
+            <input id="profileUsernameInput" maxlength="24"
+                   pattern="[A-Za-z0-9_]+">
+
+            <label for="profileBioInput">Bio</label>
+            <textarea id="profileBioInput" maxlength="160" rows="3"></textarea>
+
+            <button class="primary full" type="submit">
+              Save profile
+            </button>
+          </form>
+
+          <h2>Your posts</h2>
+          <div id="myPosts" class="feed-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <!-- MOBILE NAVIGATION -->
+    <nav class="mobile-nav">
+      <button class="active" data-view="feed" type="button">
+        🏠<span>Home</span>
+      </button>
+      <button data-view="discover" type="button">
+        🔎<span>Discover</span>
+      </button>
+      <button data-view="create" type="button">
+        ➕<span>Create</span>
+      </button>
+      <button data-view="assistant" type="button">
+        ✨<span>Avatar</span>
+      </button>
+      <button data-view="profile" type="button">
+        👤<span>Profile</span>
+      </button>
     </nav>
   </div>
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div id="sheet" class="sheet"></div></div>
-  <button id="assistantFab" class="assistant-fab hidden" aria-label="Open Vidora AI">✨</button>
-  <section id="assistantBox" class="assistant-box hidden">
-    <div class="assistant-header"><div><strong>Vidora AI</strong><div class="muted small">Your assistant</div></div><button id="closeAssistant" class="icon-btn">×</button></div>
-    <div id="assistantMessages" class="assistant-messages"></div>
-    <div class="assistant-quick"><button class="quick-btn" data-action="toggle-theme">🌓 Theme</button><button class="quick-btn" data-action="messages">📩 Messages</button><button class="quick-btn" data-action="signout">🚪 Sign out</button></div>
-    <form id="assistantForm" class="assistant-input"><input id="assistantInput" class="field" type="text" placeholder="Ask Vidora AI..." maxlength="500" autocomplete="off" /><button type="submit" class="btn primary">Send</button></form>
-  </section>
-  <script src="app.js"></script>
 </body>
 </html>
