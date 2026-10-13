@@ -865,6 +865,58 @@
   $("createForm").addEventListener("submit", publishPost);
   $("refreshFeedBtn").addEventListener("click", loadFeed);
   $("notificationsBtn").addEventListener("click", () => showView("notificationsView"));
+  $("enablePushBtn").addEventListener("click", async () => {
+  const status = $("pushStatus");
+  const button = $("enablePushBtn");
+
+  if (!("Notification" in window)) {
+    status.textContent =
+      "Browser notifications are not supported on this device.";
+    return;
+  }
+
+  if (!("serviceWorker" in navigator)) {
+    status.textContent =
+      "Service workers are not supported in this browser.";
+    return;
+  }
+
+  button.disabled = true;
+  status.textContent = "Enabling notifications...";
+
+  try {
+    const permission = await Notification.requestPermission();
+
+    if (permission !== "granted") {
+      status.textContent =
+        "Notifications were not allowed. Check your browser site settings.";
+      return;
+    }
+
+    const registration =
+      await navigator.serviceWorker.register("./sw.js");
+
+    await navigator.serviceWorker.ready;
+
+    status.textContent =
+      "Browser notifications enabled! Vidora is ready for push setup.";
+
+    button.textContent = "Notifications enabled";
+
+    // Test a local notification while Vidora is open.
+    await registration.showNotification("Vidora", {
+      body: "Browser notifications are working!",
+      icon: "./favicon.ico",
+      data: { url: "./" }
+    });
+
+  } catch (error) {
+    status.textContent =
+      "Could not enable notifications: " + error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
   $("backHomeBtn").addEventListener("click", () => showView("homeView"));
   $("messageForm").addEventListener("submit", sendMessage);
   $("backToInboxBtn").addEventListener("click", () => {
