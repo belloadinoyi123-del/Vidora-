@@ -231,10 +231,7 @@
     post_id: postId
   });
 
-  if (error) {
-    console.warn("Notification was not saved:", error.message);
-  }
-}
+  
 
     if (error) console.warn("Notification was not saved:", error.message);
   }
