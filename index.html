@@ -121,12 +121,25 @@
       </section>
 
       <section id="notificationsView" class="view" hidden>
-        <div class="section-heading">
-          <h2>Notifications</h2>
-          <button id="backHomeBtn" class="text-button">Home</button>
-        </div>
-        <div id="notificationList"></div>
-      </section>
+  <div class="section-heading">
+    <h2>Notifications</h2>
+    <button id="backHomeBtn" class="text-button">Home</button>
+  </div>
+
+  <div class="panel">
+    <h3>Browser notifications</h3>
+    <p class="muted">
+      Allow Vidora to notify you when new notifications arrive.
+    </p>
+    <button id="enablePushBtn" class="primary" type="button">
+      Enable browser notifications
+    </button>
+    <p id="pushStatus" class="message" aria-live="polite"></p>
+  </div>
+
+  <div id="notificationList"></div>
+</section>
+
 
       <section id="profileView" class="view" hidden>
         <h2>Your profile</h2>
