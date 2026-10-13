@@ -221,15 +221,20 @@
   }
 
   async function notify(recipientId, type, message, postId = null) {
-    if (!recipientId || recipientId === user?.id) return;
+  if (!user || !recipientId || recipientId === user.id) return;
 
-    const { error } = await db.from("notifications").insert({
-      recipient_id: recipientId,
-      actor_id: user.id,
-      type,
-      message,
-      post_id: postId
-    });
+  const { error } = await db.from("notifications").insert({
+    user_id: recipientId,
+    actor_id: user.id,
+    type,
+    message,
+    post_id: postId
+  });
+
+  if (error) {
+    console.warn("Notification was not saved:", error.message);
+  }
+}
 
     if (error) console.warn("Notification was not saved:", error.message);
   }
