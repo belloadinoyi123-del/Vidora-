@@ -577,34 +577,42 @@
   }
 
   async function loadNotifications() {
-    if (!user) return;
-    const box = $("notificationList");
-    if (!box) return;
+  if (!user) return;
 
-    box.innerHTML = '<p class="muted">Loading notifications...</p>';
+  const box = $("notificationList");
+  if (!box) return;
 
-    try {
-      const { data, error } = await db.from("notifications")
-        .select("id,recipient_id,actor_id,type,message,post_id,created_at")
-        .eq("recipient_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(50);
+  box.innerHTML = '<p class="muted">Loading notifications...</p>';
 
-      if (error) throw error;
+  try {
+    const { data, error } = await db
+      .from("notifications")
+      .select("id,user_id,actor_id,type,message,post_id,created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
 
-      box.innerHTML = (data || []).map((n) => `
-        <div class="notification-row">
-          <div class="mini-avatar">${escapeHTML(shortName(n.type))}</div>
-          <div>
-            <p>${escapeHTML(n.message || "You have a new notification.")}</p>
-            <small>${escapeHTML(timeLabel(n.created_at))}</small>
-          </div>
+    if (error) throw error;
+
+    box.innerHTML = (data || []).map((n) => `
+      <div class="notification-row">
+        <div class="mini-avatar">
+          ${escapeHTML(shortName(n.type))}
         </div>
-      `).join("") || '<p class="muted">You are all caught up.</p>';
-    } catch (error) {
-      box.innerHTML = `<p class="message">Notifications: ${escapeHTML(error.message)}</p>`;
-    }
+        <div>
+          <p>${escapeHTML(
+            n.message || "You have a new notification."
+          )}</p>
+          <small>${escapeHTML(timeLabel(n.created_at))}</small>
+        </div>
+      </div>
+    `).join("") || '<p class="muted">You are all caught up.</p>';
+
+  } catch (error) {
+    box.innerHTML =
+      `<p class="message">Notifications: ${escapeHTML(error.message)}</p>`;
   }
+}
 
   async function loadInbox() {
     if (!user) return;
