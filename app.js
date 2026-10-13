@@ -707,27 +707,42 @@
   }
 
   async function sendMessage(event) {
-    event.preventDefault();
-    if (!currentChat) return;
+  event.preventDefault();
 
-    const input = $("messageInput");
-    const content = input.value.trim();
-    if (!content) return;
+  if (!user || !currentChat) return;
 
-    try {
-      const { error } = await db.from("messages").insert({
-        sender_id: user.id,
-        receiver_id: currentChat.id,
-        content
-      });
+  const input = $("messageInput");
+  const content = input.value.trim();
 
-      if (error) throw error;
-      input.value = "";
-      await loadMessages();
-    } catch (error) {
-      sayStatus("chatMessage", "Message failed: " + error.message);
-    }
+  if (!content) return;
+
+  try {
+    const { error } = await db.from("messages").insert({
+      sender_id: user.id,
+      receiver_id: currentChat.id,
+      content
+    });
+
+    if (error) throw error;
+
+    input.value = "";
+
+    // Save a notification for the message recipient.
+    await notify(
+      currentChat.id,
+      "message",
+      `${displayName(profile)} sent you a message.`
+    );
+
+    await loadMessages();
+
+  } catch (error) {
+    sayStatus(
+      "chatMessage",
+      "Message failed: " + error.message
+    );
   }
+}
 
   function startChatPolling() {
     stopChatPolling();
