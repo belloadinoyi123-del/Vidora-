@@ -977,3 +977,26 @@
     }
   });
 })();
+async function testHyperWorker() {
+  const { data: sessionData, error: sessionError } =
+    await db.auth.getSession();
+
+  if (sessionError || !sessionData.session) {
+    alert("Please sign in to Vidora first.");
+    return;
+  }
+
+  const { data, error } = await db.functions.invoke("hyper-worker", {
+    body: {}
+  });
+
+  if (error) {
+    console.error("Function test failed:", error);
+    alert("Test failed. Check Supabase Function Logs.");
+    return;
+  }
+
+  alert(data?.message || "Function responded successfully!");
+}
+
+testHyperWorker();
