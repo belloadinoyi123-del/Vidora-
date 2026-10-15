@@ -881,50 +881,64 @@ function urlBase64ToUint8Array(base64String) {
   const status = $("pushStatus");
   const button = $("enablePushBtn");
 
-  if (!("Notification" in window)) {
-    status.textContent =
-      "Browser notifications are not supported on this device.";
+  if (!user) {
+    status.textContent = "Please log in first.";
     return;
   }
 
-  if (!("serviceWorker" in navigator)) {
+  if (!("Notification" in window) ||
+      !("serviceWorker" in navigator) ||
+      !("PushManager" in window)) {
     status.textContent =
-      "Service workers are not supported in this browser.";
+      "Push notifications are not supported in this browser.";
     return;
   }
 
   button.disabled = true;
-  status.textContent = "Enabling notifications...";
+  status.textContent = "Setting up push notifications...";
 
   try {
     const permission = await Notification.requestPermission();
 
     if (permission !== "granted") {
       status.textContent =
-        "Notifications were not allowed. Check your browser site settings.";
+        "Permission denied. Check your browser's site settings.";
       return;
     }
 
-    const registration =
-      await navigator.serviceWorker.register("./sw.js");
+    await navigator.serviceWorker.register("./sw.js");
+    const registration = await navigator.serviceWorker.ready;
 
-    await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey:
+          urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+
+    const { error } = await db
+      .from("push_subscriptions")
+      .upsert({
+        user_id: user.id,
+        endpoint: subscription.endpoint,
+        subscription: subscription.toJSON()
+      }, {
+        onConflict: "endpoint"
+      });
+
+    if (error) throw error;
 
     status.textContent =
-      "Browser notifications enabled! Vidora is ready for push setup.";
-
+      "Push subscription saved successfully!";
     button.textContent = "Notifications enabled";
 
-    // Test a local notification while Vidora is open.
-    await registration.showNotification("Vidora", {
-      body: "Browser notifications are working!",
-      icon: "./favicon.ico",
-      data: { url: "./" }
-    });
-
   } catch (error) {
+    console.error("Push setup failed:", error);
     status.textContent =
-      "Could not enable notifications: " + error.message;
+      "Push setup failed: " + error.message;
   } finally {
     button.disabled = false;
   }
