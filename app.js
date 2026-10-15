@@ -6,7 +6,7 @@ const SUPABASE_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
 
 // Browser push notifications
 
-const VAPID_PUBLIC_KEY = "4244611348f899597b168491e2bce9e6f1d0f25647a8829d1d81ce68786cf0da";
+const VAPID_PUBLIC_KEY = "BNSyI5LHkvoR198feKug9f2VN8t1nZQzlrjg5cWsvenuTQzyOsxfZn1KLHmVwLpNFJhZgyFkm9O3hUtmJuOYEVw";
   const $ = (id) => document.getElementById(id);
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
