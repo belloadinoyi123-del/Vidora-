@@ -1458,15 +1458,58 @@ if ($("inboxLayout")) $("inboxLayout").classList.add("has-chat");
     }
 
     container.innerHTML = (data || []).map((message) => {
-      const mine = message.sender_id === state.user.id;
+  const mine = message.sender_id === state.user.id;
 
-      return `
-        <div class="chat-bubble ${mine ? "mine" : "theirs"}">
-          <div class="bubble-content">${escapeHTML(message.content)}</div>
-          <small class="message-time">${escapeHTML(formatTime(message.created_at))}</small>
-        </div>
-      `;
-    }).join("");
+  const safeContent = escapeHTML(message.content || "");
+  const replyId = Number(message.id);
+
+  return `
+    <div class="chat-bubble ${mine ? "mine" : "theirs"}"
+         data-message-id="${replyId}">
+
+      <div class="bubble-content">${safeContent}</div>
+
+      <small class="message-time">
+        ${escapeHTML(formatTime(message.created_at))}
+      </small>
+
+      <div class="message-actions">
+        <button type="button"
+          class="reply-message-btn"
+          data-reply-id="${replyId}"
+          aria-label="Reply to message">
+          ↩️ Reply
+        </button>
+
+        <button type="button"
+          class="react-message-btn"
+          data-react-id="${replyId}"
+          data-emoji="❤️"
+          aria-label="React with heart">
+          ❤️
+        </button>
+
+        <button type="button"
+          class="react-message-btn"
+          data-react-id="${replyId}"
+          data-emoji="😂"
+          aria-label="React with laughter">
+          😂
+        </button>
+
+        <button type="button"
+          class="react-message-btn"
+          data-react-id="${replyId}"
+          data-emoji="👍"
+          aria-label="React with thumbs up">
+          👍
+        </button>
+      </div>
+
+    </div>
+  `;
+}).join("");
+      
 
     container.scrollTop = container.scrollHeight;
   }
