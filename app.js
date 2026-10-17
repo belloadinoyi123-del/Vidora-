@@ -1427,7 +1427,8 @@
     }
 
     if ($("chatPanel")) $("chatPanel").hidden = false;
-    if ($("inboxList")) $("inboxList").hidden = true;
+    if ($("inboxView")) $("inboxView").classList.add("chat-open");
+if ($("inboxLayout")) $("inboxLayout").classList.add("has-chat");
 
     await loadMessages();
   }
