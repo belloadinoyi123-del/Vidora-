@@ -390,65 +390,149 @@
 
       <!-- INBOX -->
 
-      <section id="inboxView" class="view" hidden>
+      <!-- ================= VIDORA CHAT 3.0 ================= -->
 
-        <h1>Messages</h1>
+<section id="inboxView" class="view" hidden>
 
-        <p class="muted">Chat is available to mutual followers.</p>
+  <div class="messages-heading">
+    <div>
+      <span class="chat-eyebrow">VIDORA CONNECT</span>
+      <h1>Messages</h1>
+      <p class="muted">Your conversations, all in one place.</p>
+    </div>
+  </div>
 
-        <div id="inboxList">
-          <p class="muted">Loading conversations...</p>
+  <!-- CONVERSATION LIST SCREEN -->
+
+  <div id="inboxHome" class="inbox-layout">
+
+    <aside class="inbox-sidebar">
+
+      <div class="inbox-search">
+        <span>⌕</span>
+        <input
+          id="conversationSearch"
+          type="search"
+          placeholder="Search conversations..."
+          autocomplete="off"
+          aria-label="Search conversations"
+        >
+      </div>
+
+      <div class="inbox-section-heading">
+        <strong>Recent conversations</strong>
+        <span id="conversationCount">0</span>
+      </div>
+
+      <div id="inboxList" class="inbox-list">
+        <p class="muted">Loading conversations...</p>
+      </div>
+
+    </aside>
+
+    <!-- DESKTOP EMPTY CHAT STATE -->
+
+    <div id="chatWelcome" class="chat-welcome glass">
+
+      <div class="chat-welcome-icon">✉</div>
+
+      <h2>Your space to connect</h2>
+
+      <p class="muted">
+        Select a conversation to start messaging.
+      </p>
+
+      <div class="chat-welcome-decoration">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- INDIVIDUAL CHAT SCREEN -->
+
+  <div id="chatPanel" class="chat-panel glass" hidden>
+
+    <header class="chat-header">
+
+      <button
+        id="backToInboxBtn"
+        type="button"
+        class="chat-back-button"
+        aria-label="Back to conversations"
+      >
+        ←
+      </button>
+
+      <div id="chatAvatar" class="mini-avatar">V</div>
+
+      <div class="chat-header-user">
+
+        <strong id="chatName">Conversation</strong>
+
+        <div id="chatStatus">
+          <span class="chat-status-dot"></span>
+          Secure messaging
         </div>
 
-        <div id="chatPanel" class="chat-panel glass" hidden>
+      </div>
 
-          <div class="chat-header">
+      <button
+        id="chatCastBtn"
+        type="button"
+        class="chat-options-button"
+        aria-label="Chat options"
+        title="Chat options"
+      >
+        ⋮
+      </button>
 
-            <button id="backToInboxBtn" type="button" class="btn secondary">
-              ←
-            </button>
+    </header>
 
-            <div id="chatAvatar" class="mini-avatar">V</div>
+    <div class="chat-security-banner">
+      <span>✦</span>
+      You're connected on Vidora
+    </div>
 
-            <div style="flex:1">
+    <div
+      id="chatMessages"
+      class="chat-messages"
+      aria-live="polite"
+      aria-label="Conversation messages"
+    >
+      <p class="muted">Loading messages...</p>
+    </div>
 
-              <strong id="chatName">Conversation</strong>
+    <form id="messageForm" class="message-form">
 
-              <div id="chatStatus">Secure channel</div>
+      <input
+        id="messageInput"
+        type="text"
+        maxlength="2000"
+        placeholder="Write a message..."
+        autocomplete="off"
+        aria-label="Write a message"
+        required
+      >
 
-            </div>
+      <button
+        type="submit"
+        class="chat-send-button"
+        aria-label="Send message"
+      >
+        <span>➤</span>
+      </button>
 
-            <button id="chatCastBtn" type="button">📺</button>
+    </form>
 
-          </div>
+    <p id="chatMessage" class="message" role="status"></p>
 
-          <div id="chatMessages" class="chat-messages">
-            <p class="muted">Channel open. Say hello.</p>
-          </div>
+  </div>
 
-          <form id="messageForm" class="message-form">
-
-            <input
-              id="messageInput"
-              type="text"
-              maxlength="2000"
-              placeholder="Write a message..."
-              autocomplete="off"
-              required
-            >
-
-            <button type="submit" class="btn primary">
-              Send
-            </button>
-
-          </form>
-
-          <p id="chatMessage" class="message" role="status"></p>
-
-        </div>
-
-      </section>
-
+</section>
       <!-- NOTIFICATIONS -->
 
       <section id="notificationsView" class="view" hidden>
