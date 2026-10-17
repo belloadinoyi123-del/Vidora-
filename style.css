@@ -1364,3 +1364,454 @@ textarea {
     transition-duration: 0.01ms !important;
   }
 }
+/* ==========================================
+   VIDORA ULTIMATE — PREMIUM DESIGN UPGRADE
+   Neon Galaxy + Luxury Glass + Social Feed
+========================================== */
+
+:root {
+  --vidora-glow-purple: rgba(139, 92, 246, 0.35);
+  --vidora-glow-blue: rgba(0, 217, 255, 0.20);
+  --vidora-glow-pink: rgba(255, 61, 154, 0.20);
+}
+
+/* PREMIUM BACKGROUND */
+
+body {
+  background:
+    radial-gradient(
+      ellipse at 0% 0%,
+      rgba(139, 92, 246, 0.16),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 100% 45%,
+      rgba(0, 217, 255, 0.07),
+      transparent 38%
+    ),
+    #080616;
+
+  color: #f8f7ff;
+}
+
+/* SMOOTH PAGE TRANSITIONS */
+
+.view {
+  animation: vidoraUltimateEnter 0.32s ease both;
+}
+
+@keyframes vidoraUltimateEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* PREMIUM GLASS CARDS */
+
+.glass,
+.card,
+.auth-card,
+.post-card,
+.profile-card,
+.notification-card,
+.chat-panel,
+.create-card,
+.assistant-card {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(29, 23, 56, 0.96),
+      rgba(12, 9, 27, 0.97)
+    );
+
+  border: 1px solid rgba(182, 154, 255, 0.20);
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* PREMIUM BRANDING */
+
+.brand-name,
+.auth-logo {
+  background:
+    linear-gradient(
+      110deg,
+      #ffffff 5%,
+      #b69aff 45%,
+      #00d9ff 85%
+    );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* WELCOME BANNER */
+
+.welcome-banner {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(182, 154, 255, 0.28);
+
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(0, 217, 255, 0.17),
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 0% 100%,
+      rgba(139, 92, 246, 0.22),
+      transparent 45%
+    ),
+    linear-gradient(135deg, #20143f, #100c25);
+
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.20),
+    0 0 28px rgba(139, 92, 246, 0.06);
+}
+
+.welcome-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.035),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* PREMIUM BUTTONS */
+
+.btn,
+button.primary,
+#authSubmit,
+#signupNext,
+#publishBtn {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    115deg,
+    #8b5cf6,
+    #7042df 55%,
+    #5633bd
+  );
+
+  box-shadow:
+    0 5px 18px rgba(139, 92, 246, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.13);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+.btn:active,
+button.primary:active,
+#authSubmit:active,
+#signupNext:active,
+#publishBtn:active {
+  transform: scale(0.97);
+  filter: brightness(1.12);
+}
+
+/* POST CARDS */
+
+.post-card {
+  border-radius: 21px;
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.post-header {
+  background: linear-gradient(
+    90deg,
+    rgba(139, 92, 246, 0.045),
+    transparent
+  );
+}
+
+.post-header img,
+.post-avatar,
+.user-avatar {
+  border: 2px solid rgba(182, 154, 255, 0.62);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.10);
+}
+
+.post-media,
+.post-image,
+.post-video,
+.post-card video,
+.post-card img.post-media {
+  background: #05040b;
+}
+
+/* SOCIAL ACTIONS */
+
+.post-actions button,
+.post-action-row button {
+  border-radius: 12px;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.post-actions button:active,
+.post-action-row button:active {
+  transform: scale(0.95);
+}
+
+.post-actions button.liked {
+  color: #ff3d9a;
+  background: rgba(255, 61, 154, 0.12);
+}
+
+/* PREMIUM BOTTOM NAVIGATION */
+
+.bottom-nav {
+  background: rgba(12, 9, 27, 0.94);
+  border: 1px solid rgba(182, 154, 255, 0.25);
+
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.38),
+    0 0 24px rgba(139, 92, 246, 0.07);
+
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.nav-button {
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.nav-button.active,
+.nav-button[aria-current="page"] {
+  color: #ffffff;
+
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.28),
+    rgba(0, 217, 255, 0.10)
+  );
+
+  box-shadow: inset 0 0 0 1px rgba(182, 154, 255, 0.12);
+}
+
+.nav-button:active {
+  transform: scale(0.94);
+}
+
+/* INPUT FIELDS */
+
+input,
+textarea,
+select {
+  border-color: rgba(182, 154, 255, 0.18);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  background: rgba(12, 9, 27, 0.96);
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+/* DISCOVER CARDS */
+
+.discover-card,
+.user-card {
+  background: linear-gradient(
+    145deg,
+    rgba(29, 23, 56, 0.95),
+    rgba(15, 11, 32, 0.97)
+  );
+
+  border-color: rgba(182, 154, 255, 0.16);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* CREATE POST UPLOAD AREA */
+
+.upload-zone {
+  border-color: rgba(139, 92, 246, 0.48);
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(139, 92, 246, 0.12),
+      transparent 75%
+    ),
+    rgba(139, 92, 246, 0.035);
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+/* PROFILE UPGRADE */
+
+.profile-card {
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(139, 92, 246, 0.14),
+      transparent 55%
+    ),
+    linear-gradient(145deg, #19132f, #0c091c);
+}
+
+#profileAvatar {
+  border-color: rgba(182, 154, 255, 0.75);
+  box-shadow:
+    0 0 0 5px rgba(139, 92, 246, 0.07),
+    0 0 25px rgba(139, 92, 246, 0.18);
+}
+
+/* CHAT BUBBLES */
+
+.message-bubble.mine {
+  background: linear-gradient(135deg, #8050ed, #5733b3);
+  box-shadow: 0 5px 15px rgba(100, 60, 200, 0.10);
+}
+
+.message-bubble.theirs {
+  background: rgba(35, 27, 61, 0.88);
+  border-color: rgba(182, 154, 255, 0.15);
+}
+
+/* NOTIFICATION CARDS */
+
+.notification-card {
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.notification-icon {
+  border: 1px solid rgba(182, 154, 255, 0.13);
+}
+
+/* ASSISTANT AVATAR STAGE */
+
+#avatarStage {
+  border-color: rgba(182, 154, 255, 0.23);
+
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(139, 92, 246, 0.22),
+      transparent 58%
+    ),
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(0, 217, 255, 0.09),
+      transparent 38%
+    ),
+    #0a0718;
+}
+
+/* LOADING AND EMPTY STATES */
+
+.loading {
+  color: #b69aff;
+}
+
+.empty-state {
+  border-color: rgba(182, 154, 255, 0.22);
+  background: rgba(21, 17, 43, 0.55);
+}
+
+/* DESKTOP INTERACTIONS */
+
+@media (hover: hover) and (pointer: fine) {
+  .post-card:hover {
+    border-color: rgba(182, 154, 255, 0.34);
+    box-shadow:
+      0 16px 40px rgba(0, 0, 0, 0.28),
+      0 0 20px rgba(139, 92, 246, 0.055);
+  }
+
+  .discover-card:hover,
+  .user-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(182, 154, 255, 0.34);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.20);
+  }
+
+  .upload-zone:hover {
+    border-color: #8b5cf6;
+    background-color: rgba(139, 92, 246, 0.09);
+  }
+}
+
+/* MOBILE PERFORMANCE AND SPACING */
+
+@media (max-width: 650px) {
+  .post-card {
+    border-radius: 18px;
+  }
+
+  .post-header {
+    padding: 14px;
+  }
+
+  .post-actions,
+  .post-action-row {
+    gap: 4px;
+    padding: 9px 10px 12px;
+  }
+
+  .post-actions button,
+  .post-action-row button {
+    padding: 9px 8px;
+  }
+
+  .bottom-nav {
+    box-shadow:
+      0 8px 30px rgba(0, 0, 0, 0.32),
+      0 0 15px rgba(139, 92, 246, 0.045);
+  }
+}
+
+/* ACCESSIBILITY: RESPECT REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  .view,
+  .post-card,
+  .btn,
+  button,
+  .discover-card,
+  .user-card {
+    animation: none !important;
+    transition: none !important;
+  }
+}
