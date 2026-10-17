@@ -2534,3 +2534,197 @@ select:focus {
     transition: none;
   }
 }
+/* =========================================
+   VIDORA CHAT LAYOUT — MOBILE + DESKTOP
+========================================= */
+
+#inboxView .inbox-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 480px;
+  margin-top: 20px;
+}
+
+#inboxView .inbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 18px;
+  background: rgba(17, 17, 26, 0.8);
+}
+
+#inboxView .inbox-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+#inboxView .inbox-row:hover {
+  background: rgba(139, 92, 246, 0.13);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+#inboxView .person-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+#inboxView .person-info strong,
+#inboxView .person-info small {
+  overflow-wrap: anywhere;
+}
+
+#inboxView .person-info small {
+  opacity: 0.72;
+}
+
+#inboxView .chat-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 480px;
+  overflow: hidden;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 20px;
+  background: rgba(17, 17, 26, 0.92);
+}
+
+#inboxView .chat-panel[hidden] {
+  display: none !important;
+}
+
+#inboxView .chat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+#inboxView #chatStatus {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+#inboxView .chat-messages {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 280px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding: 16px;
+  scroll-behavior: smooth;
+}
+
+#inboxView .chat-bubble {
+  max-width: 82%;
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+#inboxView .chat-bubble.mine {
+  align-self: flex-end;
+  border-color: rgba(139, 92, 246, 0.45);
+  border-bottom-right-radius: 5px;
+  background: rgba(139, 92, 246, 0.22);
+}
+
+#inboxView .chat-bubble.theirs {
+  align-self: flex-start;
+  border-bottom-left-radius: 5px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+#inboxView .message-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+#inboxView #messageInput {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  outline: none;
+}
+
+#inboxView #messageInput:focus {
+  border-color: #8b5cf6;
+}
+
+#inboxView #chatMessage {
+  margin: 0;
+  padding: 0 14px 10px;
+}
+
+@media (max-width: 700px) {
+  #inboxView .inbox-layout {
+    display: block;
+    min-height: 0;
+  }
+
+  #inboxView .inbox-list {
+    width: 100%;
+  }
+
+  #inboxView:not(.chat-open) #chatPanel {
+    display: none !important;
+  }
+
+  #inboxView.chat-open #inboxList {
+    display: none !important;
+  }
+
+  #inboxView.chat-open #chatPanel:not([hidden]) {
+    display: flex !important;
+    min-height: 65vh;
+  }
+
+  #inboxView .chat-messages {
+    min-height: 0;
+    max-height: none;
+    flex: 1;
+  }
+
+  #inboxView .chat-bubble {
+    max-width: 88%;
+  }
+
+  #inboxView .message-form {
+    position: sticky;
+    bottom: 0;
+    background: rgba(17, 17, 26, 0.98);
+  }
+}
