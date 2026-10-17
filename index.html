@@ -2,187 +2,338 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#08080d">
-  <title>Vidora — Watch. Share. Connect.</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#05030f">
+  <meta name="description" content="Vidora Ultra — the most advanced social experience. Interactive holographic avatar, casting, realtime presence.">
+  <title>Vidora Ultra — Future Social</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 </head>
 <body>
-  <section id="authScreen" class="auth-screen">
-    <div class="brand">Vi<span>dora</span></div>
-    <p>Watch. Share. Connect.</p>
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
 
-    <form id="authForm" class="panel">
+  <!-- ==================== AUTH ==================== -->
+  <section id="authScreen" class="auth-screen">
+    <div class="auth-card glass">
+      <div class="logo-mark">
+        <div class="logo-orb"></div>
+        <h1>VIDORA</h1>
+      </div>
+      <p class="tagline">Watch · Share · Cast · Transcend</p>
       <h2 id="authTitle">Welcome back</h2>
 
-      <div id="signupFields" hidden>
-        <input id="authUsername" placeholder="Username"
-          minlength="3" maxlength="24" autocomplete="username">
-        <input id="authDisplayName" placeholder="Display name"
-          maxlength="40">
+      <form id="authForm">
+        <!-- Multi-step Signup Wizard -->
+        <div id="signupWizard" hidden>
+          <div class="signup-progress">
+            <div class="prog-step active" data-step="1"><span>1</span></div>
+            <div class="prog-line"></div>
+            <div class="prog-step" data-step="2"><span>2</span></div>
+            <div class="prog-line"></div>
+            <div class="prog-step" data-step="3"><span>3</span></div>
+            <div class="prog-line"></div>
+            <div class="prog-step" data-step="4"><span>4</span></div>
+          </div>
+
+          <div class="signup-step" data-step="1">
+            <h3 class="step-title">Create your digital identity</h3>
+            <p class="step-desc">Choose a unique handle that represents you across the network.</p>
+            <div class="field">
+              <label for="authUsername">Username</label>
+              <div class="input-with-prefix">
+                <span class="prefix">@</span>
+                <input id="authUsername" type="text" placeholder="cyber_handle" autocomplete="username" maxlength="24">
+              </div>
+              <small class="hint">3–24 characters · letters, numbers, underscores</small>
+            </div>
+            <div class="field">
+              <label for="authDisplayName">Display name</label>
+              <input id="authDisplayName" type="text" placeholder="How others will see you" maxlength="40">
+            </div>
+          </div>
+
+          <div class="signup-step" data-step="2" hidden>
+            <h3 class="step-title">Secure your account</h3>
+            <p class="step-desc">Use a strong password. We never store it in plain text.</p>
+            <div class="field">
+              <label for="authEmail">Email</label>
+              <input id="authEmail" type="email" placeholder="you@domain.com" autocomplete="email">
+            </div>
+            <div class="field">
+              <label for="authPassword">Password</label>
+              <input id="authPassword" type="password" placeholder="••••••••" autocomplete="new-password" minlength="8">
+              <div class="password-strength">
+                <div class="strength-bar"><div class="strength-fill"></div></div>
+                <span class="strength-text">Strength</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="signup-step" data-step="3" hidden>
+            <h3 class="step-title">Build your persona</h3>
+            <p class="step-desc">Select interests + choose your avatar energy color.</p>
+            <div class="interest-grid" id="interestGrid">
+              <button type="button" class="interest-chip" data-interest="tech">⚡ Tech</button>
+              <button type="button" class="interest-chip" data-interest="art">🎨 Art</button>
+              <button type="button" class="interest-chip" data-interest="music">🎵 Music</button>
+              <button type="button" class="interest-chip" data-interest="gaming">🎮 Gaming</button>
+              <button type="button" class="interest-chip" data-interest="science">🔬 Science</button>
+              <button type="button" class="interest-chip" data-interest="fashion">👗 Fashion</button>
+              <button type="button" class="interest-chip" data-interest="travel">✈️ Travel</button>
+              <button type="button" class="interest-chip" data-interest="fitness">💪 Fitness</button>
+              <button type="button" class="interest-chip" data-interest="cinema">🎬 Cinema</button>
+              <button type="button" class="interest-chip" data-interest="crypto">⛓ Crypto</button>
+              <button type="button" class="interest-chip" data-interest="ai">🤖 AI</button>
+              <button type="button" class="interest-chip" data-interest="space">🚀 Space</button>
+            </div>
+            <div class="field" style="margin-top:14px">
+              <label>Avatar Energy Color</label>
+              <div class="color-row" id="avatarColorRow">
+                <button type="button" class="color-swatch active" data-color="#a855f7" style="background:#a855f7"></button>
+                <button type="button" class="color-swatch" data-color="#22d3ee" style="background:#22d3ee"></button>
+                <button type="button" class="color-swatch" data-color="#ec4899" style="background:#ec4899"></button>
+                <button type="button" class="color-swatch" data-color="#a3e635" style="background:#a3e635"></button>
+                <button type="button" class="color-swatch" data-color="#f97316" style="background:#f97316"></button>
+                <button type="button" class="color-swatch" data-color="#eab308" style="background:#eab308"></button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="authBio">Short bio (optional)</label>
+              <textarea id="authBio" rows="2" maxlength="160" placeholder="A few words about your digital self..."></textarea>
+            </div>
+          </div>
+
+          <div class="signup-step" data-step="4" hidden>
+            <h3 class="step-title">You're almost in</h3>
+            <p class="step-desc">Review and enter the network.</p>
+            <div class="review-card glass">
+              <div class="review-row"><span>Handle</span><strong id="reviewUsername">@</strong></div>
+              <div class="review-row"><span>Name</span><strong id="reviewName">—</strong></div>
+              <div class="review-row"><span>Email</span><strong id="reviewEmail">—</strong></div>
+              <div class="review-row"><span>Interests</span><strong id="reviewInterests">—</strong></div>
+            </div>
+            <label class="checkbox-row">
+              <input type="checkbox" id="authTerms">
+              <span>I agree to the network terms & privacy protocol</span>
+            </label>
+          </div>
+
+          <div class="wizard-nav">
+            <button type="button" id="signupBack" class="btn ghost" hidden>Back</button>
+            <button type="button" id="signupNext" class="btn primary glow">Continue</button>
+          </div>
+        </div>
+
+        <!-- Login -->
+        <div id="loginFields">
+          <div class="field">
+            <label for="loginEmail">Email</label>
+            <input id="loginEmail" type="email" placeholder="you@domain.com" autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" minlength="6">
+          </div>
+          <button type="submit" id="authSubmit" class="btn primary glow">Log in</button>
+        </div>
+
+        <p id="authMessage" class="message" aria-live="polite"></p>
+      </form>
+
+      <div class="auth-switch">
+        <button type="button" id="showSignup" class="text-btn">Create a new identity →</button>
+        <button type="button" id="showLogin" class="text-btn" hidden>← Already have an account?</button>
       </div>
-
-      <input id="authEmail" type="email" placeholder="Email address"
-        autocomplete="email" required>
-
-      <input id="authPassword" type="password" placeholder="Password"
-        minlength="6" autocomplete="current-password" required>
-
-      <button id="authSubmit" class="primary" type="submit">Log in</button>
-
-      <p id="authMessage" class="message" aria-live="polite"></p>
-      <button id="showSignup" type="button" class="text-button">
-        Create an account
-      </button>
-      <button id="showLogin" type="button" class="text-button" hidden>
-        Back to login
-      </button>
-    </form>
+    </div>
   </section>
 
+  <!-- ==================== APP SHELL ==================== -->
   <div id="appShell" hidden>
-    <header class="topbar">
-      <div class="brand">Vi<span>dora</span></div>
+    <header class="topbar glass">
+      <div class="brand">
+        <span class="brand-orb"></span>
+        <span class="brand-name">VIDORA</span>
+      </div>
       <div class="top-actions">
-        <button id="notificationsBtn" class="round-button"
-          aria-label="Notifications">♧</button>
-        <button id="logoutBtn" class="round-button"
-          aria-label="Log out">↪</button>
+        <button id="castBtn" class="icon-btn" title="Cast" aria-label="Cast">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><line x1="2" y1="20" x2="2.01" y2="20"/></svg>
+        </button>
+        <button id="notificationsBtn" class="icon-btn" title="Notifications" aria-label="Notifications">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notifDot" class="notif-dot" hidden></span>
+        </button>
+        <button id="logoutBtn" class="icon-btn" title="Logout" aria-label="Logout">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
       </div>
     </header>
 
-    <main class="main-content">
-      <section class="assistant panel">
-        <div class="avatar-wrap">
-          <div id="avatarCanvas" aria-label="Animated 3D assistant avatar"></div>
-        </div>
-        <div class="assistant-copy">
-          <span class="eyebrow">YOUR VIDORA ASSISTANT</span>
-          <h2 id="greetingText">Welcome to Vidora!</h2>
-          <p id="assistantReply">Ready to watch and share?</p>
-          <div class="assistant-actions">
-            <button id="speakBtn" class="small-button">🔊 Speak</button>
-            <button id="assistantHelpBtn" class="small-button">Help</button>
+    <main class="main">
+      <!-- HOME -->
+      <section id="homeView" class="view">
+        <div class="view-header">
+          <div>
+            <h2 id="greetingText">Hello</h2>
+            <p id="assistantReply" class="muted">Your holographic companion is online.</p>
+          </div>
+          <div class="header-actions">
+            <button id="speakBtn" class="icon-btn small" title="Speak">🔊</button>
+            <button id="assistantHelpBtn" class="icon-btn small" title="Help">?</button>
+            <button id="refreshFeedBtn" class="btn ghost small">Refresh</button>
           </div>
         </div>
-      </section>
 
-      <section id="homeView" class="view">
-        <div class="section-heading">
-          <h2>Your feed</h2>
-          <button id="refreshFeedBtn" class="text-button">Refresh</button>
+        <!-- INTERACTIVE AVATAR STAGE -->
+        <div class="avatar-stage glass" id="avatarStage">
+          <div id="avatarCanvas"></div>
+          <div class="avatar-hud">
+            <div class="avatar-status">
+              <span class="status-dot"></span>
+              <span id="avatarMood">Idle</span>
+            </div>
+            <div class="avatar-controls">
+              <button id="avatarWaveBtn" class="hud-btn" title="Wave">👋</button>
+              <button id="avatarDanceBtn" class="hud-btn" title="Dance">✨</button>
+              <button id="avatarColorBtn" class="hud-btn" title="Change energy">🎨</button>
+            </div>
+          </div>
+          <div class="avatar-label">Interactive Holographic Presence · Move mouse · Click to interact</div>
+          <div class="avatar-glow-ring"></div>
         </div>
+
         <div id="feed" class="feed">
-          <p class="muted">Your videos will appear here.</p>
+          <p class="muted">Syncing posts from the network...</p>
         </div>
       </section>
 
+      <!-- DISCOVER -->
       <section id="discoverView" class="view" hidden>
-        <h2>Discover people</h2>
-        <div id="discoverList"></div>
+        <div class="view-header">
+          <h2>Discover</h2>
+          <p class="muted">Find people across the network</p>
+        </div>
+        <div id="discoverList" class="list-stack"></div>
       </section>
 
+      <!-- CREATE -->
       <section id="createView" class="view" hidden>
-        <h2>Create a post</h2>
-        <form id="createForm" class="panel create-form">
-          <label for="createFile">Choose a photo or video</label>
-          <input id="createFile" type="file"
-            accept="image/*,video/*" required>
-          <textarea id="createCaption" maxlength="2000"
-            placeholder="Write a caption..."></textarea>
-          <button id="publishBtn" class="primary" type="submit">
-            🚀 Publish to Vidora
-          </button>
-          <p id="createMessage" class="message" aria-live="polite"></p>
+        <div class="view-header">
+          <h2>Create</h2>
+          <p class="muted">Share a moment with the network</p>
+        </div>
+        <form id="createForm" class="create-card glass">
+          <div class="field">
+            <label for="createFile">Media</label>
+            <input id="createFile" type="file" accept="image/*,video/*" required>
+          </div>
+          <div class="field">
+            <label for="createCaption">Caption</label>
+            <textarea id="createCaption" rows="3" maxlength="2000" placeholder="What's happening in your world..."></textarea>
+          </div>
+          <button type="submit" id="publishBtn" class="btn primary glow">Publish to the Network</button>
+          <p id="createMessage" class="message"></p>
         </form>
       </section>
 
+      <!-- INBOX / CHAT -->
       <section id="inboxView" class="view" hidden>
-        <h2>Messages</h2>
-        <p class="muted">Chat is available with mutual followers.</p>
-        <div id="inboxList"></div>
+        <div class="view-header">
+          <h2>Inbox</h2>
+          <p class="muted">Mutual connections · Encrypted channels</p>
+        </div>
+        <div id="inboxList" class="list-stack"></div>
 
-        <div id="chatPanel" class="panel" hidden>
-          <div class="chat-heading">
-            <button id="backToInboxBtn" class="text-button">← Back</button>
-            <strong id="chatName">Chat</strong>
+        <div id="chatPanel" class="chat-panel glass" hidden>
+          <div class="chat-header">
+            <button id="backToInboxBtn" class="icon-btn small">←</button>
+            <div class="chat-peer">
+              <div class="mini-avatar" id="chatAvatar">V</div>
+              <div>
+                <strong id="chatName">Chat</strong>
+                <small id="chatStatus" class="status-online">● Secure channel</small>
+              </div>
+            </div>
+            <button id="chatCastBtn" class="icon-btn small" title="Cast this chat">📺</button>
           </div>
           <div id="chatMessages" class="chat-messages"></div>
-          <form id="messageForm" class="message-form">
-            <input id="messageInput" maxlength="2000"
-              placeholder="Write a message..." required>
-            <button class="primary" type="submit">Send</button>
-          </form>
-          <p id="chatMessage" class="message"></p>
+          <div class="chat-compose">
+            <form id="messageForm" class="message-form">
+              <input id="messageInput" type="text" placeholder="Transmit a message..." maxlength="2000" autocomplete="off">
+              <button type="submit" class="btn primary small send-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </form>
+            <p id="chatMessage" class="message"></p>
+          </div>
         </div>
       </section>
 
+      <!-- NOTIFICATIONS -->
       <section id="notificationsView" class="view" hidden>
-  <div class="section-heading">
-    <h2>Notifications</h2>
-    <button id="backHomeBtn" class="text-button">Home</button>
-  </div>
+        <div class="view-header">
+          <h2>Notifications</h2>
+          <button id="backHomeBtn" class="btn ghost small">Back</button>
+        </div>
+        <div class="push-setup glass">
+          <p>Enable real-time push alerts</p>
+          <button id="enablePushBtn" class="btn secondary">Enable Push</button>
+          <p id="pushStatus" class="muted small"></p>
+        </div>
+        <div id="notificationList" class="list-stack"></div>
+      </section>
 
-  <div class="panel">
-    <h3>Browser notifications</h3>
-    <p class="muted">
-      Allow Vidora to notify you when new notifications arrive.
-    </p>
-    <button id="enablePushBtn" class="primary" type="button">
-      Enable browser notifications
-    </button>
-    <p id="pushStatus" class="message" aria-live="polite"></p>
-  </div>
-
-  <div id="notificationList"></div>
-</section>
-
-
+      <!-- PROFILE -->
       <section id="profileView" class="view" hidden>
-        <h2>Your profile</h2>
-        <div class="panel profile-panel">
-          <div id="profileAvatar" class="profile-avatar">V</div>
-          <h3 id="profileDisplayName">Vidora user</h3>
-          <p id="profileUsername" class="muted">@username</p>
-          <div class="profile-stats">
-            <span><strong id="postCount">0</strong> Posts</span>
-            <span><strong id="followerCount">0</strong> Followers</span>
-            <span><strong id="followingCount">0</strong> Following</span>
+        <div class="profile-hero glass">
+          <div id="profileAvatar" class="big-avatar">V</div>
+          <h2 id="profileDisplayName">User</h2>
+          <p id="profileUsername" class="muted">@user</p>
+          <div class="stats">
+            <div><strong id="postCount">0</strong><span>Posts</span></div>
+            <div><strong id="followerCount">0</strong><span>Followers</span></div>
+            <div><strong id="followingCount">0</strong><span>Following</span></div>
           </div>
         </div>
-        <h3>Your posts</h3>
         <div id="myPosts" class="feed"></div>
       </section>
     </main>
 
-    <nav class="bottom-nav" aria-label="Main navigation">
-      <button data-view="homeView" class="nav-button active">⌂<span>Home</span></button>
-      <button data-view="discoverView" class="nav-button">⌕<span>Discover</span></button>
-      <button data-view="createView" class="nav-button">＋<span>Create</span></button>
-      <button data-view="inboxView" class="nav-button">✉<span>Inbox</span></button>
-      <button data-view="profileView" class="nav-button">◎<span>Profile</span></button>
+    <nav class="bottom-nav glass">
+      <button class="nav-button active" data-view="homeView"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+      <button class="nav-button" data-view="discoverView"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Discover</span></button>
+      <button class="nav-button create-nav" data-view="createView"><div class="create-orb">+</div><span>Create</span></button>
+      <button class="nav-button" data-view="inboxView"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Inbox</span></button>
+      <button class="nav-button" data-view="profileView"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></button>
     </nav>
   </div>
 
-  <script src="app.js"></script>
- 
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", async () => {
-    try {
-      const registration =
-        await navigator.serviceWorker.register("./sw.js");
+  <!-- CAST OVERLAY -->
+  <div id="castOverlay" class="cast-overlay" hidden>
+    <div class="cast-card glass">
+      <h3>Cast Vidora</h3>
+      <p class="muted">Mirror your activity to another screen or smart display.</p>
+      <div class="cast-options">
+        <button id="castPresentation" class="btn primary glow">Cast via Presentation API</button>
+        <button id="castFullscreen" class="btn secondary">Open Cast View (Fullscreen)</button>
+        <button id="castClose" class="btn ghost">Cancel</button>
+      </div>
+      <p id="castStatus" class="message"></p>
+    </div>
+  </div>
 
-      console.log("Vidora service worker registered:", registration.scope);
-    } catch (error) {
-      console.error("Service worker registration failed:", error);
+  <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(console.error);
+      });
     }
-  });
-}
-</script>
- 
+  </script>
 </body>
 </html>
