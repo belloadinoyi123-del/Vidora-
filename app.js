@@ -1554,6 +1554,84 @@ if ($("inboxLayout")) $("inboxLayout").classList.add("has-chat");
     await loadMessages();
     await loadInbox();
   }
+  // VIDORA: REPLY AND EMOJI REACTIONS
+
+let replyingToMessage = null;
+
+async function handleMessageAction(event) {
+  const replyButton = event.target.closest(".reply-message-btn");
+  const reactButton = event.target.closest(".react-message-btn");
+
+  if (replyButton) {
+    const messageId = Number(replyButton.dataset.replyId);
+    const bubble = replyButton.closest(".chat-bubble");
+    const content = bubble?.querySelector(".bubble-content")?.textContent || "";
+
+    if (!Number.isSafeInteger(messageId) || messageId <= 0) return;
+
+    replyingToMessage = {
+      id: messageId,
+      content: content.slice(0, 150)
+    };
+
+    const input = $("messageInput");
+
+    if (input) {
+      input.placeholder = "Replying to: " + replyingToMessage.content;
+      input.focus();
+    }
+
+    showMessage("Reply selected. Type your response and send it.");
+    return;
+  }
+
+  if (reactButton) {
+    if (!state.user) {
+      showMessage("Please sign in to react.");
+      return;
+    }
+
+    const messageId = Number(reactButton.dataset.reactId);
+    const emoji = reactButton.dataset.emoji;
+
+    if (!Number.isSafeInteger(messageId) || messageId <= 0) return;
+
+    const allowedEmojis = ["❤️", "😂", "😮", "😢", "👍", "🔥"];
+
+    if (!allowedEmojis.includes(emoji)) return;
+
+    const { error } = await db
+      .from("message_reactions")
+      .upsert(
+        {
+          message_id: messageId,
+          user_id: state.user.id,
+          emoji
+        },
+        {
+          onConflict: "message_id,user_id,emoji",
+          ignoreDuplicates: true
+        }
+      );
+
+    if (error) {
+      showMessage("Reaction failed: " + error.message);
+      return;
+    }
+
+    reactButton.classList.add("reaction-selected");
+    showMessage("Reaction saved " + emoji);
+  }
+}
+
+function setupMessageActions() {
+  const container = $("chatMessages");
+
+  if (!container || container.dataset.actionsReady === "true") return;
+
+  container.dataset.actionsReady = "true";
+  container.addEventListener("click", handleMessageAction);
+}
 
   /* =========================================
      SHARE POSTS
