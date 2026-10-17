@@ -1839,14 +1839,27 @@ if ($("inboxLayout")) $("inboxLayout").classList.add("has-chat");
 
     bind("messageForm", "submit", sendMessage);
 
-    bind("backToInboxBtn", "click", () => {
-      state.currentChat = null;
+bind("backToInboxBtn", "click", () => {
+  state.currentChat = null;
 
-      if ($("chatPanel")) $("chatPanel").hidden = true;
-      if ($("inboxList")) $("inboxList").hidden = false;
+  if ($("chatPanel")) {
+    $("chatPanel").hidden = true;
+  }
 
-      loadInbox();
-    });
+  if ($("inboxList")) {
+    $("inboxList").hidden = false;
+  }
+
+  if ($("inboxView")) {
+    $("inboxView").classList.remove("chat-open");
+  }
+
+  if ($("inboxLayout")) {
+    $("inboxLayout").classList.remove("has-chat");
+  }
+
+  loadInbox();
+});
 
     bind("assistantHelpBtn", "click", assistantHelp);
     bind("avatarWaveBtn", "click", waveAvatar);
