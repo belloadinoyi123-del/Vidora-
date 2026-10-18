@@ -392,57 +392,295 @@
 
 
 
-<!-- INBOX / MESSAGES -->
+<!-- ================= VIDORA MESSAGES ================= -->
+
 <section id="inboxView" class="view" hidden>
 
-  <div class="view-heading">
-    <h1>Messages</h1>
-    <p class="muted">Chat is available to mutual followers.</p>
+  <div class="view-heading vidora-inbox-heading">
+    <div>
+      <span class="inbox-eyebrow">VIDORA CONNECT</span>
+      <h1>Messages</h1>
+      <p class="muted">Your conversations, your space.</p>
+    </div>
+
+    <button
+      id="chatPreferencesBtn"
+      class="chat-icon-button"
+      type="button"
+      aria-label="Chat preferences"
+      title="Chat preferences">
+      ⚙
+    </button>
   </div>
 
-  <div class="inbox-layout" id="inboxLayout">
+  <div class="inbox-layout vidora-inbox-layout" id="inboxLayout">
 
     <!-- CONVERSATION LIST -->
-    <div id="inboxList" class="inbox-list">
-      <p class="muted">Loading conversations...</p>
+
+    <div id="inboxList" class="inbox-list vidora-conversation-list">
+
+      <div class="inbox-search-wrap">
+        <input
+          id="conversationSearch"
+          type="search"
+          placeholder="Search conversations..."
+          aria-label="Search conversations">
+      </div>
+
+      <div class="inbox-list-heading">
+        <strong>Recent chats</strong>
+        <span id="conversationCount">Your inbox</span>
+      </div>
+
+      <div id="conversationItems">
+        <p class="muted">Loading conversations...</p>
+      </div>
+
     </div>
 
     <!-- CHAT WINDOW -->
-    <div id="chatPanel" class="chat-panel glass" hidden>
 
-      <div class="chat-header">
+    <div
+      id="chatPanel"
+      class="chat-panel glass vidora-chat-panel"
+      hidden>
+
+      <!-- CHAT HEADER -->
+
+      <header class="chat-header vidora-chat-header">
 
         <button
           id="backToInboxBtn"
           type="button"
-          class="btn secondary"
-          aria-label="Back to conversations">
+          class="chat-icon-button chat-back-button"
+          aria-label="Back to inbox">
           ←
         </button>
 
-        <div id="chatAvatar" class="mini-avatar">V</div>
+        <div class="chat-person-avatar">
+          <div id="chatAvatar" class="mini-avatar">V</div>
+          <span class="chat-online-indicator" aria-hidden="true"></span>
+        </div>
 
-        <div class="chat-user-info" style="flex:1">
+        <div class="chat-user-info">
           <strong id="chatName">Conversation</strong>
-          <div id="chatStatus">Secure channel</div>
+          <div id="chatStatus">Mutual followers</div>
         </div>
 
         <button
-          id="chatCastBtn"
+          id="chatPreferencesOpenBtn"
           type="button"
-          aria-label="Cast options">
-          📺
+          class="chat-icon-button"
+          aria-label="Conversation preferences"
+          title="Conversation preferences">
+          ⋮
+        </button>
+
+      </header>
+
+      <!-- CHAT PREFERENCES PANEL -->
+
+      <div
+        id="chatPreferencesPanel"
+        class="chat-preferences-panel"
+        hidden>
+
+        <div class="chat-preferences-title">
+          <div>
+            <strong>Chat preferences</strong>
+            <p class="muted">Personalize your conversation.</p>
+          </div>
+
+          <button
+            id="closeChatPreferencesBtn"
+            class="chat-icon-button"
+            type="button"
+            aria-label="Close preferences">
+            ×
+          </button>
+        </div>
+
+        <label for="chatWallpaperSelect">Chat background</label>
+
+        <select id="chatWallpaperSelect">
+          <option value="galaxy">Neon galaxy</option>
+          <option value="midnight">Midnight</option>
+          <option value="purple">Purple glow</option>
+          <option value="plain">Plain dark</option>
+        </select>
+
+        <label for="chatTextSizeSelect">Message text size</label>
+
+        <select id="chatTextSizeSelect">
+          <option value="small">Small</option>
+          <option value="medium" selected>Medium</option>
+          <option value="large">Large</option>
+        </select>
+
+        <label class="chat-setting-row">
+          <span>
+            <strong>Enter to send</strong>
+            <small>Use Enter to send messages.</small>
+          </span>
+
+          <input id="chatEnterToSend" type="checkbox" checked>
+        </label>
+
+        <label class="chat-setting-row">
+          <span>
+            <strong>Message notifications</strong>
+            <small>Show in-app alerts for new messages.</small>
+          </span>
+
+          <input id="chatNotificationsEnabled" type="checkbox" checked>
+        </label>
+
+        <button
+          id="saveChatPreferencesBtn"
+          class="btn primary"
+          type="button">
+          Save preferences
+        </button>
+
+        <p id="chatPreferencesStatus" class="message" role="status"></p>
+
+      </div>
+
+      <!-- REPLY PREVIEW -->
+
+      <div
+        id="replyPreview"
+        class="reply-preview"
+        hidden>
+
+        <div class="reply-preview-content">
+          <strong>Replying to message</strong>
+          <p id="replyPreviewText"></p>
+        </div>
+
+        <button
+          id="cancelReplyBtn"
+          type="button"
+          class="chat-icon-button"
+          aria-label="Cancel reply">
+          ×
+        </button>
+
+      </div>
+
+      <!-- MESSAGE SEARCH -->
+
+      <div id="messageSearchBar" class="message-search-bar" hidden>
+
+        <input
+          id="messageSearchInput"
+          type="search"
+          placeholder="Find a message..."
+          aria-label="Search messages">
+
+        <button
+          id="closeMessageSearchBtn"
+          class="chat-icon-button"
+          type="button"
+          aria-label="Close message search">
+          ×
         </button>
 
       </div>
 
       <!-- CHAT MESSAGES -->
-      <div id="chatMessages" class="chat-messages">
-        <p class="muted">Channel open. Say hello.</p>
+
+      <div
+        id="chatMessages"
+        class="chat-messages vidora-chat-messages"
+        aria-live="polite"
+        aria-label="Conversation messages">
+
+        <p class="muted">Your conversation will appear here.</p>
+
       </div>
 
-      <!-- MESSAGE INPUT -->
-      <form id="messageForm" class="message-form">
+      <!-- MESSAGE SELECTION TOOLBAR -->
+
+      <div id="selectedMessageToolbar" class="selected-message-toolbar" hidden>
+
+        <span id="selectedMessageCount">1 message selected</span>
+
+        <button id="highlightMessageBtn" type="button">
+          Highlight
+        </button>
+
+        <button id="copyMessageBtn" type="button">
+          Copy
+        </button>
+
+        <button id="replySelectedMessageBtn" type="button">
+          Reply
+        </button>
+
+        <button id="clearMessageSelectionBtn" type="button">
+          Cancel
+        </button>
+
+      </div>
+
+      <!-- MESSAGE ACTION MENU -->
+
+      <div
+        id="messageActionMenu"
+        class="message-action-menu"
+        hidden>
+
+        <button type="button" data-message-action="reply">
+          Reply
+        </button>
+
+        <button type="button" data-message-action="highlight">
+          Highlight
+        </button>
+
+        <button type="button" data-message-action="copy">
+          Copy text
+        </button>
+
+        <button type="button" data-message-action="react">
+          React
+        </button>
+
+        <button type="button" data-message-action="delete">
+          Delete my message
+        </button>
+
+      </div>
+
+      <!-- REACTION PICKER -->
+
+      <div
+        id="messageReactionPicker"
+        class="message-reaction-picker"
+        hidden>
+
+        <button type="button" data-chat-reaction="❤️">❤️</button>
+        <button type="button" data-chat-reaction="😂">😂</button>
+        <button type="button" data-chat-reaction="👍">👍</button>
+        <button type="button" data-chat-reaction="😮">😮</button>
+        <button type="button" data-chat-reaction="😢">😢</button>
+        <button type="button" data-chat-reaction="🔥">🔥</button>
+
+      </div>
+
+      <!-- MESSAGE COMPOSER -->
+
+      <form id="messageForm" class="message-form vidora-message-form">
+
+        <button
+          id="openMessageSearchBtn"
+          class="chat-icon-button"
+          type="button"
+          aria-label="Search messages"
+          title="Search messages">
+          ⌕
+        </button>
 
         <input
           id="messageInput"
@@ -450,9 +688,10 @@
           maxlength="2000"
           placeholder="Write a message..."
           autocomplete="off"
+          aria-label="Write a message"
           required>
 
-        <button type="submit" class="btn primary">
+        <button id="sendMessageBtn" type="submit" class="btn primary">
           Send
         </button>
 
@@ -461,9 +700,12 @@
       <p id="chatMessage" class="message" role="status"></p>
 
     </div>
+
   </div>
 
 </section>
+
+<!-- ================= END VIDORA MESSAGES ================= -->
   
 
   
