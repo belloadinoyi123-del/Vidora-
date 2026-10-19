@@ -217,7 +217,7 @@ function loadSongs() {
         el.innerHTML = `<div style="font-size:24px;">🎵</div><div><strong>${song.title}</strong><br><small style="color:#9e9e9e;">${song.artist} • ${song.genre}</small></div>`;
     el.onclick = () => {
       state.currentSong = song;
-      \( ("videoSong").textContent = ` \){song.title} - ${song.artist}`;
+            $("videoSong").textContent = `${song.title} - ${song.artist}`;
       $("songModal").classList.remove("active");
       notify(`Now playing: ${song.title}`);
     };
