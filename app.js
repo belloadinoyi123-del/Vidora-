@@ -1720,6 +1720,57 @@ function bindEvents() {
     loadNotifications();
   });
 }
+// ========== SIGNUP WIZARD FIX ==========
+let currentSignupStep = 1;
+
+$("signupNext")?.addEventListener("click", () => {
+  if (currentSignupStep < 4) {
+    // Validation
+    if (currentSignupStep === 1) {
+      const username = $("authUsername")?.value.trim();
+      if (!username) {
+        notify("Please choose a username.");
+        return;
+      }
+    }
+    if (currentSignupStep === 2) {
+      const email = $("authEmail")?.value.trim();
+      const password = $("authPassword")?.value.trim();
+      if (!email || !password || password.length < 8) {
+        notify("Enter a valid email and a password of at least 8 characters.");
+        return;
+      }
+    }
+
+    currentSignupStep++;
+    showSignupStep(currentSignupStep);
+  } else {
+    // Final step → create the account
+    handleAuth(new Event("submit"));
+  }
+});
+
+$("signupBack")?.addEventListener("click", () => {
+  if (currentSignupStep > 1) {
+    currentSignupStep--;
+    showSignupStep(currentSignupStep);
+  }
+});
+
+// Interest chips
+document.querySelectorAll(".interest-chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    chip.classList.toggle("active");
+  });
+});
+
+// Color swatches
+document.querySelectorAll(".color-swatch").forEach(swatch => {
+  swatch.addEventListener("click", () => {
+    document.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("active"));
+    swatch.classList.add("active");
+  });
+});
 
 /* ===================== OPTIONAL CSS ===================== */
 
