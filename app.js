@@ -1,7 +1,7 @@
 "use strict";
 
 const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h"; // ← PUT YOUR REAL KEY HERE
+ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9........";  // paste your real key here// ← PUT YOUR REAL KEY HERE
 
 const state = {
   supabase: null,
