@@ -198,7 +198,7 @@ function loadStories() {
     item.className = "story-item";
     item.innerHTML = `
       <div class="story-ring">
-        <img src="avatars/\( {name}.png" alt=" \){name}" onerror="this.src='https://via.placeholder.com/64/111/00e676?text=${name[0]}'">
+                <img src="avatars/${name}.png" alt="${name}" onerror="this.src='https://via.placeholder.com/64/111/00e676?text=${name[0]}'">
       </div>
       <span style="font-size:11px;color:#9e9e9e;">${name}</span>
     `;
