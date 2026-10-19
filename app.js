@@ -214,7 +214,7 @@ function loadSongs() {
   SONGS.forEach(song => {
     const el = document.createElement("div");
     el.className = "song-item";
-    el.innerHTML = `<div style="font-size:24px;">🎵</div><div><strong>\( {song.title}</strong><br><small style="color:#9e9e9e;"> \){song.artist} • ${song.genre}</small></div>`;
+        el.innerHTML = `<div style="font-size:24px;">🎵</div><div><strong>${song.title}</strong><br><small style="color:#9e9e9e;">${song.artist} • ${song.genre}</small></div>`;
     el.onclick = () => {
       state.currentSong = song;
       \( ("videoSong").textContent = ` \){song.title} - ${song.artist}`;
