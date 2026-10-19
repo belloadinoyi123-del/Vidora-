@@ -198,9 +198,10 @@ function initSupabase() {
   }
 
   if (
-    !SUPABASE_ANON_KEY ||
-    SUPABASE_ANON_KEY === "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h"
-  ) {
+  !SUPABASE_URL ||
+  !SUPABASE_ANON_KEY ||
+  SUPABASE_ANON_KEY.includes("YOUR_EXISTING")
+) {
     console.warn("Add your public Supabase anon/publishable key.");
     notify("Add your Supabase public key in app.js.");
     return;
