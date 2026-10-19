@@ -20,7 +20,7 @@ const SUPABASE_URL =
 */
 
 const SUPABASE_ANON_KEY =
-  "YOUR_EXISTING_SUPABASE_ANON_KEY";
+  "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
 
 const MUSIC_TRACKS = [
   { name: "Original sound", url: "" },
