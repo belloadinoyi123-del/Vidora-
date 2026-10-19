@@ -295,7 +295,7 @@ function setAuthMode(mode) {
 
   if (isSignup) showSignupStep(1);
 }
-}
+
 function showSignupStep(step) {
   document.querySelectorAll(".signup-step").forEach(panel => {
     const active = Number(panel.dataset.step) === step;
