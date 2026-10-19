@@ -98,17 +98,33 @@ function showSignupStep(step) {
 async function doLogin() {
   const email = $("loginEmail").value.trim();
   const password = $("loginPassword").value.trim();
-  if (!email || !password) return notify("Enter email and password");
 
-  if (!state.supabase) return notify("Supabase not ready. Check your key.");
+  if (!email || !password) {
+    notify("Please enter email and password");
+    return;
+  }
+
+  if (!state.supabase) {
+    notify("Supabase is not ready. Check your anon key in app.js");
+    console.error("Supabase client is null");
+    return;
+  }
+
+  notify("Logging in...");
 
   try {
-    const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await state.supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
     if (error) throw error;
+
     state.user = data.user;
     showApp();
     notify("Welcome back!");
   } catch (err) {
+    console.error(err);
     notify(err.message || "Login failed");
   }
 }
@@ -121,23 +137,51 @@ async function doSignup() {
   const country = $("authCountry").value;
   const language = $("authLanguage").value;
 
-  if (!email || !password || !username) return notify("Please fill all fields");
-  if (!$("authTerms").checked) return notify("Please accept the terms");
+  if (!email || !password || !username) {
+    notify("Please fill all required fields");
+    return;
+  }
+  if (!$("authTerms").checked) {
+    notify("Please accept the terms");
+    return;
+  }
+
+  if (!state.supabase) {
+    notify("Supabase is not ready. Check your anon key in app.js");
+    return;
+  }
+
+  notify("Creating account...");
 
   try {
     const { data, error } = await state.supabase.auth.signUp({
-      email, password,
-      options: { data: { username, display_name: displayName, country, language } }
+      email,
+      password,
+      options: {
+        data: {
+          username,
+          display_name: displayName || username,
+          country,
+          language
+        }
+      }
     });
+
     if (error) throw error;
+
     localStorage.setItem("vidora_country", country);
     localStorage.setItem("vidora_language", language);
-    notify("Account created!");
+
+    notify("Account created successfully!");
+    
     if (data.session) {
       state.user = data.user;
       showApp();
+    } else {
+      notify("Check your email to verify your account");
     }
   } catch (err) {
+    console.error(err);
     notify(err.message || "Signup failed");
   }
 }
