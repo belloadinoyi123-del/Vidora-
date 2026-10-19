@@ -199,7 +199,7 @@ function initSupabase() {
 
   if (
     !SUPABASE_ANON_KEY ||
-    SUPABASE_ANON_KEY === "YOUR_EXISTING_SUPABASE_ANON_KEY"
+    SUPABASE_ANON_KEY === "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h"
   ) {
     console.warn("Add your public Supabase anon/publishable key.");
     notify("Add your Supabase public key in app.js.");
@@ -250,24 +250,90 @@ function showApp() {
 
 /* ===================== AUTHENTICATION ===================== */
 
+
 function setAuthMode(mode) {
   const isSignup = mode === "signup";
 
-  if ($("loginFields")) {
-    $("loginFields").style.display = isSignup ? "none" : "block";
+  const loginFields = document.getElementById("loginFields");
+  const signupWizard = document.getElementById("signupWizard");
+  const authTitle = document.getElementById("authTitle");
+  const authMessage = document.getElementById("authMessage");
+  const showSignup = document.getElementById("showSignup");
+  const showLogin = document.getElementById("showLogin");
+
+  if (loginFields) {
+    loginFields.hidden = isSignup;
   }
 
-  if ($("signupWizard")) {
-    $("signupWizard").style.display = isSignup ? "block" : "none";
+  if (signupWizard) {
+    signupWizard.hidden = !isSignup;
   }
 
-  if ($("authSubmit")) {
-    $("authSubmit").textContent = isSignup
-      ? "Create account"
-      : "Log in";
+  if (authTitle) {
+    authTitle.textContent = isSignup
+      ? "Create your Vidora account"
+      : "Welcome back";
+  }
+
+  if (authMessage) {
+    authMessage.textContent = "";
+  }
+
+  if (showSignup) {
+    showSignup.hidden = isSignup;
+  }
+
+  if (showLogin) {
+    showLogin.hidden = !isSignup;
+  }
+
+  if (isSignup) {
+    showSignupStep(1);
   }
 }
+function showSignupStep(step) {
+  document.querySelectorAll(".signup-step").forEach(panel => {
+    panel.hidden = Number(panel.dataset.step) !== step;
+  });
 
+  document.querySelectorAll(".prog-step").forEach(item => {
+    item.classList.toggle(
+      "active",
+      Number(item.dataset.step) === step
+    );
+  });
+
+  const back = document.getElementById("signupBack");
+  const next = document.getElementById("signupNext");
+
+  if (back) {
+    back.hidden = step === 1;
+  }
+
+  if (next) {
+    next.textContent = step === 4
+      ? "Create account"
+      : "Continue";
+  }
+
+  if (step === 4) {
+    document.getElementById("reviewUsername").textContent =
+      document.getElementById("authUsername").value;
+
+    document.getElementById("reviewName").textContent =
+      document.getElementById("authDisplayName").value;
+
+    document.getElementById("reviewEmail").textContent =
+      document.getElementById("authEmail").value;
+
+    const interests = [
+      ...document.querySelectorAll(".interest-chip.active")
+    ].map(button => button.dataset.interest);
+
+    document.getElementById("reviewInterests").textContent =
+      interests.join(", ") || "Not selected";
+  }
+}
 async function handleAuth(event) {
   event?.preventDefault();
 
