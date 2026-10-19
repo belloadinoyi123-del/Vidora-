@@ -10,7 +10,7 @@
 const SUPABASE_URL = "https://htnrqgzxkfktwoioscjr.supabase.co";
 
 // IMPORTANT: Replace with your real Supabase anon key
-const SUPABASE_ANON_KEY = "YOUR_REAL_SUPABASE_ANON_KEY_HERE";
+const SUPABASE_ANON_KEY = "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
 
 /* ===================== STATE ===================== */
 
