@@ -2,863 +2,238 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#080616">
-  <meta name="description" content="Vidora — Watch. Swipe. Connect.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#030303">
+  <meta name="description" content="Vidora — Futuristic Social Video">
 
-  <title>Vidora — Watch. Swipe. Connect.</title>
+  <title>Vidora — Watch. Create. Connect.</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
-
-  <link rel="manifest" href="./manifest.json">
 </head>
-
 <body>
 
-  <canvas id="bgCanvas" aria-hidden="true"></canvas>
-
-  <!-- ================= AUTHENTICATION ================= -->
-
+  <!-- ===================== AUTH SCREEN ===================== -->
   <section id="authScreen">
-    <div class="auth-card glass">
+    <div class="auth-card">
 
-      <div class="logo" style="text-align:center;font-size:30px;margin-bottom:8px">
-        VIDORA
-      </div>
-
-      <p style="text-align:center;color:var(--blue)">
-        WATCH. SWIPE. CONNECT.
-      </p>
+      <div class="auth-logo">VIDORA</div>
+      <p class="auth-subtitle">Watch • Create • Connect</p>
 
       <h2 id="authTitle">Welcome back</h2>
-
-      <p id="authMessage" class="message" role="status"></p>
+      <p id="authMessage" class="message"></p>
 
       <form id="authForm">
 
         <!-- LOGIN -->
-
         <div id="loginFields">
+          <div class="form-group">
+            <label for="loginEmail">Email</label>
+            <input id="loginEmail" type="email" placeholder="Enter your email" required autocomplete="email">
+          </div>
 
-          <label for="loginEmail">Email address</label>
-          <input
-            id="loginEmail"
-            type="email"
-            autocomplete="email"
-            placeholder="Enter your email"
-            required
-          >
+          <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword" type="password" placeholder="Enter your password" required autocomplete="current-password">
+          </div>
 
-          <br><br>
-
-          <label for="loginPassword">Password</label>
-          <input
-            id="loginPassword"
-            type="password"
-            autocomplete="current-password"
-            placeholder="Enter your password"
-            required
-          >
-
-          <br><br>
-
-          <button id="authSubmit" class="btn primary" type="submit" style="width:100%">
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">
             Log In
           </button>
-
         </div>
 
-        <!-- SIGNUP WIZARD -->
+        <!-- SIGNUP (Facebook-style multi-step) -->
+        <div id="signupWizard" class="hidden">
 
-        <div id="signupWizard" hidden>
-
-          <div class="signup-progress" style="display:flex;justify-content:space-between;margin:15px 0">
-            <span class="prog-step active" data-step="1">1 · Identity</span>
-            <span class="prog-step" data-step="2">2 · Security</span>
-            <span class="prog-step" data-step="3">3 · Interests</span>
-            <span class="prog-step" data-step="4">4 · Finish</span>
-          </div>
-
-          <!-- STEP 1 -->
-
+          <!-- Step 1: Name -->
           <div class="signup-step" data-step="1">
-
-            <h3>Create your identity</h3>
-
-            <label for="authUsername">Username</label>
-            <input
-              id="authUsername"
-              maxlength="24"
-              autocomplete="username"
-              placeholder="your_username"
-            >
-
-            <br><br>
-
-            <label for="authDisplayName">Display name</label>
-            <input
-              id="authDisplayName"
-              maxlength="50"
-              placeholder="Your name"
-            >
-
-            <br><br>
-
-            <label for="authBio">Short bio</label>
-            <textarea
-              id="authBio"
-              maxlength="250"
-              placeholder="Tell people about yourself"
-            ></textarea>
-
+            <div class="form-group">
+              <label for="authDisplayName">Full Name</label>
+              <input id="authDisplayName" type="text" placeholder="Your full name" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label for="authUsername">Username</label>
+              <input id="authUsername" type="text" placeholder="Choose a username" maxlength="24">
+            </div>
           </div>
 
-          <!-- STEP 2 -->
-
-          <div class="signup-step" data-step="2" hidden>
-
-            <h3>Secure your account</h3>
-
-            <label for="authEmail">Email address</label>
-            <input
-              id="authEmail"
-              type="email"
-              autocomplete="email"
-              placeholder="you@example.com"
-            >
-
-            <br><br>
-
-            <label for="authPassword">Password</label>
-            <input
-              id="authPassword"
-              type="password"
-              autocomplete="new-password"
-              minlength="8"
-              placeholder="At least 8 characters"
-            >
-
-            <div class="strength-track" style="height:5px;background:#29213f;border-radius:10px;margin-top:10px">
-              <div class="strength-fill" style="height:100%;width:0;border-radius:10px"></div>
+          <!-- Step 2: Contact -->
+          <div class="signup-step hidden" data-step="2">
+            <div class="form-group">
+              <label for="authEmail">Email</label>
+              <input id="authEmail" type="email" placeholder="you@example.com">
             </div>
-
-            <small class="strength-text">Password strength</small>
-
+            <div class="form-group">
+              <label for="authPassword">Password</label>
+              <input id="authPassword" type="password" placeholder="At least 8 characters" minlength="8">
+            </div>
           </div>
 
-          <!-- STEP 3 -->
-
-          <div class="signup-step" data-step="3" hidden>
-
-            <h3>Choose your interests</h3>
-
-            <p class="muted">Select the topics you enjoy.</p>
-
-            <div class="interest-options">
-
-              <button type="button" class="interest-chip" data-interest="Technology">Technology</button>
-              <button type="button" class="interest-chip" data-interest="Music">Music</button>
-              <button type="button" class="interest-chip" data-interest="Gaming">Gaming</button>
-              <button type="button" class="interest-chip" data-interest="Sports">Sports</button>
-              <button type="button" class="interest-chip" data-interest="Comedy">Comedy</button>
-              <button type="button" class="interest-chip" data-interest="Education">Education</button>
-              <button type="button" class="interest-chip" data-interest="Fashion">Fashion</button>
-              <button type="button" class="interest-chip" data-interest="Movies">Movies</button>
-
+          <!-- Step 3: Country & Language -->
+          <div class="signup-step hidden" data-step="3">
+            <div class="form-group">
+              <label for="authCountry">Country / Region</label>
+              <select id="authCountry">
+                <option value="">Select your country</option>
+                <option value="NG">Nigeria</option>
+                <option value="GH">Ghana</option>
+                <option value="ZA">South Africa</option>
+                <option value="KE">Kenya</option>
+                <option value="US">United States</option>
+                <option value="GB">United Kingdom</option>
+                <option value="CA">Canada</option>
+                <option value="FR">France</option>
+                <option value="DE">Germany</option>
+                <option value="BR">Brazil</option>
+                <option value="IN">India</option>
+                <option value="OTHER">Other</option>
+              </select>
             </div>
 
-            <h3 style="margin-top:25px">Avatar energy color</h3>
-
-            <div style="display:flex;gap:12px;flex-wrap:wrap">
-
-              <button type="button" class="color-swatch active" data-color="#a855f7" aria-label="Purple" style="width:35px;height:35px;border-radius:50%;background:#a855f7;border:0"></button>
-
-              <button type="button" class="color-swatch" data-color="#00d9ff" aria-label="Blue" style="width:35px;height:35px;border-radius:50%;background:#00d9ff;border:0"></button>
-
-              <button type="button" class="color-swatch" data-color="#ff3d9a" aria-label="Pink" style="width:35px;height:35px;border-radius:50%;background:#ff3d9a;border:0"></button>
-
-              <button type="button" class="color-swatch" data-color="#a3e635" aria-label="Lime" style="width:35px;height:35px;border-radius:50%;background:#a3e635;border:0"></button>
-
-              <button type="button" class="color-swatch" data-color="#f97316" aria-label="Orange" style="width:35px;height:35px;border-radius:50%;background:#f97316;border:0"></button>
-
+            <div class="form-group">
+              <label for="authLanguage">Preferred Language</label>
+              <select id="authLanguage">
+                <option value="en">English</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+                <option value="ar">Arabic</option>
+                <option value="ha">Hausa</option>
+                <option value="yo">Yoruba</option>
+                <option value="ig">Igbo</option>
+                <option value="pt">Portuguese</option>
+              </select>
             </div>
-
           </div>
 
-          <!-- STEP 4 -->
+          <!-- Step 4: Finish -->
+          <div class="signup-step hidden" data-step="4">
+            <p style="text-align:center; color:#aaa; margin-bottom:20px;">
+              Review your details and create your account
+            </p>
+            <div style="background:#111; padding:16px; border-radius:12px; border:1px solid rgba(0,230,118,0.2);">
+              <p><strong>Name:</strong> <span id="reviewName">—</span></p>
+              <p><strong>Username:</strong> @<span id="reviewUsername">—</span></p>
+              <p><strong>Email:</strong> <span id="reviewEmail">—</span></p>
+              <p><strong>Country:</strong> <span id="reviewCountry">—</span></p>
+            </div>
 
-          <div class="signup-step" data-step="4" hidden>
-
-            <h3>Review your identity</h3>
-
-            <p>Username: <strong id="reviewUsername"></strong></p>
-            <p>Name: <strong id="reviewName"></strong></p>
-            <p>Email: <strong id="reviewEmail"></strong></p>
-            <p>Interests: <strong id="reviewInterests"></strong></p>
-
-            <label style="display:flex;align-items:flex-start;gap:10px">
-              <input id="authTerms" type="checkbox">
-              <span>I agree to use Vidora respectfully and follow its community rules.</span>
+            <label style="display:flex; gap:10px; margin-top:18px; font-size:13px; color:#ccc;">
+              <input type="checkbox" id="authTerms">
+              I agree to Vidora’s Terms and Community Guidelines
             </label>
-
           </div>
 
-          <div style="display:flex;gap:10px;margin-top:22px">
-
-            <button id="signupBack" type="button" class="btn secondary" hidden>
+          <!-- Navigation buttons -->
+          <div style="display:flex; gap:12px; margin-top:24px;">
+            <button type="button" id="signupBack" class="btn btn-ghost hidden" style="flex:1;">
               Back
             </button>
-
-            <button id="signupNext" type="button" class="btn primary" style="flex:1">
+            <button type="button" id="signupNext" class="btn btn-primary" style="flex:2;">
               Continue
             </button>
-
           </div>
-
         </div>
-
       </form>
 
-      <div style="text-align:center;margin-top:22px">
-
-        <button id="showSignup" type="button" class="text-button">
-          Create an account
-        </button>
-
-        <button id="showLogin" type="button" class="text-button" hidden>
-          Already registered? Log in
-        </button>
-
+      <div class="auth-switch">
+        <button type="button" id="showSignup">Create new account</button>
+        <button type="button" id="showLogin" class="hidden">Already have an account? Log in</button>
       </div>
-
     </div>
   </section>
 
-  <!-- ================= MAIN APP ================= -->
+  <!-- ===================== MAIN APP ===================== -->
+  <div id="appShell">
 
-  <div id="appShell" hidden>
-
-    <!-- TOP BAR -->
-
+    <!-- Top Bar -->
     <header class="topbar">
-
       <div class="logo">VIDORA</div>
-
-      <div style="display:flex;gap:8px;align-items:center">
-
-        <button id="castBtn" type="button">📺 Cast</button>
-
-        <button id="notificationsBtn" type="button" aria-label="Notifications">
-          🔔
-        </button>
-
-        <button id="logoutBtn" type="button">Log out</button>
-
+      <div style="display:flex; gap:12px; align-items:center;">
+        <button id="castBtn" style="background:none; border:none; color:white; font-size:20px;">📺</button>
+        <button id="notificationsBtn" style="background:none; border:none; color:white; font-size:20px;">🔔</button>
       </div>
-
     </header>
 
-    <!-- APP CONTENT -->
-
-    <main class="app-layout">
-
-      <!-- HOME / FEED -->
-
-      <section id="homeView" class="view">
-
-        <h1>Discover your world.</h1>
-
-        <p id="greetingText" class="muted">Welcome to Vidora.</p>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin:20px 0">
-
-          <button id="refreshFeedBtn" class="btn secondary" type="button">
-            ↻ Refresh
-          </button>
-
-          <button class="btn primary" type="button" data-view="createView">
-            ＋ Create post
-          </button>
-
+    <!-- Stories -->
+    <div class="stories-bar" id="storiesBar">
+      <!-- Will be filled by JavaScript using your avatars -->
+      <div class="story-item" id="addStoryBtn">
+        <div class="story-ring" style="background:linear-gradient(135deg,#00e676,#00b0ff);">
+          <div style="width:100%;height:100%;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;font-size:24px;color:#00e676;">+</div>
         </div>
-
-        <div id="feed">
-          <p class="muted">Loading your feed...</p>
-        </div>
-
-      </section>
-
-      <!-- DISCOVER -->
-
-      <section id="discoverView" class="view" hidden>
-
-        <h1>Discover</h1>
-
-        <p class="muted">Find people in the Vidora community.</p>
-
-        <div id="discoverList">
-          <p class="muted">Scanning the network...</p>
-        </div>
-
-      </section>
-
-      <!-- CREATE -->
-
-      <section id="createView" class="view" hidden>
-
-        <div class="create-card glass">
-
-          <h1>Create a post</h1>
-
-          <p class="muted">Share a photo or video with your community.</p>
-
-          <p id="createMessage" class="message" role="status"></p>
-
-          <form id="createForm">
-
-            <label for="createFile">Choose a photo or video</label>
-
-            <input
-              id="createFile"
-              type="file"
-              accept="image/*,video/*"
-              required
-            >
-
-            <label for="createCaption">Caption</label>
-
-            <textarea
-              id="createCaption"
-              maxlength="2000"
-              placeholder="What's happening?"
-            ></textarea>
-
-            <button id="publishBtn" type="submit" class="btn primary">
-              🚀 Publish to Vidora
-            </button>
-
-          </form>
-
-        </div>
-
-      </section>
-
-      <!-- HOLOGRAPHIC ASSISTANT -->
-
-      <section id="assistantView" class="view" hidden>
-
-        <h1>Your AI companion</h1>
-
-        <p class="muted">Your holographic companion is ready.</p>
-
-        <div id="avatarStage" class="avatar-stage glass">
-
-          <div id="avatarCanvas"></div>
-
-          <div class="avatar-label">
-            VIDORA AI · <span id="avatarMood">Idle</span>
-          </div>
-
-        </div>
-
-        <h2 id="greetingTextAssistant">Your companion</h2>
-
-        <p id="assistantReply">
-          Your holographic companion is online.
-        </p>
-
-        <div class="avatar-controls">
-
-          <button id="avatarWaveBtn" type="button">👋 Wave</button>
-
-          <button id="avatarDanceBtn" type="button">✨ Dance</button>
-
-          <button id="avatarColorBtn" type="button">🎨 Change color</button>
-
-          <button id="speakBtn" type="button">🔊 Speak</button>
-
-          <button id="assistantHelpBtn" type="button">Help</button>
-
-        </div>
-
-      </section>
-
-      
-
-
-
-<!-- ================= VIDORA MESSAGES ================= -->
-
-<section id="inboxView" class="view" hidden>
-
-  <div class="view-heading vidora-inbox-heading">
-    <div>
-      <span class="inbox-eyebrow">VIDORA CONNECT</span>
-      <h1>Messages</h1>
-      <p class="muted">Your conversations, your space.</p>
+        <span>Your Story</span>
+      </div>
     </div>
 
-    <button
-      id="chatPreferencesBtn"
-      class="chat-icon-button"
-      type="button"
-      aria-label="Chat preferences"
-      title="Chat preferences">
-      ⚙
-    </button>
-  </div>
+    <!-- Main Feed / Video Player -->
+    <main class="feed-container" id="homeView">
+      <video class="video-player" id="mainVideo" playsinline loop muted></video>
 
-  <div class="inbox-layout vidora-inbox-layout" id="inboxLayout">
-
-    <!-- CONVERSATION LIST -->
-
-    <div id="inboxList" class="inbox-list vidora-conversation-list">
-
-      <div class="inbox-search-wrap">
-        <input
-          id="conversationSearch"
-          type="search"
-          placeholder="Search conversations..."
-          aria-label="Search conversations">
-      </div>
-
-      <div class="inbox-list-heading">
-        <strong>Recent chats</strong>
-        <span id="conversationCount">Your inbox</span>
-      </div>
-
-      <div id="conversationItems">
-        <p class="muted">Loading conversations...</p>
-      </div>
-
-    </div>
-
-    <!-- CHAT WINDOW -->
-
-    <div
-      id="chatPanel"
-      class="chat-panel glass vidora-chat-panel"
-      hidden>
-
-      <!-- CHAT HEADER -->
-
-      <header class="chat-header vidora-chat-header">
-
-        <button
-          id="backToInboxBtn"
-          type="button"
-          class="chat-icon-button chat-back-button"
-          aria-label="Back to inbox">
-          ←
-        </button>
-
-        <div class="chat-person-avatar">
-          <div id="chatAvatar" class="mini-avatar">V</div>
-          <span class="chat-online-indicator" aria-hidden="true"></span>
+      <div class="video-overlay">
+        <div style="margin-bottom:8px;">
+          <strong id="videoUsername">@creator</strong>
         </div>
-
-        <div class="chat-user-info">
-          <strong id="chatName">Conversation</strong>
-          <div id="chatStatus">Mutual followers</div>
+        <p id="videoCaption" style="font-size:14px; margin-bottom:6px;">Caption goes here...</p>
+        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#00e676;">
+          <span>🎵</span>
+          <span id="videoSong">Original Sound</span>
         </div>
-
-        <button
-          id="chatPreferencesOpenBtn"
-          type="button"
-          class="chat-icon-button"
-          aria-label="Conversation preferences"
-          title="Conversation preferences">
-          ⋮
-        </button>
-
-      </header>
-
-      <!-- CHAT PREFERENCES PANEL -->
-
-      <div
-        id="chatPreferencesPanel"
-        class="chat-preferences-panel"
-        hidden>
-
-        <div class="chat-preferences-title">
-          <div>
-            <strong>Chat preferences</strong>
-            <p class="muted">Personalize your conversation.</p>
-          </div>
-
-          <button
-            id="closeChatPreferencesBtn"
-            class="chat-icon-button"
-            type="button"
-            aria-label="Close preferences">
-            ×
-          </button>
-        </div>
-
-        <label for="chatWallpaperSelect">Chat background</label>
-
-        <select id="chatWallpaperSelect">
-          <option value="galaxy">Neon galaxy</option>
-          <option value="midnight">Midnight</option>
-          <option value="purple">Purple glow</option>
-          <option value="plain">Plain dark</option>
-        </select>
-
-        <label for="chatTextSizeSelect">Message text size</label>
-
-        <select id="chatTextSizeSelect">
-          <option value="small">Small</option>
-          <option value="medium" selected>Medium</option>
-          <option value="large">Large</option>
-        </select>
-
-        <label class="chat-setting-row">
-          <span>
-            <strong>Enter to send</strong>
-            <small>Use Enter to send messages.</small>
-          </span>
-
-          <input id="chatEnterToSend" type="checkbox" checked>
-        </label>
-
-        <label class="chat-setting-row">
-          <span>
-            <strong>Message notifications</strong>
-            <small>Show in-app alerts for new messages.</small>
-          </span>
-
-          <input id="chatNotificationsEnabled" type="checkbox" checked>
-        </label>
-
-        <button
-          id="saveChatPreferencesBtn"
-          class="btn primary"
-          type="button">
-          Save preferences
-        </button>
-
-        <p id="chatPreferencesStatus" class="message" role="status"></p>
-
       </div>
 
-      <!-- REPLY PREVIEW -->
-
-      <div
-        id="replyPreview"
-        class="reply-preview"
-        hidden>
-
-        <div class="reply-preview-content">
-          <strong>Replying to message</strong>
-          <p id="replyPreviewText"></p>
-        </div>
-
-        <button
-          id="cancelReplyBtn"
-          type="button"
-          class="chat-icon-button"
-          aria-label="Cancel reply">
-          ×
+      <!-- Right side actions -->
+      <div class="video-actions">
+        <button class="action-btn" data-action="like">
+          <span class="icon">♡</span>
+          <span id="likeCount">0</span>
         </button>
-
+        <button class="action-btn" data-action="comment">
+          <span class="icon">💬</span>
+          <span>0</span>
+        </button>
+        <button class="action-btn" data-action="share">
+          <span class="icon">↗</span>
+          <span>Share</span>
+        </button>
+        <button class="action-btn" data-action="music">
+          <span class="icon">🎵</span>
+          <span>Sound</span>
+        </button>
+        <button class="action-btn" data-action="filter">
+          <span class="icon">✨</span>
+          <span>Filter</span>
+        </button>
       </div>
-
-      <!-- MESSAGE SEARCH -->
-
-      <div id="messageSearchBar" class="message-search-bar" hidden>
-
-        <input
-          id="messageSearchInput"
-          type="search"
-          placeholder="Find a message..."
-          aria-label="Search messages">
-
-        <button
-          id="closeMessageSearchBtn"
-          class="chat-icon-button"
-          type="button"
-          aria-label="Close message search">
-          ×
-        </button>
-
-      </div>
-
-      <!-- CHAT MESSAGES -->
-
-      <div
-        id="chatMessages"
-        class="chat-messages vidora-chat-messages"
-        aria-live="polite"
-        aria-label="Conversation messages">
-
-        <p class="muted">Your conversation will appear here.</p>
-
-      </div>
-
-      <!-- MESSAGE SELECTION TOOLBAR -->
-
-      <div id="selectedMessageToolbar" class="selected-message-toolbar" hidden>
-
-        <span id="selectedMessageCount">1 message selected</span>
-
-        <button id="highlightMessageBtn" type="button">
-          Highlight
-        </button>
-
-        <button id="copyMessageBtn" type="button">
-          Copy
-        </button>
-
-        <button id="replySelectedMessageBtn" type="button">
-          Reply
-        </button>
-
-        <button id="clearMessageSelectionBtn" type="button">
-          Cancel
-        </button>
-
-      </div>
-
-      <!-- MESSAGE ACTION MENU -->
-
-      <div
-        id="messageActionMenu"
-        class="message-action-menu"
-        hidden>
-
-        <button type="button" data-message-action="reply">
-          Reply
-        </button>
-
-        <button type="button" data-message-action="highlight">
-          Highlight
-        </button>
-
-        <button type="button" data-message-action="copy">
-          Copy text
-        </button>
-
-        <button type="button" data-message-action="react">
-          React
-        </button>
-
-        <button type="button" data-message-action="delete">
-          Delete my message
-        </button>
-
-      </div>
-
-      <!-- REACTION PICKER -->
-
-      <div
-        id="messageReactionPicker"
-        class="message-reaction-picker"
-        hidden>
-
-        <button type="button" data-chat-reaction="❤️">❤️</button>
-        <button type="button" data-chat-reaction="😂">😂</button>
-        <button type="button" data-chat-reaction="👍">👍</button>
-        <button type="button" data-chat-reaction="😮">😮</button>
-        <button type="button" data-chat-reaction="😢">😢</button>
-        <button type="button" data-chat-reaction="🔥">🔥</button>
-
-      </div>
-
-      <!-- MESSAGE COMPOSER -->
-
-      <form id="messageForm" class="message-form vidora-message-form">
-
-        <button
-          id="openMessageSearchBtn"
-          class="chat-icon-button"
-          type="button"
-          aria-label="Search messages"
-          title="Search messages">
-          ⌕
-        </button>
-
-        <input
-          id="messageInput"
-          type="text"
-          maxlength="2000"
-          placeholder="Write a message..."
-          autocomplete="off"
-          aria-label="Write a message"
-          required>
-
-        <button id="sendMessageBtn" type="submit" class="btn primary">
-          Send
-        </button>
-
-      </form>
-
-      <p id="chatMessage" class="message" role="status"></p>
-
-    </div>
-
-  </div>
-
-</section>
-
-<!-- ================= END VIDORA MESSAGES ================= -->
-  
-
-  
-      <!-- NOTIFICATIONS -->
-
-      <section id="notificationsView" class="view" hidden>
-
-        <h1>Notifications</h1>
-
-        <p class="muted">Stay updated with your community.</p>
-
-        <button id="enablePushBtn" class="btn primary" type="button">
-          Enable push notifications
-        </button>
-
-        <p id="pushStatus" class="muted" role="status"></p>
-
-        <div id="notificationList">
-          <p class="muted">Loading notifications...</p>
-        </div>
-
-        <button id="backHomeBtn" type="button" class="btn secondary" style="margin-top:20px">
-          ← Home
-        </button>
-
-      </section>
-
-      <!-- PROFILE -->
-
-      <section id="profileView" class="view" hidden>
-
-        <div class="profile-card glass" style="text-align:center">
-
-          <div id="profileAvatar" class="profile-avatar">V</div>
-
-          <h1 id="profileDisplayName">Vidora user</h1>
-
-          <p id="profileUsername" class="muted">@user</p>
-
-          <div class="profile-stats">
-
-            <div>
-              <strong id="postCount">0</strong>
-              <div class="muted">Posts</div>
-            </div>
-
-            <div>
-              <strong id="followerCount">0</strong>
-              <div class="muted">Followers</div>
-            </div>
-
-            <div>
-              <strong id="followingCount">0</strong>
-              <div class="muted">Following</div>
-            </div>
-
-          </div>
-
-        </div>
-
-        <h2 style="margin-top:25px">My posts</h2>
-
-        <div id="myPosts">
-          <p class="muted">Loading posts...</p>
-        </div>
-
-      </section>
-
     </main>
 
-    <!-- BOTTOM NAVIGATION -->
-
-    <nav class="bottom-nav" aria-label="Main navigation">
-
-      <button class="nav-button active" type="button" data-view="homeView">
-        <span>⌂</span>
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-view="homeView">
+        <span class="icon">⌂</span>
         <span>Home</span>
       </button>
-
-      <button class="nav-button" type="button" data-view="discoverView">
-        <span>⌕</span>
+      <button class="nav-item" data-view="discoverView">
+        <span class="icon">⌕</span>
         <span>Discover</span>
       </button>
-
-      <button class="nav-button" type="button" data-view="createView">
-        <span>＋</span>
-        <span>Create</span>
+      <button class="nav-item" id="createBtn">
+        <div class="create-btn">+</div>
       </button>
-
-      <button class="nav-button" type="button" data-view="inboxView">
-        <span>✉</span>
+      <button class="nav-item" data-view="inboxView">
+        <span class="icon">✉</span>
         <span>Inbox</span>
       </button>
-
-      <button class="nav-button" type="button" data-view="assistantView">
-        <span>✧</span>
-        <span>AI</span>
-      </button>
-
-      <button class="nav-button" type="button" data-view="profileView">
-        <span>◉</span>
+      <button class="nav-item" data-view="profileView">
+        <span class="icon">◉</span>
         <span>Profile</span>
       </button>
-
     </nav>
-
   </div>
 
-  <!-- ================= CAST OVERLAY ================= -->
-
-  <div id="castOverlay" hidden>
-
-    <div class="glass">
-
-      <h2>Cast Vidora</h2>
-
-      <p class="muted">
-        Open Vidora in fullscreen or use your device's screen-casting feature.
-      </p>
-
-      <p id="castStatus" class="muted" role="status"></p>
-
-      <button id="castPresentation" class="btn primary" type="button">
-        Start presentation
-      </button>
-
-      <button id="castFullscreen" class="btn secondary" type="button">
-        Fullscreen
-      </button>
-
-      <button id="castClose" class="btn secondary" type="button">
-        Close
-      </button>
-
-    </div>
-
-  </div>
-
-  <!-- ================= LIBRARIES ================= -->
-
+  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-
   <script src="app.js"></script>
-
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch(console.warn);
-      });
-    }
-  </script>
-
 </body>
 </html>
