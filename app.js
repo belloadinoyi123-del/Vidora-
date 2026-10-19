@@ -280,10 +280,10 @@ function bindEvents() {
 
   $("signupNext").onclick = () => {
     if (state.currentSignupStep < 4) {
-      if (state.currentSignupStep === 1 && (!\( ("authDisplayName").value || ! \)("authUsername").value)) {
+            if (state.currentSignupStep === 1 && (!$("authDisplayName").value || !$("authUsername").value)) {
         return notify("Enter name and username");
       }
-      if (state.currentSignupStep === 2 && (!\( ("authEmail").value || ! \)("authPassword").value)) {
+            if (state.currentSignupStep === 2 && (!$("authEmail").value || !$("authPassword").value)) {
         return notify("Enter email and password");
       }
       state.currentSignupStep++;
