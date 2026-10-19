@@ -4,80 +4,63 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#030303">
-  <meta name="description" content="Vidora — Futuristic Social Video">
-
-  <title>Vidora — Watch. Create. Connect.</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <title>Vidora — Futuristic Social Video</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- ===================== AUTH SCREEN ===================== -->
+  <!-- AUTH SCREEN -->
   <section id="authScreen">
     <div class="auth-card">
-
       <div class="auth-logo">VIDORA</div>
       <p class="auth-subtitle">Watch • Create • Connect</p>
-
       <h2 id="authTitle">Welcome back</h2>
-      <p id="authMessage" class="message"></p>
+      <p id="authMessage" style="color:#00e676;font-size:13px;text-align:center;margin-bottom:12px;"></p>
 
-      <form id="authForm">
-
+      <form id="authForm" onsubmit="return false;">
         <!-- LOGIN -->
         <div id="loginFields">
           <div class="form-group">
-            <label for="loginEmail">Email</label>
-            <input id="loginEmail" type="email" placeholder="Enter your email" required autocomplete="email">
+            <label>Email</label>
+            <input id="loginEmail" type="email" placeholder="Enter your email" autocomplete="email">
           </div>
-
           <div class="form-group">
-            <label for="loginPassword">Password</label>
-            <input id="loginPassword" type="password" placeholder="Enter your password" required autocomplete="current-password">
+            <label>Password</label>
+            <input id="loginPassword" type="password" placeholder="Enter your password" autocomplete="current-password">
           </div>
-
-          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">
-            Log In
-          </button>
+          <button type="button" id="loginBtn" class="btn btn-primary" style="width:100%;margin-top:8px;">Log In</button>
         </div>
 
-        <!-- SIGNUP (Facebook-style multi-step) -->
+        <!-- SIGNUP WIZARD -->
         <div id="signupWizard" class="hidden">
-
-          <!-- Step 1: Name -->
           <div class="signup-step" data-step="1">
             <div class="form-group">
-              <label for="authDisplayName">Full Name</label>
-              <input id="authDisplayName" type="text" placeholder="Your full name" maxlength="50">
+              <label>Full Name</label>
+              <input id="authDisplayName" type="text" placeholder="Your full name">
             </div>
             <div class="form-group">
-              <label for="authUsername">Username</label>
-              <input id="authUsername" type="text" placeholder="Choose a username" maxlength="24">
+              <label>Username</label>
+              <input id="authUsername" type="text" placeholder="Choose a username">
             </div>
           </div>
 
-          <!-- Step 2: Contact -->
           <div class="signup-step hidden" data-step="2">
             <div class="form-group">
-              <label for="authEmail">Email</label>
+              <label>Email</label>
               <input id="authEmail" type="email" placeholder="you@example.com">
             </div>
             <div class="form-group">
-              <label for="authPassword">Password</label>
-              <input id="authPassword" type="password" placeholder="At least 8 characters" minlength="8">
+              <label>Password</label>
+              <input id="authPassword" type="password" placeholder="At least 8 characters">
             </div>
           </div>
 
-          <!-- Step 3: Country & Language -->
           <div class="signup-step hidden" data-step="3">
             <div class="form-group">
-              <label for="authCountry">Country / Region</label>
+              <label>Country / Region</label>
               <select id="authCountry">
-                <option value="">Select your country</option>
+                <option value="">Select country</option>
                 <option value="NG">Nigeria</option>
                 <option value="GH">Ghana</option>
                 <option value="ZA">South Africa</option>
@@ -85,154 +68,130 @@
                 <option value="US">United States</option>
                 <option value="GB">United Kingdom</option>
                 <option value="CA">Canada</option>
-                <option value="FR">France</option>
-                <option value="DE">Germany</option>
-                <option value="BR">Brazil</option>
-                <option value="IN">India</option>
                 <option value="OTHER">Other</option>
               </select>
             </div>
-
             <div class="form-group">
-              <label for="authLanguage">Preferred Language</label>
+              <label>Language</label>
               <select id="authLanguage">
                 <option value="en">English</option>
                 <option value="fr">French</option>
                 <option value="es">Spanish</option>
-                <option value="ar">Arabic</option>
                 <option value="ha">Hausa</option>
                 <option value="yo">Yoruba</option>
                 <option value="ig">Igbo</option>
-                <option value="pt">Portuguese</option>
               </select>
             </div>
           </div>
 
-          <!-- Step 4: Finish -->
           <div class="signup-step hidden" data-step="4">
-            <p style="text-align:center; color:#aaa; margin-bottom:20px;">
-              Review your details and create your account
-            </p>
-            <div style="background:#111; padding:16px; border-radius:12px; border:1px solid rgba(0,230,118,0.2);">
+            <div style="background:#111;padding:16px;border-radius:12px;border:1px solid rgba(0,230,118,0.2);margin-bottom:16px;">
               <p><strong>Name:</strong> <span id="reviewName">—</span></p>
               <p><strong>Username:</strong> @<span id="reviewUsername">—</span></p>
               <p><strong>Email:</strong> <span id="reviewEmail">—</span></p>
               <p><strong>Country:</strong> <span id="reviewCountry">—</span></p>
             </div>
-
-            <label style="display:flex; gap:10px; margin-top:18px; font-size:13px; color:#ccc;">
-              <input type="checkbox" id="authTerms">
-              I agree to Vidora’s Terms and Community Guidelines
+            <label style="display:flex;gap:10px;font-size:13px;color:#ccc;">
+              <input type="checkbox" id="authTerms"> I agree to Vidora Terms
             </label>
           </div>
 
-          <!-- Navigation buttons -->
-          <div style="display:flex; gap:12px; margin-top:24px;">
-            <button type="button" id="signupBack" class="btn btn-ghost hidden" style="flex:1;">
-              Back
-            </button>
-            <button type="button" id="signupNext" class="btn btn-primary" style="flex:2;">
-              Continue
-            </button>
+          <div style="display:flex;gap:12px;margin-top:20px;">
+            <button type="button" id="signupBack" class="btn btn-ghost hidden" style="flex:1;">Back</button>
+            <button type="button" id="signupNext" class="btn btn-primary" style="flex:2;">Continue</button>
           </div>
         </div>
       </form>
 
-      <div class="auth-switch">
-        <button type="button" id="showSignup">Create new account</button>
-        <button type="button" id="showLogin" class="hidden">Already have an account? Log in</button>
+      <div style="text-align:center;margin-top:22px;font-size:14px;">
+        <button type="button" id="showSignup" style="background:none;border:none;color:#00e676;font-weight:700;cursor:pointer;">Create new account</button>
+        <button type="button" id="showLogin" class="hidden" style="background:none;border:none;color:#00e676;font-weight:700;cursor:pointer;">Already have an account? Log in</button>
       </div>
     </div>
   </section>
 
-  <!-- ===================== MAIN APP ===================== -->
+  <!-- MAIN APP -->
   <div id="appShell">
-
-    <!-- Top Bar -->
     <header class="topbar">
       <div class="logo">VIDORA</div>
-      <div style="display:flex; gap:12px; align-items:center;">
-        <button id="castBtn" style="background:none; border:none; color:white; font-size:20px;">📺</button>
-        <button id="notificationsBtn" style="background:none; border:none; color:white; font-size:20px;">🔔</button>
+      <div style="display:flex;gap:14px;">
+        <button id="castBtn" style="background:none;border:none;color:white;font-size:20px;">📺</button>
+        <button id="assistantToggle" style="background:none;border:none;color:white;font-size:20px;">✧</button>
+        <button id="notificationsBtn" style="background:none;border:none;color:white;font-size:20px;">🔔</button>
       </div>
     </header>
 
     <!-- Stories -->
     <div class="stories-bar" id="storiesBar">
-      <!-- Will be filled by JavaScript using your avatars -->
       <div class="story-item" id="addStoryBtn">
-        <div class="story-ring" style="background:linear-gradient(135deg,#00e676,#00b0ff);">
-          <div style="width:100%;height:100%;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;font-size:24px;color:#00e676;">+</div>
+        <div class="story-ring">
+          <div style="width:100%;height:100%;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;color:#00e676;font-size:26px;">+</div>
         </div>
-        <span>Your Story</span>
+        <span style="font-size:11px;color:#9e9e9e;">Your Story</span>
       </div>
     </div>
 
-    <!-- Main Feed / Video Player -->
-    <main class="feed-container" id="homeView">
-      <video class="video-player" id="mainVideo" playsinline loop muted></video>
+    <!-- Video Feed -->
+    <main class="feed-container">
+      <video id="mainVideo" class="video-player" playsinline loop></video>
 
       <div class="video-overlay">
-        <div style="margin-bottom:8px;">
-          <strong id="videoUsername">@creator</strong>
-        </div>
-        <p id="videoCaption" style="font-size:14px; margin-bottom:6px;">Caption goes here...</p>
-        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#00e676;">
+        <strong id="videoUsername">@creator</strong>
+        <p id="videoCaption" style="font-size:14px;margin:6px 0;">Welcome to the new Vidora</p>
+        <div style="display:flex;align-items:center;gap:6px;color:#00e676;font-size:13px;">
           <span>🎵</span>
-          <span id="videoSong">Original Sound</span>
+          <span id="videoSong">Original Sound - Vidora</span>
         </div>
       </div>
 
-      <!-- Right side actions -->
       <div class="video-actions">
-        <button class="action-btn" data-action="like">
-          <span class="icon">♡</span>
-          <span id="likeCount">0</span>
-        </button>
-        <button class="action-btn" data-action="comment">
-          <span class="icon">💬</span>
-          <span>0</span>
-        </button>
-        <button class="action-btn" data-action="share">
-          <span class="icon">↗</span>
-          <span>Share</span>
-        </button>
-        <button class="action-btn" data-action="music">
-          <span class="icon">🎵</span>
-          <span>Sound</span>
-        </button>
-        <button class="action-btn" data-action="filter">
-          <span class="icon">✨</span>
-          <span>Filter</span>
-        </button>
+        <button class="action-btn" data-action="like"><span class="icon">♡</span><span>12.8K</span></button>
+        <button class="action-btn" data-action="comment"><span class="icon">💬</span><span>256</span></button>
+        <button class="action-btn" data-action="share"><span class="icon">↗</span><span>Share</span></button>
+        <button class="action-btn" data-action="music"><span class="icon">🎵</span><span>Sound</span></button>
+        <button class="action-btn" data-action="filter"><span class="icon">✨</span><span>Filter</span></button>
       </div>
     </main>
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Nav -->
     <nav class="bottom-nav">
-      <button class="nav-item active" data-view="homeView">
-        <span class="icon">⌂</span>
-        <span>Home</span>
-      </button>
-      <button class="nav-item" data-view="discoverView">
-        <span class="icon">⌕</span>
-        <span>Discover</span>
-      </button>
-      <button class="nav-item" id="createBtn">
-        <div class="create-btn">+</div>
-      </button>
-      <button class="nav-item" data-view="inboxView">
-        <span class="icon">✉</span>
-        <span>Inbox</span>
-      </button>
-      <button class="nav-item" data-view="profileView">
-        <span class="icon">◉</span>
-        <span>Profile</span>
-      </button>
+      <button class="nav-item active" data-view="home"><span style="font-size:22px;">⌂</span><span>Home</span></button>
+      <button class="nav-item" data-view="discover"><span style="font-size:22px;">⌕</span><span>Discover</span></button>
+      <button class="nav-item" id="createBtn"><div class="create-btn">+</div></button>
+      <button class="nav-item" data-view="inbox"><span style="font-size:22px;">✉</span><span>Inbox</span></button>
+      <button class="nav-item" data-view="profile"><span style="font-size:22px;">◉</span><span>Profile</span></button>
     </nav>
   </div>
 
-  <!-- Libraries -->
+  <!-- Song Library Modal -->
+  <div class="modal" id="songModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Song Library</h3>
+        <button id="closeSongModal" style="background:none;border:none;color:white;font-size:22px;">×</button>
+      </div>
+      <div id="songList"></div>
+    </div>
+  </div>
+
+  <!-- Filters Modal -->
+  <div class="modal" id="filterModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Filters</h3>
+        <button id="closeFilterModal" style="background:none;border:none;color:white;font-size:22px;">×</button>
+      </div>
+      <div id="filterList"></div>
+    </div>
+  </div>
+
+  <!-- Assistant Panel -->
+  <div id="assistantPanel">
+    <img id="assistantAvatarImg" class="assistant-avatar" src="avatars/skye.png" alt="Vidora Avatar">
+    <p id="assistantText" style="text-align:center;font-size:14px;margin-bottom:12px;">Hi, I’m your Vidora assistant.</p>
+    <button class="btn btn-primary" style="width:100%;" onclick="Vidora.speak('Hello! Welcome to the new Vidora. How can I help you today?')">Speak</button>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
