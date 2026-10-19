@@ -1,198 +1,2495 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#030303">
-  <title>Vidora — Futuristic Social Video</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<meta name="theme-color" content="#08080d">
+
+<title>Vidora — Watch. Share. Connect.</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --bg: #08080d;
+  --surface: #14141d;
+  --surface2: #20202b;
+  --green: #00e676;
+  --text: #ffffff;
+  --muted: #a5a5b5;
+  --border: #30303b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+
+button, input, textarea, select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: .5;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* AUTHENTICATION */
+
+#authScreen {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 25px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+.logo {
+  font-size: 29px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--green);
+}
+
+.auth-card h2 {
+  text-align: center;
+}
+
+.field {
+  margin: 15px 0;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.field input,
+.field textarea,
+.field select,
+.search-input,
+.message-input {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: white;
+  outline: none;
+}
+
+.primary {
+  background: var(--green);
+  color: #001b0c;
+  border: 0;
+  border-radius: 10px;
+  padding: 13px 18px;
+  font-weight: bold;
+}
+
+.ghost {
+  background: var(--surface2);
+  color: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.full {
+  width: 100%;
+}
+
+/* APPLICATION */
+
+#app {
+  display: none;
+  max-width: 760px;
+  margin: auto;
+  padding-bottom: 85px;
+}
+
+#app.active {
+  display: block;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  background: rgba(8,8,13,.96);
+  border-bottom: 1px solid var(--border);
+}
+
+.top-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.icon-button {
+  position: relative;
+  color: white;
+  background: transparent;
+  border: 0;
+  font-size: 22px;
+}
+
+.green-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  display: inline-block;
+  box-shadow: 0 0 8px rgba(0,230,118,.65);
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -7px;
+  min-width: 17px;
+  height: 17px;
+  padding: 2px 4px;
+  border-radius: 10px;
+  background: var(--green);
+  color: #001b0c;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* STORIES */
+
+.stories {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.story {
+  min-width: 66px;
+  max-width: 75px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.story img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--green);
+  padding: 2px;
+}
+
+.story button {
+  background: transparent;
+  border: 0;
+  color: var(--green);
+}
+
+/* CONTENT */
+
+.view {
+  display: none;
+  padding: 15px;
+}
+
+.view.active {
+  display: block;
+}
+
+.section-title {
+  font-size: 21px;
+  margin: 10px 0 18px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  margin-bottom: 17px;
+  overflow: hidden;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 50%;
+  background: var(--surface2);
+}
+
+.username {
+  font-weight: bold;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.post-caption {
+  padding: 0 13px 12px;
+  overflow-wrap: anywhere;
+}
+
+.post-media {
+  width: 100%;
+  max-height: 75vh;
+  background: #000;
+  display: block;
+  object-fit: contain;
+}
+
+.video-stage {
+  position: relative;
+  background: #000;
+  overflow: hidden;
+}
+
+.video-stage video {
+  transition: transform .65s ease;
+}
+
+.video-stage.rotating video {
+  transform: rotateY(360deg);
+}
+
+.video-controls {
+  display: flex;
+  gap: 9px;
+  padding: 10px 12px;
+  flex-wrap: wrap;
+}
+
+.video-controls button {
+  background: var(--surface2);
+  color: white;
+  border: 1px solid var(--border);
+  padding: 8px 11px;
+  border-radius: 9px;
+}
+
+.post-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px;
+}
+
+.post-actions button {
+  background: transparent;
+  border: 0;
+  color: white;
+}
+
+.post-actions button.liked {
+  color: var(--green);
+}
+
+.delete-button {
+  margin-left: auto;
+  color: #ff7777 !important;
+}
+
+/* FORMS */
+
+.upload-box {
+  padding: 15px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  margin-bottom: 16px;
+}
+
+.upload-box input,
+.upload-box textarea,
+.upload-box select {
+  width: 100%;
+  margin: 7px 0 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: white;
+}
+
+.profile-header {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.profile-header .avatar {
+  width: 95px;
+  height: 95px;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.profile-grid video,
+.profile-grid img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  background: var(--surface2);
+}
+
+/* USERS AND CHAT */
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.user-row .user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-box {
+  display: flex;
+  flex-direction: column;
+  height: 62vh;
+  min-height: 350px;
+  background: var(--surface);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.bubble {
+  max-width: 82%;
+  padding: 10px 12px;
+  border-radius: 13px;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+  background: var(--surface2);
+}
+
+.bubble.mine {
+  margin-left: auto;
+  background: #075d36;
+}
+
+.chat-compose {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.chat-compose input {
+  min-width: 0;
+  flex: 1;
+  background: var(--bg);
+  color: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px;
+}
+
+/* MODAL AND NOTIFICATIONS */
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0,0,0,.92);
+  padding: 18px;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 15px;
+}
+
+.modal-media {
+  max-width: 100%;
+  max-height: 65vh;
+  display: block;
+  margin: 12px auto;
+}
+
+.notification-row {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+}
+
+.notification-row.unread {
+  border-left: 3px solid var(--green);
+  padding-left: 10px;
+}
+
+/* NAVIGATION */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 2px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(15,15,22,.98);
+  border-top: 1px solid var(--border);
+}
+
+.bottom-nav button {
+  position: relative;
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.bottom-nav button.active {
+  color: var(--green);
+}
+
+.bottom-nav .nav-icon {
+  display: block;
+  font-size: 21px;
+  margin-bottom: 3px;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 90px;
+  transform: translateX(-50%);
+  background: var(--surface2);
+  color: white;
+  border: 1px solid var(--green);
+  border-radius: 12px;
+  padding: 12px 16px;
+  z-index: 100;
+  max-width: 90%;
+}
+
+@media (min-width: 650px) {
+  #app {
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    min-height: 100vh;
+  }
+}
+</style>
 </head>
+
 <body>
 
-  <!-- AUTH SCREEN -->
-  <section id="authScreen">
-    <div class="auth-card">
-      <div class="auth-logo">VIDORA</div>
-      <p class="auth-subtitle">Watch • Create • Connect</p>
-      <h2 id="authTitle">Welcome back</h2>
-      <p id="authMessage" style="color:#00e676;font-size:13px;text-align:center;margin-bottom:12px;"></p>
+<!-- LOGIN AND SIGNUP -->
 
-      <form id="authForm" onsubmit="return false;">
-        <!-- LOGIN -->
-        <div id="loginFields">
-          <div class="form-group">
-            <label>Email</label>
-            <input id="loginEmail" type="email" placeholder="Enter your email" autocomplete="email">
-          </div>
-          <div class="form-group">
-            <label>Password</label>
-            <input id="loginPassword" type="password" placeholder="Enter your password" autocomplete="current-password">
-          </div>
-          <button type="button" id="loginBtn" class="btn btn-primary" style="width:100%;margin-top:8px;">Log In</button>
-        </div>
+<section id="authScreen">
+  <div class="auth-card">
+    <div class="logo">VIDORA</div>
+    <p class="muted">Watch. Share. Connect.</p>
 
-        <!-- SIGNUP WIZARD -->
-        <div id="signupWizard" class="hidden">
-          <div class="signup-step" data-step="1">
-            <div class="form-group">
-              <label>Full Name</label>
-              <input id="authDisplayName" type="text" placeholder="Your full name">
-            </div>
-            <div class="form-group">
-              <label>Username</label>
-              <input id="authUsername" type="text" placeholder="Choose a username">
-            </div>
-          </div>
+    <h2 id="authHeading">Welcome back</h2>
 
-          <div class="signup-step hidden" data-step="2">
-            <div class="form-group">
-              <label>Email</label>
-              <input id="authEmail" type="email" placeholder="you@example.com">
-            </div>
-            <div class="form-group">
-              <label>Password</label>
-              <input id="authPassword" type="password" placeholder="At least 8 characters">
-            </div>
-          </div>
+    <form id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input id="email" type="email" required autocomplete="email">
+      </div>
 
-          <div class="signup-step hidden" data-step="3">
-            <div class="form-group">
-              <label>Country / Region</label>
-              <select id="authCountry">
-                <option value="">Select country</option>
-                <option value="NG">Nigeria</option>
-                <option value="GH">Ghana</option>
-                <option value="ZA">South Africa</option>
-                <option value="KE">Kenya</option>
-                <option value="US">United States</option>
-                <option value="GB">United Kingdom</option>
-                <option value="CA">Canada</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Language</label>
-              <select id="authLanguage">
-                <option value="en">English</option>
-                <option value="fr">French</option>
-                <option value="es">Spanish</option>
-                <option value="ha">Hausa</option>
-                <option value="yo">Yoruba</option>
-                <option value="ig">Igbo</option>
-              </select>
-            </div>
-          </div>
+      <div class="field">
+        <label>Password</label>
+        <input id="password" type="password"
+               required autocomplete="current-password">
+      </div>
 
-          <div class="signup-step hidden" data-step="4">
-            <div style="background:#111;padding:16px;border-radius:12px;border:1px solid rgba(0,230,118,0.2);margin-bottom:16px;">
-              <p><strong>Name:</strong> <span id="reviewName">—</span></p>
-              <p><strong>Username:</strong> @<span id="reviewUsername">—</span></p>
-              <p><strong>Email:</strong> <span id="reviewEmail">—</span></p>
-              <p><strong>Country:</strong> <span id="reviewCountry">—</span></p>
-            </div>
-            <label style="display:flex;gap:10px;font-size:13px;color:#ccc;">
-              <input type="checkbox" id="authTerms"> I agree to Vidora Terms
-            </label>
-          </div>
+      <button class="primary full" type="submit">Log In</button>
+    </form>
 
-          <div style="display:flex;gap:12px;margin-top:20px;">
-            <button type="button" id="signupBack" class="btn btn-ghost hidden" style="flex:1;">Back</button>
-            <button type="button" id="signupNext" class="btn btn-primary" style="flex:2;">Continue</button>
-          </div>
-        </div>
-      </form>
+    <form id="signupForm" class="hidden">
+      <div class="field">
+        <label>Full name</label>
+        <input id="displayName" required>
+      </div>
 
-      <div style="text-align:center;margin-top:22px;font-size:14px;">
-        <button type="button" id="showSignup" style="background:none;border:none;color:#00e676;font-weight:700;cursor:pointer;">Create new account</button>
-        <button type="button" id="showLogin" class="hidden" style="background:none;border:none;color:#00e676;font-weight:700;cursor:pointer;">Already have an account? Log in</button>
+      <div class="field">
+        <label>Username</label>
+        <input id="username" required minlength="3" maxlength="30">
+      </div>
+
+      <div class="field">
+        <label>Email</label>
+        <input id="signupEmail" type="email" required>
+      </div>
+
+      <div class="field">
+        <label>Password (at least 8 characters)</label>
+        <input id="signupPassword" type="password"
+               minlength="8" required>
+      </div>
+
+      <button class="primary full" type="submit">
+        Create account
+      </button>
+    </form>
+
+    <p style="text-align:center">
+      <button class="ghost" id="toggleAuth" type="button">
+        Create a new account
+      </button>
+    </p>
+  </div>
+</section>
+
+<!-- MAIN APP -->
+
+<div id="app">
+
+  <header class="topbar">
+    <div class="logo">VIDORA</div>
+
+    <div class="top-actions">
+      <button class="icon-button" id="openNotifications"
+              aria-label="Notifications">
+        🔔 <span id="notificationDot" class="green-dot hidden"></span>
+      </button>
+
+      <button class="icon-button" id="openInbox"
+              aria-label="Messages">
+        ✉ <span id="messageDot" class="green-dot hidden"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- STORIES -->
+
+  <div class="stories" id="storiesBar">
+    <div class="story">
+      <button id="addStory">
+        <div style="font-size:30px">＋</div>
+        Your Story
+      </button>
+    </div>
+  </div>
+
+  <!-- HOME FEED -->
+
+  <section id="homeView" class="view active">
+    <h2 class="section-title">For You</h2>
+
+    <div id="feed">
+      <p class="muted">Loading posts...</p>
+    </div>
+
+    <button class="ghost full" id="nextVideo">
+      Next video ↻
+    </button>
+  </section>
+
+  <!-- DISCOVER -->
+
+  <section id="discoverView" class="view">
+    <h2 class="section-title">Discover people</h2>
+
+    <input id="userSearch" class="search-input"
+           placeholder="Search usernames">
+
+    <div id="userResults"></div>
+  </section>
+
+  <!-- CREATE POST -->
+
+  <section id="createView" class="view">
+    <h2 class="section-title">Create a post</h2>
+
+    <div class="upload-box">
+      <label>Choose a photo or video</label>
+      <input type="file" id="postFile"
+             accept="image/*,video/*" required>
+
+      <label>Caption</label>
+      <textarea id="postCaption" rows="3"
+                maxlength="2000"
+                placeholder="Write something..."></textarea>
+
+      <label>Optional music file</label>
+      <input type="file" id="postMusic" accept="audio/*">
+
+      <label>Filter</label>
+      <select id="postFilter">
+        <option value="none">Normal</option>
+        <option value="contrast(1.1) saturate(1.2)">Cinematic</option>
+        <option value="sepia(.35)">Vintage</option>
+        <option value="saturate(1.6)">Vivid</option>
+        <option value="grayscale(1)">Noir</option>
+      </select>
+
+      <label>
+        <input type="checkbox" id="muteOriginal">
+        Mute original video sound
+      </label>
+
+      <button class="primary full" id="publishPost">
+        Publish post
+      </button>
+    </div>
+  </section>
+
+  <!-- INBOX -->
+
+  <section id="inboxView" class="view">
+    <h2 class="section-title">Messages</h2>
+
+    <input id="chatSearch" class="search-input"
+           placeholder="Find someone to chat with">
+
+    <div id="chatSearchResults"></div>
+    <div id="conversations"></div>
+
+    <div id="chatPanel" class="hidden">
+      <button class="ghost" id="backInbox">← Inbox</button>
+      <h3 id="chatTitle">Chat</h3>
+
+      <div class="chat-box">
+        <div class="chat-messages" id="chatMessages"></div>
+
+        <form class="chat-compose" id="sendMessageForm">
+          <input id="messageText" maxlength="2000"
+                 placeholder="Write a message..." required>
+          <button class="primary" type="submit">Send</button>
+        </form>
       </div>
     </div>
   </section>
 
-  <!-- MAIN APP -->
-  <div id="appShell">
-    <header class="topbar">
-      <div class="logo">VIDORA</div>
-      <div style="display:flex;gap:14px;">
-        <button id="castBtn" style="background:none;border:none;color:white;font-size:20px;">📺</button>
-        <button id="assistantToggle" style="background:none;border:none;color:white;font-size:20px;">✧</button>
-        <button id="notificationsBtn" style="background:none;border:none;color:white;font-size:20px;">🔔</button>
-      </div>
-    </header>
+  <!-- PROFILE -->
 
-    <!-- Stories -->
-    <div class="stories-bar" id="storiesBar">
-      <div class="story-item" id="addStoryBtn">
-        <div class="story-ring">
-          <div style="width:100%;height:100%;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;color:#00e676;font-size:26px;">+</div>
+  <section id="profileView" class="view">
+    <div class="profile-header">
+      <img id="myAvatar" class="avatar"
+           src="avatars/nova.png" alt="Profile picture">
+
+      <h2 id="myDisplayName">My profile</h2>
+      <p id="myUsername" class="muted"></p>
+
+      <div id="profileStats"></div>
+    </div>
+
+    <div class="upload-box">
+      <h3>Change profile picture</h3>
+      <input type="file" id="avatarFile" accept="image/*">
+
+      <button class="primary full" id="saveAvatar">
+        Upload profile picture
+      </button>
+
+      <p class="muted">
+        You can also select an existing avatar below.
+      </p>
+
+      <div id="presetAvatars"
+           style="display:flex;gap:10px;flex-wrap:wrap"></div>
+    </div>
+
+    <div class="upload-box">
+      <h3>Custom avatar creator</h3>
+
+      <label>Skin tone</label>
+      <select id="avatarSkin">
+        <option value="#f5d0b5">Light</option>
+        <option value="#d49a72">Medium</option>
+        <option value="#985b3c">Brown</option>
+        <option value="#593522">Dark</option>
+      </select>
+
+      <label>Hair style</label>
+      <select id="avatarHair">
+        <option value="short">Short</option>
+        <option value="curly">Curly</option>
+        <option value="long">Long</option>
+      </select>
+
+      <label>Clothing colour</label>
+      <input id="avatarClothes" type="color" value="#00e676">
+
+      <button class="primary full" id="makeAvatar">
+        Create and save 2D avatar
+      </button>
+
+      <p class="muted">
+        This is a basic 2D avatar creator. A full 3D creator
+        requires a separate rendering system and character assets.
+      </p>
+    </div>
+
+    <h3>My posts</h3>
+    <div class="profile-grid" id="myPosts"></div>
+
+    <button class="ghost full" id="logoutBtn">Log out</button>
+  </section>
+
+  <!-- NOTIFICATIONS -->
+
+  <section id="notificationsView" class="view">
+    <h2 class="section-title">Notifications</h2>
+    <div id="notificationList"></div>
+  </section>
+
+  <!-- BOTTOM NAV -->
+
+  <nav class="bottom-nav">
+    <button class="active" data-view="home">
+      <span class="nav-icon">⌂</span>Home
+    </button>
+
+    <button data-view="discover">
+      <span class="nav-icon">⌕</span>Discover
+    </button>
+
+    <button data-view="create">
+      <span class="nav-icon">＋</span>Create
+    </button>
+
+    <button data-view="inbox">
+      <span class="nav-icon">✉</span>Inbox
+      <span id="navMessageDot"
+            class="green-dot hidden"></span>
+    </button>
+
+    <button data-view="profile">
+      <span class="nav-icon">◉</span>Profile
+    </button>
+  </nav>
+</div>
+
+<!-- STORY VIEWER -->
+
+<div class="modal" id="storyModal">
+  <div class="modal-content">
+    <button class="ghost" data-close="storyModal">Close</button>
+
+    <div id="storyContent"></div>
+
+    <button class="ghost full" id="nextStory">
+      Next story →
+    </button>
+  </div>
+</div>
+
+<!-- COMMENTS -->
+
+<div class="modal" id="commentsModal">
+  <div class="modal-content">
+    <button class="ghost" data-close="commentsModal">Close</button>
+    <h3>Comments</h3>
+    <div id="commentsList"></div>
+
+    <form id="commentForm">
+      <textarea id="commentText" rows="2"
+                maxlength="500" required
+                placeholder="Write a comment..."></textarea>
+
+      <button class="primary full" type="submit">
+        Send comment
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- STORY UPLOAD -->
+
+<div class="modal" id="storyUploadModal">
+  <div class="modal-content">
+    <button class="ghost" data-close="storyUploadModal">Close</button>
+    <h3>Add a story</h3>
+
+    <input id="storyFile" type="file" accept="image/*,video/*">
+
+    <label>Optional music</label>
+    <input id="storyMusic" type="file" accept="audio/*">
+
+    <button class="primary full" id="publishStory">
+      Publish story
+    </button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+"use strict";
+
+/* YOUR EXISTING SUPABASE PROJECT */
+
+const SUPABASE_URL =
+  "https://htnrqgzxkfktwoioscjr.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const $ = id => document.getElementById(id);
+
+const state = {
+  user: null,
+  profile: null,
+  posts: [],
+  currentPost: null,
+  currentStoryList: [],
+  storyIndex: 0,
+  chatUser: null,
+  chatChannel: null,
+  feedChannel: null,
+  notificationChannel: null,
+  messageChannel: null,
+  audio: null,
+  lastMessageCount: 0
+};
+
+const PRESET_AVATARS = [
+  "skye", "neo", "nova", "luna",
+  "blaze", "pixel", "aria", "jett",
+  "kai", "zara", "onyx", "rex"
+];
+
+const FILTERS = {
+  "none": "Normal",
+  "contrast(1.1) saturate(1.2)": "Cinematic",
+  "sepia(.35)": "Vintage",
+  "saturate(1.6)": "Vivid",
+  "grayscale(1)": "Noir"
+};
+
+/* HELPERS */
+
+function toast(message) {
+  $("toast").textContent = message;
+  $("toast").classList.remove("hidden");
+
+  clearTimeout(toast.timer);
+
+  toast.timer = setTimeout(() => {
+    $("toast").classList.add("hidden");
+  }, 3000);
+}
+
+function escapeHTML(value = "") {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function avatarURL(profile) {
+  if (profile?.avatar_url) return profile.avatar_url;
+
+  const name = profile?.avatar_name || "nova";
+
+  return "avatars/" +
+    encodeURIComponent(name.toLowerCase()) + ".png";
+}
+
+function stopAudio() {
+  if (state.audio) {
+    state.audio.pause();
+    state.audio.currentTime = 0;
+    state.audio = null;
+  }
+}
+
+function stopAllMedia() {
+  document.querySelectorAll("video").forEach(video => {
+    video.pause();
+  });
+
+  stopAudio();
+}
+
+function showView(name) {
+  document.querySelectorAll(".view").forEach(view => {
+    view.classList.remove("active");
+  });
+
+  const target = $(name + "View");
+
+  if (target) target.classList.add("active");
+
+  document.querySelectorAll("[data-view]").forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.view === name
+    );
+  });
+
+  if (name === "home") loadFeed();
+  if (name === "discover") loadPeople("");
+  if (name === "inbox") loadConversations();
+  if (name === "profile") loadMyProfile();
+  if (name === "notifications") loadNotifications();
+
+  window.scrollTo(0, 0);
+}
+
+async function getProfile(userId) {
+  const { data, error } = await db
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) console.error("Profile lookup:", error.message);
+
+  return data;
+}
+
+async function ensureProfile(user) {
+  let profile = await getProfile(user.id);
+
+  if (!profile) {
+    const username =
+      user.user_metadata?.username ||
+      "user" + user.id.slice(0, 8);
+
+    const { error } = await db.from("profiles").upsert({
+      id: user.id,
+      username,
+      display_name:
+        user.user_metadata?.display_name || username,
+      avatar_name: "nova",
+      avatar_type: "preset"
+    });
+
+    if (error) {
+      console.error(error);
+      toast("Profile setup failed. Check Supabase policies.");
+      return null;
+    }
+
+    profile = await getProfile(user.id);
+  }
+
+  return profile;
+}
+
+/* AUTHENTICATION */
+
+$("toggleAuth").onclick = () => {
+  const signup = $("signupForm");
+  const login = $("loginForm");
+
+  const switchingToSignup = signup.classList.contains("hidden");
+
+  signup.classList.toggle("hidden", !switchingToSignup);
+  login.classList.toggle("hidden", switchingToSignup);
+
+  $("authHeading").textContent =
+    switchingToSignup ? "Create your account" : "Welcome back";
+
+  $("toggleAuth").textContent =
+    switchingToSignup
+      ? "Already have an account? Log in"
+      : "Create a new account";
+};
+
+$("loginForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const { data, error } = await db.auth.signInWithPassword({
+    email: $("email").value.trim(),
+    password: $("password").value
+  });
+
+  if (error) return toast(error.message);
+
+  await startApp(data.user);
+});
+
+$("signupForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const username = $("username").value.trim().toLowerCase();
+
+  if (!/^[a-z0-9_.]{3,30}$/.test(username)) {
+    return toast(
+      "Use 3–30 letters, numbers, underscores or periods."
+    );
+  }
+
+  const { data, error } = await db.auth.signUp({
+    email: $("signupEmail").value.trim(),
+    password: $("signupPassword").value,
+    options: {
+      data: {
+        username,
+        display_name: $("displayName").value.trim() || username
+      }
+    }
+  });
+
+  if (error) return toast(error.message);
+
+  if (data.session) {
+    await startApp(data.user);
+  } else {
+    toast("Account created. Check your email to verify it.");
+  }
+});
+
+async function startApp(user) {
+  state.user = user;
+
+  state.profile = await ensureProfile(user);
+
+  if (!state.profile) return;
+
+  $("authScreen").style.display = "none";
+  $("app").classList.add("active");
+
+  await loadFeed();
+  await loadStories();
+  await loadMyProfile();
+  await loadNotifications();
+  await updateUnreadIndicators();
+
+  subscribeRealtime();
+
+  toast("Welcome to Vidora!");
+}
+
+async function logout() {
+  stopAllMedia();
+
+  if (state.chatChannel) {
+    await db.removeChannel(state.chatChannel);
+    state.chatChannel = null;
+  }
+
+  if (state.feedChannel) {
+    await db.removeChannel(state.feedChannel);
+    state.feedChannel = null;
+  }
+
+  if (state.notificationChannel) {
+    await db.removeChannel(state.notificationChannel);
+    state.notificationChannel = null;
+  }
+
+  if (state.messageChannel) {
+    await db.removeChannel(state.messageChannel);
+    state.messageChannel = null;
+  }
+
+  await db.auth.signOut();
+
+  state.user = null;
+  state.profile = null;
+  state.chatUser = null;
+
+  $("app").classList.remove("active");
+  $("authScreen").style.display = "flex";
+}
+
+$("logoutBtn").onclick = logout;
+
+/* PROFILE PICTURES */
+
+async function uploadFile(file, folder) {
+  if (!file) throw new Error("Choose a file first.");
+
+  const maxSize = 50 * 1024 * 1024;
+
+  if (file.size > maxSize) {
+    throw new Error("File must be 50 MB or smaller.");
+  }
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+  const path =
+    folder + "/" + state.user.id + "/" +
+    Date.now() + "_" + safeName;
+
+  const { error } = await db.storage
+    .from("media")
+    .upload(path, file, {
+      upsert: false,
+      contentType: file.type
+    });
+
+  if (error) throw error;
+
+  const { data } = db.storage
+    .from("media")
+    .getPublicUrl(path);
+
+  return data.publicUrl;
+}
+
+$("saveAvatar").onclick = async () => {
+  const file = $("avatarFile").files[0];
+
+  if (!file) return toast("Choose a profile picture.");
+
+  if (!file.type.startsWith("image/")) {
+    return toast("Choose an image.");
+  }
+
+  try {
+    toast("Uploading profile picture...");
+
+    const url = await uploadFile(file, "avatars");
+
+    const { error } = await db.from("profiles")
+      .update({
+        avatar_url: url,
+        avatar_type: "upload"
+      })
+      .eq("id", state.user.id);
+
+    if (error) throw error;
+
+    state.profile = await getProfile(state.user.id);
+
+    await loadMyProfile();
+    await loadFeed();
+
+    toast("Profile picture updated!");
+  } catch (error) {
+    console.error(error);
+    toast(error.message);
+  }
+};
+
+function renderPresetAvatars() {
+  $("presetAvatars").innerHTML = "";
+
+  PRESET_AVATARS.forEach(name => {
+    const button = document.createElement("button");
+    button.className = "ghost";
+    button.style.width = "76px";
+
+    button.innerHTML = `
+      <img src="avatars/${name}.png"
+           alt="${escapeHTML(name)}"
+           style="width:42px;height:42px;object-fit:cover;
+                  border-radius:50%"
+           onerror="this.style.display='none'">
+      <br>${escapeHTML(name)}
+    `;
+
+    button.onclick = async () => {
+      const { error } = await db.from("profiles")
+        .update({
+          avatar_url: null,
+          avatar_type: "preset",
+          avatar_name: name
+        })
+        .eq("id", state.user.id);
+
+      if (error) return toast(error.message);
+
+      state.profile = await getProfile(state.user.id);
+
+      await loadMyProfile();
+      await loadFeed();
+
+      toast("Avatar updated!");
+    };
+
+    $("presetAvatars").appendChild(button);
+  });
+}
+
+/* BASIC CUSTOM 2D AVATAR */
+
+$("makeAvatar").onclick = async () => {
+  const skin = $("avatarSkin").value;
+  const hair = $("avatarHair").value;
+  const clothes = $("avatarClothes").value;
+
+  const hairShape = hair === "long"
+    ? '<path d="M35 48 Q25 10 64 12 Q104 12 94 48 L91 90 L78 90 L78 42 L48 42 L48 90 L36 90Z" fill="#24170f"/>'
+    : hair === "curly"
+    ? '<path d="M30 40 Q20 12 39 20 Q47 2 59 17 Q76 3 84 20 Q103 13 98 42 L91 53 L37 53Z" fill="#24170f"/>'
+    : '<path d="M31 43 Q26 10 64 12 Q101 12 97 43 L86 34 L43 34Z" fill="#24170f"/>';
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"
+         viewBox="0 0 128 128">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop stop-color="#282842"/>
+          <stop offset="1" stop-color="#08080d"/>
+        </linearGradient>
+      </defs>
+      <rect width="128" height="128" rx="64" fill="url(#bg)"/>
+      <path d="M20 128 Q22 82 64 83 Q106 82 108 128"
+            fill="${clothes}"/>
+      ${hairShape}
+      <ellipse cx="64" cy="49" rx="28" ry="34" fill="${skin}"/>
+      <ellipse cx="53" cy="47" rx="3" ry="4" fill="#24170f"/>
+      <ellipse cx="75" cy="47" rx="3" ry="4" fill="#24170f"/>
+      <path d="M56 65 Q64 71 72 65" fill="none"
+            stroke="#653b30" stroke-width="3" stroke-linecap="round"/>
+      <path d="M35 43 Q30 12 64 12 Q100 12 94 43"
+            fill="none" stroke="#24170f" stroke-width="5"/>
+    </svg>`;
+
+  const dataURL =
+    "data:image/svg+xml;charset=UTF-8," +
+    encodeURIComponent(svg);
+
+  const { error } = await db.from("profiles")
+    .update({
+      avatar_url: dataURL,
+      avatar_type: "upload",
+      avatar_name: "custom"
+    })
+    .eq("id", state.user.id);
+
+  if (error) return toast(error.message);
+
+  state.profile = await getProfile(state.user.id);
+
+  await loadMyProfile();
+  await loadFeed();
+
+  toast("Custom avatar saved!");
+};
+
+async function loadMyProfile() {
+  if (!state.user) return;
+
+  state.profile = await getProfile(state.user.id);
+
+  if (!state.profile) return;
+
+  $("myAvatar").src = avatarURL(state.profile);
+  $("myDisplayName").textContent =
+    state.profile.display_name || "Vidora user";
+
+  $("myUsername").textContent =
+    "@" + (state.profile.username || "");
+
+  const [followers, following, posts] = await Promise.all([
+    db.from("follows").select("id", { count: "exact", head: true })
+      .eq("following_id", state.user.id),
+
+    db.from("follows").select("id", { count: "exact", head: true })
+      .eq("follower_id", state.user.id),
+
+    db.from("posts").select("*")
+      .eq("user_id", state.user.id)
+      .order("created_at", { ascending: false })
+  ]);
+
+  $("profileStats").textContent =
+    `${followers.count || 0} followers · ` +
+    `${following.count || 0} following · ` +
+    `${posts.data?.length || 0} posts`;
+
+  $("myPosts").innerHTML = "";
+
+  for (const post of posts.data || []) {
+    const media = document.createElement(
+      post.media_type === "video" ? "video" : "img"
+    );
+
+    media.src = post.media_url;
+    media.className = "profile-media";
+
+    if (media.tagName === "VIDEO") media.muted = true;
+
+    $("myPosts").appendChild(media);
+  }
+
+  renderPresetAvatars();
+}
+
+/* POSTS AND FEED */
+
+async function loadFeed() {
+  if (!state.user) return;
+
+  const { data: posts, error } = await db.from("posts")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error(error);
+    $("feed").innerHTML =
+      "<p>Could not load posts. Check your Supabase policies.</p>";
+    return;
+  }
+
+  state.posts = posts || [];
+  $("feed").innerHTML = "";
+
+  if (!state.posts.length) {
+    $("feed").innerHTML =
+      "<p class='muted'>No posts yet. Be the first to publish!</p>";
+    return;
+  }
+
+  for (const post of state.posts) {
+    const profile = await getProfile(post.user_id);
+
+    const card = document.createElement("article");
+    card.className = "card";
+    card.dataset.postId = post.id;
+
+    const mediaType = post.media_type === "video" ? "video" : "image";
+
+    const mediaHTML = mediaType === "video"
+      ? `<div class="video-stage">
+           <video class="post-media"
+                  src="${escapeHTML(post.media_url)}"
+                  playsinline loop preload="metadata"
+                  style="filter:${FILTERS[post.filter] ? post.filter : "none"}"
+                  ${post.mute_original ? "muted" : ""}></video>
+         </div>`
+      : `<img class="post-media"
+               src="${escapeHTML(post.media_url)}"
+               alt="Post">`;
+
+    const { count: likesCount } = await db.from("post_likes")
+      .select("id", { count: "exact", head: true })
+      .eq("post_id", post.id);
+
+    const { data: existingLike } = await db.from("post_likes")
+      .select("id")
+      .eq("post_id", post.id)
+      .eq("user_id", state.user.id)
+      .maybeSingle();
+
+    const { count: commentsCount } = await db.from("post_comments")
+      .select("id", { count: "exact", head: true })
+      .eq("post_id", post.id);
+
+    card.innerHTML = `
+      <div class="card-head">
+        <img class="avatar"
+             src="${escapeHTML(avatarURL(profile))}"
+             alt="">
+        <div style="flex:1">
+          <div class="username">
+            ${escapeHTML(profile?.display_name || "Vidora user")}
+          </div>
+          <div class="muted">
+            @${escapeHTML(profile?.username || "user")}
+          </div>
         </div>
-        <span style="font-size:11px;color:#9e9e9e;">Your Story</span>
+
+        ${post.user_id === state.user.id
+          ? '<button class="ghost delete-button" data-delete>Delete</button>'
+          : '<button class="ghost" data-profile>Profile</button>'}
       </div>
-    </div>
 
-    <!-- Video Feed -->
-    <main class="feed-container">
-      <video id="mainVideo" class="video-player" playsinline loop></video>
+      ${mediaHTML}
 
-      <div class="video-overlay">
-        <strong id="videoUsername">@creator</strong>
-        <p id="videoCaption" style="font-size:14px;margin:6px 0;">Welcome to the new Vidora</p>
-        <div style="display:flex;align-items:center;gap:6px;color:#00e676;font-size:13px;">
-          <span>🎵</span>
-          <span id="videoSong">Original Sound - Vidora</span>
+      <div class="post-caption">
+        ${escapeHTML(post.caption || post.content || "")}
+        ${post.sound_name
+          ? `<p class="muted">🎵 ${escapeHTML(post.sound_name)}</p>`
+          : ""}
+      </div>
+
+      <div class="post-actions">
+        <button data-like class="${existingLike ? "liked" : ""}">
+          ${existingLike ? "♥" : "♡"}
+          ${likesCount || 0}
+        </button>
+
+        <button data-comments>
+          💬 ${commentsCount || 0}
+        </button>
+
+        <button data-share>↗ Share</button>
+      </div>
+
+      ${post.sound_url
+        ? `<div class="video-controls">
+             <button data-music>🎵 Play music</button>
+           </div>`
+        : ""}
+    `;
+
+    card.querySelector("[data-like]").onclick = () =>
+      toggleLike(post, card);
+
+    card.querySelector("[data-comments]").onclick = () =>
+      openComments(post.id);
+
+    card.querySelector("[data-share]").onclick = async () => {
+      const shareURL = location.origin + location.pathname +
+        "?post=" + encodeURIComponent(post.id);
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: "Vidora post",
+            text: post.caption || "Watch this on Vidora",
+            url: shareURL
+          });
+        } else if (navigator.clipboard) {
+          await navigator.clipboard.writeText(shareURL);
+          toast("Post link copied.");
+        } else {
+          toast(shareURL);
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") toast("Share failed.");
+      }
+    };
+
+    card.querySelector("[data-delete]")?.addEventListener(
+      "click",
+      () => deletePost(post)
+    );
+
+    card.querySelector("[data-profile]")?.addEventListener(
+      "click",
+      () => openPublicProfile(post.user_id)
+    );
+
+    card.querySelector("[data-music]")?.addEventListener(
+      "click",
+      () => playPostMusic(post)
+    );
+
+    card.querySelector("video")?.addEventListener("click", event => {
+      const video = event.currentTarget;
+
+      if (video.paused) {
+        stopAllMedia();
+        video.muted = false;
+        video.play().catch(() => {
+          video.muted = true;
+          video.play().catch(() => {});
+          toast("Tap the video again to enable sound.");
+        });
+      } else {
+        video.pause();
+      }
+    });
+
+    $("feed").appendChild(card);
+  }
+}
+
+async function toggleLike(post, card) {
+  const { data: existing } = await db.from("post_likes")
+    .select("id")
+    .eq("post_id", post.id)
+    .eq("user_id", state.user.id)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await db.from("post_likes")
+      .delete()
+      .eq("id", existing.id)
+      .eq("user_id", state.user.id);
+
+    if (error) return toast(error.message);
+  } else {
+    const { error } = await db.from("post_likes").insert({
+      post_id: post.id,
+      user_id: state.user.id
+    });
+
+    if (error) return toast(error.message);
+
+    if (post.user_id !== state.user.id) {
+      await createNotification(
+        post.user_id,
+        "like",
+        "liked your post",
+        post.id
+      );
+    }
+  }
+
+  await loadFeed();
+}
+
+async function deletePost(post) {
+  if (!confirm("Delete this post?")) return;
+
+  const { error } = await db.from("posts")
+    .delete()
+    .eq("id", post.id)
+    .eq("user_id", state.user.id);
+
+  if (error) return toast(error.message);
+
+  toast("Post deleted.");
+  await loadFeed();
+}
+
+async function publishPost() {
+  const file = $("postFile").files[0];
+  const musicFile = $("postMusic").files[0];
+
+  if (!file) return toast("Choose a photo or video.");
+
+  const mediaType = file.type.startsWith("video/")
+    ? "video"
+    : file.type.startsWith("image/")
+    ? "image"
+    : null;
+
+  if (!mediaType) return toast("Unsupported media file.");
+
+  try {
+    toast("Uploading post...");
+
+    const mediaURL = await uploadFile(file, "posts");
+
+    let musicURL = null;
+    let soundName = null;
+
+    if (musicFile) {
+      if (!musicFile.type.startsWith("audio/")) {
+        return toast("Choose a valid audio file.");
+      }
+
+      musicURL = await uploadFile(musicFile, "music");
+      soundName = musicFile.name;
+    }
+
+    const caption = $("postCaption").value.trim();
+
+    const { error } = await db.from("posts").insert({
+      user_id: state.user.id,
+      media_url: mediaURL,
+      media_type: mediaType,
+      caption,
+      content: caption,
+      sound_url: musicURL,
+      sound_name: soundName,
+      mute_original: $("muteOriginal").checked,
+      filter: $("postFilter").value
+    });
+
+    if (error) throw error;
+
+    $("postFile").value = "";
+    $("postMusic").value = "";
+    $("postCaption").value = "";
+
+    toast("Post published!");
+
+    showView("home");
+    await loadFeed();
+  } catch (error) {
+    console.error(error);
+    toast(error.message);
+  }
+}
+
+$("publishPost").onclick = publishPost;
+
+async function playPostMusic(post) {
+  if (!post.sound_url) return toast("No music attached.");
+
+  stopAudio();
+
+  state.audio = new Audio(post.sound_url);
+  state.audio.loop = true;
+
+  try {
+    await state.audio.play();
+  } catch {
+    toast("Tap again to allow music playback.");
+  }
+}
+
+/* NEXT VIDEO: ROTATION EFFECT */
+
+$("nextVideo").onclick = () => {
+  const videos = [...document.querySelectorAll("#feed video")];
+
+  if (!videos.length) return toast("No videos available yet.");
+
+  const playing = videos.findIndex(video => !video.paused);
+  const nextIndex = (playing + 1) % videos.length;
+
+  stopAllMedia();
+
+  const video = videos[nextIndex];
+  const stage = video.closest(".video-stage");
+
+  stage?.classList.remove("rotating");
+
+  requestAnimationFrame(() => {
+    stage?.classList.add("rotating");
+
+    setTimeout(() => {
+      video.muted = false;
+      video.play().catch(() => {
+        video.muted = true;
+        video.play().catch(() => {});
+      });
+    }, 300);
+  });
+
+  video.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+};
+
+/* COMMENTS */
+
+async function openComments(postId) {
+  state.currentPost = postId;
+
+  $("commentsModal").classList.add("active");
+  $("commentsList").innerHTML = "Loading comments...";
+
+  const { data, error } = await db.from("post_comments")
+    .select("*")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    $("commentsList").textContent = error.message;
+    return;
+  }
+
+  $("commentsList").innerHTML = "";
+
+  for (const comment of data || []) {
+    const profile = await getProfile(comment.user_id);
+
+    const row = document.createElement("p");
+
+    row.innerHTML =
+      `<strong>${escapeHTML(profile?.username || "user")}</strong> ` +
+      escapeHTML(comment.content);
+
+    $("commentsList").appendChild(row);
+  }
+}
+
+$("commentForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const content = $("commentText").value.trim();
+
+  if (!content || !state.currentPost) return;
+
+  const { error } = await db.from("post_comments").insert({
+    post_id: state.currentPost,
+    user_id: state.user.id,
+    content
+  });
+
+  if (error) return toast(error.message);
+
+  $("commentText").value = "";
+
+  await openComments(state.currentPost);
+  await loadFeed();
+
+  const post = state.posts.find(
+    item => String(item.id) === String(state.currentPost)
+  );
+
+  if (post && post.user_id !== state.user.id) {
+    await createNotification(
+      post.user_id,
+      "comment",
+      "commented on your post",
+      post.id
+    );
+  }
+});
+
+/* FOLLOWING AND DISCOVERY */
+
+async function loadPeople(query) {
+  if (!state.user) return;
+
+  let request = db.from("profiles")
+    .select("id,username,display_name,avatar_url,avatar_name")
+    .neq("id", state.user.id)
+    .limit(30);
+
+  if (query) {
+    request = request.ilike("username", "%" + query + "%");
+  }
+
+  const { data, error } = await request;
+
+  if (error) {
+    $("userResults").textContent = error.message;
+    return;
+  }
+
+  $("userResults").innerHTML = "";
+
+  for (const person of data || []) {
+    const row = document.createElement("div");
+    row.className = "user-row";
+
+    row.innerHTML = `
+      <img class="avatar" src="${escapeHTML(avatarURL(person))}">
+      <div class="user-info">
+        <strong>${escapeHTML(person.display_name || person.username)}</strong>
+        <div class="muted">@${escapeHTML(person.username || "")}</div>
+      </div>
+      <button class="ghost" data-open>Profile</button>
+      <button class="primary" data-follow>Follow</button>
+      <button class="ghost" data-chat>Message</button>
+    `;
+
+    row.querySelector("[data-open]").onclick = () =>
+      openPublicProfile(person.id);
+
+    row.querySelector("[data-follow]").onclick = async () => {
+      const { data: existing } = await db.from("follows")
+        .select("id")
+        .eq("follower_id", state.user.id)
+        .eq("following_id", person.id)
+        .maybeSingle();
+
+      if (existing) {
+        toast("You already follow this user.");
+        return;
+      }
+
+      const { error } = await db.from("follows").insert({
+        follower_id: state.user.id,
+        following_id: person.id
+      });
+
+      if (error) return toast(error.message);
+
+      await createNotification(
+        person.id,
+        "follow",
+        "started following you"
+      );
+
+      toast("Following!");
+    };
+
+    row.querySelector("[data-chat]").onclick = () =>
+      openChat(person);
+
+    $("userResults").appendChild(row);
+  }
+}
+
+$("userSearch").addEventListener("input", event => {
+  loadPeople(event.target.value.trim());
+});
+
+async function openPublicProfile(userId) {
+  const profile = await getProfile(userId);
+
+  if (!profile) return toast("Profile not found.");
+
+  const { data: posts } = await db.from("posts")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  $("feed").innerHTML = `
+    <div class="card">
+      <div class="card-head">
+        <img class="avatar" src="${escapeHTML(avatarURL(profile))}">
+        <div>
+          <strong>${escapeHTML(profile.display_name || "")}</strong>
+          <div class="muted">@${escapeHTML(profile.username || "")}</div>
         </div>
       </div>
-
-      <div class="video-actions">
-        <button class="action-btn" data-action="like"><span class="icon">♡</span><span>12.8K</span></button>
-        <button class="action-btn" data-action="comment"><span class="icon">💬</span><span>256</span></button>
-        <button class="action-btn" data-action="share"><span class="icon">↗</span><span>Share</span></button>
-        <button class="action-btn" data-action="music"><span class="icon">🎵</span><span>Sound</span></button>
-        <button class="action-btn" data-action="filter"><span class="icon">✨</span><span>Filter</span></button>
+      <div class="post-caption">${escapeHTML(profile.bio || "")}</div>
+      <div class="video-controls">
+        <button id="profileFollow">Follow</button>
+        <button id="profileMessage">Message</button>
       </div>
-    </main>
-
-    <!-- Bottom Nav -->
-    <nav class="bottom-nav">
-      <button class="nav-item active" data-view="home"><span style="font-size:22px;">⌂</span><span>Home</span></button>
-      <button class="nav-item" data-view="discover"><span style="font-size:22px;">⌕</span><span>Discover</span></button>
-      <button class="nav-item" id="createBtn"><div class="create-btn">+</div></button>
-      <button class="nav-item" data-view="inbox"><span style="font-size:22px;">✉</span><span>Inbox</span></button>
-      <button class="nav-item" data-view="profile"><span style="font-size:22px;">◉</span><span>Profile</span></button>
-    </nav>
-  </div>
-
-  <!-- Song Library Modal -->
-  <div class="modal" id="songModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Song Library</h3>
-        <button id="closeSongModal" style="background:none;border:none;color:white;font-size:22px;">×</button>
-      </div>
-      <div id="songList"></div>
     </div>
-  </div>
+  `;
 
-  <!-- Filters Modal -->
-  <div class="modal" id="filterModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Filters</h3>
-        <button id="closeFilterModal" style="background:none;border:none;color:white;font-size:22px;">×</button>
+  $("profileFollow").onclick = async () => {
+    const { error } = await db.from("follows").insert({
+      follower_id: state.user.id,
+      following_id: userId
+    });
+
+    if (error) return toast(error.message);
+
+    await createNotification(userId, "follow", "started following you");
+    toast("Followed!");
+  };
+
+  $("profileMessage").onclick = () => openChat(profile);
+
+  for (const post of posts || []) {
+    const item = document.createElement("article");
+    item.className = "card";
+
+    item.innerHTML = `
+      ${post.media_type === "video"
+        ? `<video class="post-media" src="${escapeHTML(post.media_url)}"
+                  controls playsinline></video>`
+        : `<img class="post-media" src="${escapeHTML(post.media_url)}">`}
+      <p class="post-caption">${escapeHTML(post.caption || "")}</p>
+    `;
+
+    $("feed").appendChild(item);
+  }
+
+  showView("home");
+}
+
+/* CHAT */
+
+async function openChat(profile) {
+  state.chatUser = profile;
+
+  $("chatPanel").classList.remove("hidden");
+  $("conversations").classList.add("hidden");
+  $("chatSearchResults").classList.add("hidden");
+
+  $("chatTitle").textContent =
+    profile.display_name || profile.username || "Chat";
+
+  await loadMessages();
+
+  if (state.chatChannel) {
+    await db.removeChannel(state.chatChannel);
+  }
+
+  state.chatChannel = db.channel(
+    "chat-" + state.user.id + "-" + profile.id
+  )
+  .on(
+    "postgres_changes",
+    { event: "*", schema: "public", table: "messages" },
+    async payload => {
+      const message = payload.new;
+
+      if (!message) return;
+
+      const relevant =
+        (message.sender_id === state.user.id &&
+         message.receiver_id === profile.id) ||
+        (message.sender_id === profile.id &&
+         message.receiver_id === state.user.id);
+
+      if (relevant) await loadMessages();
+    }
+  )
+  .subscribe();
+}
+
+async function loadMessages() {
+  if (!state.chatUser) return;
+
+  const otherId = state.chatUser.id;
+
+  const { data, error } = await db.from("messages")
+    .select("*")
+    .or(
+      `and(sender_id.eq.${state.user.id},receiver_id.eq.${otherId}),` +
+      `and(sender_id.eq.${otherId},receiver_id.eq.${state.user.id})`
+    )
+    .order("created_at", { ascending: true })
+    .limit(200);
+
+  if (error) {
+    $("chatMessages").textContent = error.message;
+    return;
+  }
+
+  $("chatMessages").innerHTML = "";
+
+  for (const message of data || []) {
+    const bubble = document.createElement("div");
+
+    bubble.className =
+      "bubble " +
+      (message.sender_id === state.user.id ? "mine" : "");
+
+    bubble.textContent = message.content || "";
+
+    $("chatMessages").appendChild(bubble);
+  }
+
+  $("chatMessages").scrollTop =
+    $("chatMessages").scrollHeight;
+
+  await updateUnreadIndicators();
+}
+
+$("sendMessageForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!state.chatUser) return;
+
+  const content = $("messageText").value.trim();
+
+  if (!content) return;
+
+  const { error } = await db.from("messages").insert({
+    sender_id: state.user.id,
+    receiver_id: state.chatUser.id,
+    content
+  });
+
+  if (error) return toast(error.message);
+
+  $("messageText").value = "";
+
+  await loadMessages();
+
+  await createNotification(
+    state.chatUser.id,
+    "message",
+    "sent you a message"
+  );
+});
+
+$("backInbox").onclick = () => {
+  $("chatPanel").classList.add("hidden");
+  $("conversations").classList.remove("hidden");
+  $("chatSearchResults").classList.remove("hidden");
+
+  if (state.chatChannel) {
+    db.removeChannel(state.chatChannel);
+    state.chatChannel = null;
+  }
+
+  state.chatUser = null;
+  loadConversations();
+};
+
+$("chatSearch").addEventListener("input", async event => {
+  const query = event.target.value.trim();
+
+  if (!query) {
+    $("chatSearchResults").innerHTML = "";
+    return;
+  }
+
+  const { data } = await db.from("profiles")
+    .select("id,username,display_name,avatar_url,avatar_name")
+    .ilike("username", "%" + query + "%")
+    .neq("id", state.user.id)
+    .limit(15);
+
+  $("chatSearchResults").innerHTML = "";
+
+  for (const person of data || []) {
+    const button = document.createElement("button");
+    button.className = "user-row ghost full";
+
+    button.textContent =
+      "@" + person.username + " — Message";
+
+    button.onclick = () => openChat(person);
+
+    $("chatSearchResults").appendChild(button);
+  }
+});
+
+async function loadConversations() {
+  if (!state.user) return;
+
+  const { data, error } = await db.from("messages")
+    .select("sender_id,receiver_id,content,created_at")
+    .or(
+      `sender_id.eq.${state.user.id},receiver_id.eq.${state.user.id}`
+    )
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    $("conversations").textContent = error.message;
+    return;
+  }
+
+  const ids = [...new Set((data || []).map(message =>
+    message.sender_id === state.user.id
+      ? message.receiver_id
+      : message.sender_id
+  ))].filter(Boolean);
+
+  $("conversations").innerHTML = "";
+
+  for (const id of ids) {
+    const profile = await getProfile(id);
+
+    if (!profile) continue;
+
+    const row = document.createElement("button");
+    row.className = "user-row ghost full";
+
+    row.innerHTML = `
+      <img class="avatar" src="${escapeHTML(avatarURL(profile))}">
+      <div class="user-info">
+        <strong>${escapeHTML(profile.display_name || profile.username)}</strong>
+        <div class="muted">@${escapeHTML(profile.username || "")}</div>
       </div>
-      <div id="filterList"></div>
+      💬
+    `;
+
+    row.onclick = () => openChat(profile);
+
+    $("conversations").appendChild(row);
+  }
+}
+
+$("openInbox").onclick = () => showView("inbox");
+
+/* STORIES */
+
+async function loadStories() {
+  if (!state.user) return;
+
+  const { data: follows } = await db.from("follows")
+    .select("following_id")
+    .eq("follower_id", state.user.id);
+
+  const followedIds = (follows || []).map(row => row.following_id);
+
+  const allowedIds = [...new Set([
+    state.user.id,
+    ...followedIds
+  ])];
+
+  const { data, error } = await db.from("stories")
+    .select("*")
+    .in("user_id", allowedIds)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Stories:", error.message);
+    return;
+  }
+
+  state.currentStoryList = data || [];
+
+  const bar = $("storiesBar");
+
+  bar.innerHTML = `
+    <div class="story">
+      <button id="addStory">
+        <div style="font-size:30px">＋</div>
+        Your Story
+      </button>
     </div>
-  </div>
+  `;
 
-  <!-- Assistant Panel -->
-  <div id="assistantPanel">
-    <img id="assistantAvatarImg" class="assistant-avatar" src="avatars/skye.png" alt="Vidora Avatar">
-    <p id="assistantText" style="text-align:center;font-size:14px;margin-bottom:12px;">Hi, I’m your Vidora assistant.</p>
-    <button class="btn btn-primary" style="width:100%;" onclick="Vidora.speak('Hello! Welcome to the new Vidora. How can I help you today?')">Speak</button>
-  </div>
+  $("addStory").onclick = () =>
+    $("storyUploadModal").classList.add("active");
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
+  const ownerIds = [...new Set(state.currentStoryList.map(s => s.user_id))];
+  const profiles = {};
+
+  for (const id of ownerIds) {
+    profiles[id] = await getProfile(id);
+  }
+
+  for (const id of ownerIds) {
+    const story = state.currentStoryList.find(s => s.user_id === id);
+    const profile = profiles[id];
+
+    const item = document.createElement("div");
+    item.className = "story";
+
+    item.innerHTML = `
+      <button>
+        <img src="${escapeHTML(avatarURL(profile))}">
+        <div>${escapeHTML(profile?.username || "user")}</div>
+      </button>
+    `;
+
+    item.onclick = () => openStoriesForUser(id);
+
+    bar.appendChild(item);
+  }
+}
+
+function openStoriesForUser(userId) {
+  const stories = state.currentStoryList.filter(
+    story => story.user_id === userId
+  );
+
+  if (!stories.length) return;
+
+  state.viewingStories = stories;
+  state.storyIndex = 0;
+
+  showStory();
+}
+
+function showStory() {
+  stopAllMedia();
+
+  const story = state.viewingStories?.[state.storyIndex];
+
+  if (!story) {
+    $("storyModal").classList.remove("active");
+    return;
+  }
+
+  const media = story.media_type === "video"
+    ? `<video class="modal-media" src="${escapeHTML(story.media_url)}"
+              controls autoplay playsinline></video>`
+    : `<img class="modal-media" src="${escapeHTML(story.media_url)}">`;
+
+  const music = story.sound_url
+    ? `<audio controls autoplay src="${escapeHTML(story.sound_url)}"></audio>`
+    : "";
+
+  $("storyContent").innerHTML =
+    media + music +
+    `<p>${escapeHTML(story.sound_name || "")}</p>`;
+
+  $("storyModal").classList.add("active");
+}
+
+$("nextStory").onclick = () => {
+  state.storyIndex++;
+  showStory();
+};
+
+$("publishStory").onclick = async () => {
+  const file = $("storyFile").files[0];
+  const musicFile = $("storyMusic").files[0];
+
+  if (!file) return toast("Choose a photo or video.");
+
+  try {
+    const mediaType = file.type.startsWith("video/")
+      ? "video"
+      : file.type.startsWith("image/")
+      ? "image"
+      : null;
+
+    if (!mediaType) return toast("Unsupported story file.");
+
+    const mediaURL = await uploadFile(file, "stories");
+
+    let soundURL = null;
+    let soundName = null;
+
+    if (musicFile) {
+      soundURL = await uploadFile(musicFile, "music");
+      soundName = musicFile.name;
+    }
+
+    const { error } = await db.from("stories").insert({
+      user_id: state.user.id,
+      media_url: mediaURL,
+      media_type: mediaType,
+      sound_url: soundURL,
+      sound_name: soundName,
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    });
+
+    if (error) throw error;
+
+    $("storyUploadModal").classList.remove("active");
+
+    $("storyFile").value = "";
+    $("storyMusic").value = "";
+
+    await loadStories();
+
+    toast("Story published!");
+  } catch (error) {
+    console.error(error);
+    toast(error.message);
+  }
+};
+
+/* IN-APP NOTIFICATIONS ONLY */
+
+async function createNotification(userId, type, message, postId = null) {
+  if (userId === state.user.id) return;
+
+  const { error } = await db.from("notifications").insert({
+    user_id: userId,
+    actor_id: state.user.id,
+    type,
+    message,
+    post_id: postId
+  });
+
+  if (error) console.error("Notification:", error.message);
+}
+
+async function loadNotifications() {
+  if (!state.user) return;
+
+  const { data, error } = await db.from("notifications")
+    .select("*")
+    .eq("user_id", state.user.id)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    $("notificationList").textContent = error.message;
+    return;
+  }
+
+  $("notificationList").innerHTML = "";
+
+  for (const notification of data || []) {
+    const actor = notification.actor_id
+      ? await getProfile(notification.actor_id)
+      : null;
+
+    const row = document.createElement("div");
+
+    row.className =
+      "notification-row " +
+      (!notification.is_read ? "unread" : "");
+
+    row.innerHTML = `
+      <span class="${notification.is_read ? "hidden" : "green-dot"}"></span>
+      <div>
+        <strong>${escapeHTML(actor?.username || "Vidora")}</strong>
+        ${escapeHTML(notification.message || notification.type || "New activity")}
+        <div class="muted">
+          ${new Date(notification.created_at).toLocaleString()}
+        </div>
+      </div>
+    `;
+
+    $("notificationList").appendChild(row);
+  }
+}
+
+async function updateUnreadIndicators() {
+  if (!state.user) return;
+
+  const { count: notificationCount } = await db.from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", state.user.id)
+    .eq("is_read", false);
+
+  const hasNotifications = (notificationCount || 0) > 0;
+
+  $("notificationDot").classList.toggle(
+    "hidden",
+    !hasNotifications
+  );
+
+  const { count: messageCount } = await db.from("messages")
+    .select("id", { count: "exact", head: true })
+    .eq("receiver_id", state.user.id);
+
+  /*
+    IMPORTANT:
+    The existing messages table has no is_read column.
+    A total-message count is NOT a reliable unread count.
+    Add the database migration described after this code
+    before treating message indicators as fully functional.
+  */
+
+  const hasMessages = (messageCount || 0) > 0;
+
+  $("messageDot").classList.toggle("hidden", !hasMessages);
+  $("navMessageDot").classList.toggle("hidden", !hasMessages);
+}
+
+$("openNotifications").onclick = async () => {
+  showView("notifications");
+
+  const { error } = await db.from("notifications")
+    .update({ is_read: true })
+    .eq("user_id", state.user.id)
+    .eq("is_read", false);
+
+  if (error) {
+    toast("Could not mark notifications read.");
+    console.error(error);
+  }
+
+  await loadNotifications();
+  await updateUnreadIndicators();
+};
+
+/* REALTIME */
+
+function subscribeRealtime() {
+  if (state.feedChannel) db.removeChannel(state.feedChannel);
+  if (state.notificationChannel) db.removeChannel(state.notificationChannel);
+  if (state.messageChannel) db.removeChannel(state.messageChannel);
+
+  state.feedChannel = db.channel("vidora-post-updates")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "posts" },
+      () => loadFeed()
+    )
+    .subscribe();
+
+  state.notificationChannel = db.channel(
+    "vidora-notifications-" + state.user.id
+  )
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+        filter: "user_id=eq." + state.user.id
+      },
+      () => {
+        updateUnreadIndicators();
+
+        if ($("notificationsView").classList.contains("active")) {
+          loadNotifications();
+        }
+      }
+    )
+    .subscribe();
+
+  state.messageChannel = db.channel(
+    "vidora-messages-" + state.user.id
+  )
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: "receiver_id=eq." + state.user.id
+      },
+      async () => {
+        await updateUnreadIndicators();
+
+        if (state.chatUser) await loadMessages();
+
+        if ($("inboxView").classList.contains("active")) {
+          await loadConversations();
+        }
+      }
+    )
+    .subscribe();
+}
+
+/* NAVIGATION */
+
+document.querySelectorAll("[data-view]").forEach(button => {
+  button.addEventListener("click", () => {
+    stopAllMedia();
+    showView(button.dataset.view);
+  });
+});
+
+$("addStory").onclick = () =>
+  $("storyUploadModal").classList.add("active");
+
+document.querySelectorAll("[data-close]").forEach(button => {
+  button.onclick = () => {
+    stopAllMedia();
+    $(button.dataset.close).classList.remove("active");
+  };
+});
+
+/* STARTUP */
+
+db.auth.getSession().then(async ({ data, error }) => {
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  if (data.session?.user) {
+    await startApp(data.session.user);
+  }
+});
+
+db.auth.onAuthStateChange(async (event, session) => {
+  if (event === "SIGNED_OUT") {
+    state.user = null;
+    state.profile = null;
+    $("app").classList.remove("active");
+    $("authScreen").style.display = "flex";
+  }
+});
+</script>
+
 </body>
 </html>
