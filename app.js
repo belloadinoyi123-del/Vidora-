@@ -272,10 +272,12 @@ function setAuthMode(mode) {
 
   if (loginFields) {
     loginFields.hidden = isSignup;
+    loginFields.style.display = isSignup ? "none" : "block";
   }
 
   if (signupWizard) {
     signupWizard.hidden = !isSignup;
+    signupWizard.style.display = isSignup ? "block" : "none";
   }
 
   if (authTitle) {
@@ -288,21 +290,18 @@ function setAuthMode(mode) {
     authMessage.textContent = "";
   }
 
-  if (showSignup) {
-    showSignup.hidden = isSignup;
-  }
+  if (showSignup) showSignup.hidden = isSignup;
+  if (showLogin) showLogin.hidden = !isSignup;
 
-  if (showLogin) {
-    showLogin.hidden = !isSignup;
-  }
-
-  if (isSignup) {
-    showSignupStep(1);
-  }
+  if (isSignup) showSignupStep(1);
+}
 }
 function showSignupStep(step) {
   document.querySelectorAll(".signup-step").forEach(panel => {
-    panel.hidden = Number(panel.dataset.step) !== step;
+    const active = Number(panel.dataset.step) === step;
+
+    panel.hidden = !active;
+    panel.style.display = active ? "block" : "none";
   });
 
   document.querySelectorAll(".prog-step").forEach(item => {
@@ -315,31 +314,38 @@ function showSignupStep(step) {
   const back = document.getElementById("signupBack");
   const next = document.getElementById("signupNext");
 
-  if (back) {
-    back.hidden = step === 1;
-  }
+  if (back) back.hidden = step === 1;
 
   if (next) {
-    next.textContent = step === 4
-      ? "Create account"
-      : "Continue";
+    next.hidden = false;
+    next.textContent =
+      step === 4 ? "Create account" : "Continue";
   }
 
-  if (step === 4) {
-    document.getElementById("reviewUsername").textContent =
-      document.getElementById("authUsername").value;
+  const username =
+    document.getElementById("authUsername")?.value.trim() || "";
 
-    document.getElementById("reviewName").textContent =
-      document.getElementById("authDisplayName").value;
+  const displayName =
+    document.getElementById("authDisplayName")?.value.trim() || "";
 
-    document.getElementById("reviewEmail").textContent =
-      document.getElementById("authEmail").value;
+  const email =
+    document.getElementById("authEmail")?.value.trim() || "";
 
+  const reviewUsername = document.getElementById("reviewUsername");
+  const reviewName = document.getElementById("reviewName");
+  const reviewEmail = document.getElementById("reviewEmail");
+  const reviewInterests = document.getElementById("reviewInterests");
+
+  if (reviewUsername) reviewUsername.textContent = username;
+  if (reviewName) reviewName.textContent = displayName;
+  if (reviewEmail) reviewEmail.textContent = email;
+
+  if (reviewInterests) {
     const interests = [
       ...document.querySelectorAll(".interest-chip.active")
     ].map(button => button.dataset.interest);
 
-    document.getElementById("reviewInterests").textContent =
+    reviewInterests.textContent =
       interests.join(", ") || "Not selected";
   }
 }
