@@ -241,13 +241,22 @@ function initSupabase() {
 }
 
 function showApp() {
-  if ($("authScreen")) $("authScreen").style.display = "none";
-  if ($("appShell")) $("appShell").style.display = "block";
+  const auth = document.getElementById("authScreen");
+  const app = document.getElementById("appShell");
+
+  if (auth) {
+    auth.hidden = true;
+    auth.style.display = "none";
+  }
+
+  if (app) {
+    app.hidden = false;
+    app.style.display = "block";
+  }
 
   updateProfileUI();
   showView("homeView");
 }
-
 /* ===================== AUTHENTICATION ===================== */
 
 
