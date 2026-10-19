@@ -1191,7 +1191,6 @@ async function deletePost(postId) {
 }
 
 /* ===================== NAVIGATION ===================== */
-
 function showView(viewId) {
   const views = [
     "homeView",
@@ -1204,10 +1203,13 @@ function showView(viewId) {
   ];
 
   views.forEach(id => {
-    const element = $(id);
-    if (element) {
-      element.style.display = id === viewId ? "block" : "none";
-    }
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    const active = id === viewId;
+
+    element.hidden = !active;
+    element.style.display = active ? "block" : "none";
   });
 
   state.currentView = viewId;
