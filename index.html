@@ -1288,19 +1288,32 @@ function closeReels(){
 }
 
 function toggleReelPlayback(video){
-  if(video.paused)video.play().catch(()=>{});
-  else video.pause();
+  if(video.paused){
+    video.play().catch(error=>{
+      console.error("Video playback failed:",error);
+      toast("Tap the video again to play.");
+    });
+  }else{
+    video.pause();
+  }
 }
 
 function toggleCurrentVideoSound(){
   state.videoSound=!state.videoSound;
+
   if(state.activeReel){
     state.activeReel.muted=!state.videoSound;
-    if(state.videoSound)state.activeReel.play().catch(()=>{});
+
+    if(state.videoSound){
+      state.activeReel.play().catch(error=>{
+        console.error("Video sound failed:",error);
+        toast("Tap the video to enable sound.");
+      });
+    }
   }
+
   toast(state.videoSound?"Video sound enabled":"Video sound muted");
 }
-
 async function reelLike(id,button){
   await toggleLike(id);
   button.textContent=button.textContent==="♡"?"♥":"♡";
