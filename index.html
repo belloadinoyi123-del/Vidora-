@@ -1498,61 +1498,79 @@ function applyFilter(){
    MUSIC LIBRARY
    ========================================================= */
 
-async function loadMusic(){
-  const box=$("musicLibrary");
-  if(!box)return;
+const BUILT_IN_DRILL_TRACK = {
+  id: "vidora-default-drill",
+  title: "Afro Drill Beat",
+  artist: "Instrumentals.com.ng",
+  category: "Drill",
+  genre: "Drill",
+  audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3",
+  is_public: true
+};
 
-  box.innerHTML='<p class="muted small">Loading music…</p>';
+async function loadMusic() {
+  const box = $("musicLibrary");
+  if (!box) return;
 
-  try{
-    const {data,error}=await db.from("music_tracks")
-      .select("*").eq("is_public",true)
-      .order("created_at",{ascending:false}).limit(100);
+  box.innerHTML = '<p class="muted small">Loading music…</p>';
 
-    if(error)throw error;
+  let tracks = [BUILT_IN_DRILL_TRACK];
 
-    const category = $("musicCategory")?.value || "All";
+  try {
+    const { data, error } = await db
+      .from("music_tracks")
+      .select("*")
+      .eq("is_public", true)
+      .order("created_at", { ascending: false })
+      .limit(100);
 
-state.tracks = (data || []).filter(track => {
-  const trackCategory = String(
-    track.category || track.genre || "Other"
-  ).trim().toLowerCase();
+    if (error) throw error;
 
-  return category === "All" ||
-    trackCategory === category.trim().toLowerCase();
-});
-
-    if(!state.tracks.length){
-      box.innerHTML='<p class="muted small">No tracks in this category yet. Upload an audio file below to start building Vidora music.</p>';
-      return;
-    }
-
-    box.innerHTML=state.tracks.map(t=>`
-      <div class="music-track">
-        <button class="icon-btn" onclick="previewTrack('${String(t.id).replace(/[^a-zA-Z0-9-]/g,"")}')">▶</button>
-        <div class="track-info">
-          <strong>${escapeHTML(t.title)}</strong>
-          <span>${escapeHTML(t.artist||"Vidora creator")}</span>
-        </div>
-        <button class="secondary" onclick="selectTrack('${String(t.id).replace(/[^a-zA-Z0-9-]/g,"")}')">Use</button>
-      </div>`).join("");
-
-  }catch(e){
-    console.error(e);
-    box.innerHTML=`<p class="muted small">Music library could not load: ${escapeHTML(e.message)}</p>`;
+    tracks = tracks.concat(data || []);
+  } catch (e) {
+    console.warn("Online music library unavailable:", e.message);
   }
-}
 
-async function previewTrack(id){
-  const track=state.tracks.find(t=>String(t.id)===String(id));
-  if(!track)return;
+  const category = $("musicCategory")?.value || "All";
 
-  const audio=$("musicPreview");
-  audio.src=safeURL(track.audio_url);
-  audio.classList.remove("hidden");
-  audio.load();
-  try{await audio.play();}
-  catch{toast("Tap the audio player to preview this track.");}
+  state.tracks = tracks.filter(track => {
+    const trackCategory = String(
+      track.category || track.genre || "Other"
+    ).trim().toLowerCase();
+
+    return category === "All" ||
+      trackCategory === category.trim().toLowerCase();
+  });
+
+  if (!state.tracks.length) {
+    box.innerHTML =
+      '<p class="muted small">No tracks in this category. Choose All or Drill.</p>';
+    return;
+  }
+
+  box.innerHTML = state.tracks.map(track => {
+    const id = String(track.id).replace(/[^a-zA-Z0-9-]/g, "");
+
+    return `
+      <div class="music-track">
+        <button class="icon-btn"
+          onclick="previewTrack('${id}')"
+          aria-label="Preview ${escapeHTML(track.title)}">▶</button>
+
+        <div class="track-info">
+          <strong>${escapeHTML(track.title || "Untitled")}</strong>
+          <span>${escapeHTML(track.artist || "Vidora creator")}${
+            track.id === "vidora-default-drill"
+              ? " • Online beat"
+              : ""
+          }</span>
+        </div>
+
+        <button class="secondary"
+          onclick="selectTrack('${id}')">Use</button>
+      </div>
+    `;
+  }).join("");
 }
 
 function selectTrack(id){
