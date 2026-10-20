@@ -1336,32 +1336,76 @@ async function reelComment(id){
   setTimeout(()=>openComments(id),300);
 }
 
-let postMusicAudio=null;
-let postMusicId=null;
+let postMusicAudio = null;
+let postMusicId = null;
 
-function stopPostMusic(){
-  if(postMusicAudio){
+function stopPostMusic() {
+  if (postMusicAudio) {
     postMusicAudio.pause();
-    postMusicAudio.src="";
-    postMusicAudio=null;
-    postMusicId=null;
+    postMusicAudio.currentTime = 0;
+    postMusicAudio.src = "";
+    postMusicAudio = null;
+  }
+
+  postMusicId = null;
+}
+
+function playPostMusic(postId) {
+  const post = state.posts.find(
+    p => String(p.id) === String(postId)
+  );
+
+  // Stop music if this post has no attached music.
+  if (!post || !post.sound_url) {
+    stopPostMusic();
+    return;
+  }
+
+  // Don't restart music that is already playing for this post.
+  if (
+    postMusicId === String(postId) &&
+    postMusicAudio &&
+    !postMusicAudio.paused
+  ) {
+    return;
+  }
+
+  stopPostMusic();
+
+  try {
+    postMusicAudio = new Audio(safeURL(post.sound_url));
+    postMusicAudio.loop = true;
+    postMusicAudio.volume = 0.75;
+    postMusicId = String(postId);
+
+    postMusicAudio.play().catch(error => {
+      console.error("Post music failed:", error);
+      toast("Tap the video again to enable its music.");
+    });
+  } catch (error) {
+    console.error("Could not load post music:", error);
+    stopPostMusic();
   }
 }
 
-function toggleReelPlayback(video){
+function toggleReelPlayback(video) {
+  if (!video) return;
+
   const reel = video.closest(".reel");
   const postId = reel?.dataset.postId;
 
-  if(video.paused){
-    if(postId){
-      playPostMusic(postId);
-    }
-
-    video.play().catch(error=>{
+  if (video.paused) {
+    // Attempt to play the video.
+    video.play().catch(error => {
       console.error("Video playback failed:", error);
       toast("Tap the video again to play.");
     });
-  }else{
+
+    // Play attached music when available.
+    if (postId) {
+      playPostMusic(postId);
+    }
+  } else {
     video.pause();
     stopPostMusic();
   }
