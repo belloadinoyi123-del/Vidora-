@@ -1288,15 +1288,24 @@ function closeReels(){
 }
 
 function toggleReelPlayback(video){
+  const reel = video.closest(".reel");
+  const postId = reel?.dataset.postId;
+
   if(video.paused){
+    if(postId){
+      playPostMusic(postId);
+    }
+
     video.play().catch(error=>{
-      console.error("Video playback failed:",error);
+      console.error("Video playback failed:", error);
       toast("Tap the video again to play.");
     });
   }else{
     video.pause();
+    stopPostMusic();
   }
 }
+
 
 function toggleCurrentVideoSound(){
   state.videoSound=!state.videoSound;
