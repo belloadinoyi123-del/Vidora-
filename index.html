@@ -318,6 +318,83 @@ label{font-size:13px;color:#c5d2d9}
   .avatar-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
   .post-media{max-height:720px}
 }
+ /* VIDORA PREMIUM MUSIC PLAYER */
+.music-track {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  margin: 10px 0;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #191925, #101018);
+  transition: 0.2s ease;
+}
+
+.music-track:hover {
+  border-color: #8b5cf6;
+  transform: translateY(-1px);
+}
+
+.music-track .icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6, #ff2d75);
+  color: white;
+  border: none;
+  flex-shrink: 0;
+}
+
+.music-track .track-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.music-track .track-info strong {
+  display: block;
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.music-track .track-info span {
+  display: block;
+  color: #aaaabd;
+  font-size: 12px;
+}
+
+.music-track button.secondary {
+  border-radius: 20px;
+  padding: 8px 14px;
+  flex-shrink: 0;
+}
+
+#musicCategory,
+#uploadMusicCategory {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 12px;
+  background: #191925;
+  color: white;
+  border: 1px solid #343448;
+}
+
+#musicPreview {
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 12px;
+}
+
+#selectedMusicLabel {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 20px;
+  background: rgba(139, 92, 246, 0.15);
+  color: #c4b5fd;
+} 
 </style>
 </head>
 
