@@ -1511,11 +1511,16 @@ async function loadMusic(){
 
     if(error)throw error;
 
-    const category=$("musicCategory")?.value||"All";
-    state.tracks=(data||[]).filter(track=>
-      category==="All"||
-      String(track.category||track.genre||"Other").toLowerCase()===category.toLowerCase()
-    );
+    const category = $("musicCategory")?.value || "All";
+
+state.tracks = (data || []).filter(track => {
+  const trackCategory = String(
+    track.category || track.genre || "Other"
+  ).trim().toLowerCase();
+
+  return category === "All" ||
+    trackCategory === category.trim().toLowerCase();
+});
 
     if(!state.tracks.length){
       box.innerHTML='<p class="muted small">No tracks in this category yet. Upload an audio file below to start building Vidora music.</p>';
