@@ -1292,12 +1292,10 @@ function toggleReelPlayback(video){
   const postId = reel?.dataset.postId;
 
   if(video.paused){
-    if(postId){
-      playPostMusic(postId);
-    }
+    if(postId) playPostMusic(postId);
 
     video.play().catch(error=>{
-      console.error("Video playback failed:", error);
+      console.error("Video playback failed:",error);
       toast("Tap the video again to play.");
     });
   }else{
@@ -1306,12 +1304,11 @@ function toggleReelPlayback(video){
   }
 }
 
-
 function toggleCurrentVideoSound(){
-  state.videoSound=!state.videoSound;
+  state.videoSound = !state.videoSound;
 
   if(state.activeReel){
-    state.activeReel.muted=!state.videoSound;
+    state.activeReel.muted = !state.videoSound;
 
     if(state.videoSound){
       state.activeReel.play().catch(error=>{
@@ -1321,8 +1318,13 @@ function toggleCurrentVideoSound(){
     }
   }
 
-  toast(state.videoSound?"Video sound enabled":"Video sound muted");
+  toast(
+    state.videoSound
+      ? "Original video sound on"
+      : "Original video sound muted"
+  );
 }
+
 async function reelLike(id,button){
   await toggleLike(id);
   button.textContent=button.textContent==="♡"?"♥":"♡";
