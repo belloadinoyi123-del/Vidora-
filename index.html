@@ -952,10 +952,15 @@ function mediaElement(post, extraClass=""){
   const filter=filters[post.filter_name||post.filter||"normal"]||"none";
 
   if(mediaIsVideo(post)){
-    return `<video class="post-media ${extraClass}" src="${escapeHTML(url)}"
-      style="filter:${filter}" controls playsinline preload="metadata"
+    return `<video class="post-media ${extraClass}"
+      data-post-id="${escapeHTML(String(post.id))}"
+      src="${escapeHTML(url)}"
+      style="filter:${filter}"
+      controls playsinline preload="metadata"
+      onclick="toggleReelPlayback(this)"
       ${post.mute_original?"muted":""}></video>`;
-  }
+}
+  
 
   return `<img class="post-media image ${extraClass}" src="${escapeHTML(url)}"
     style="filter:${filter}" alt="Vidora post" loading="lazy">`;
