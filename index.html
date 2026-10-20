@@ -1611,7 +1611,29 @@ const avatarOptions=Array.from({length:30},(_,i)=>({
   name:"Avatar "+(i+1),
   url:"https://i.pravatar.cc/180?img="+(i+1)
 }));
-
+// Add your local Vidora avatars (does NOT change the old ones)
+avatarOptions.push(
+  { name: "Skye",   url: "avatars/skye.png" },
+  { name: "Neo",    url: "avatars/neo.png" },
+  { name: "Nova",   url: "avatars/nova.png" },
+  { name: "Luna",   url: "avatars/luna.png" },
+  { name: "Blaze",  url: "avatars/blaze.png" },
+  { name: "Pixel",  url: "avatars/pixel.png" },
+  { name: "Aria",   url: "avatars/aria.png" },
+  { name: "Jett",   url: "avatars/jett.png" },
+  { name: "Kai",    url: "avatars/kai.png" },
+  { name: "Zara",   url: "avatars/zara.png" },
+  { name: "Onyx",   url: "avatars/onyx.png" },
+  { name: "Rex",    url: "avatars/rex.png" },
+  { name: "Ivy",    url: "avatars/ivy.png" },
+  { name: "Orion",  url: "avatars/orion.png" },
+  { name: "Zeno",   url: "avatars/zeno.png" },
+  { name: "Sage",   url: "avatars/sage.png" },
+  { name: "Vexa",   url: "avatars/vexa.png" },
+  { name: "Nia",    url: "avatars/nia.png" },
+  { name: "Kairo",  url: "avatars/kairo.png" },
+  { name: "Axel",   url: "avatars/axel.png" }
+);
 function renderAvatarGrid(){
   $("avatarGrid").innerHTML=avatarOptions.map((a,i)=>`
     <button class="avatar-choice ${state.selectedAvatar===a.url?"active":""}"
