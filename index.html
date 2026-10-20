@@ -1639,7 +1639,25 @@ async function loadMusic() {
     `;
   }).join("");
 }
+function previewTrack(id) {
+  const track = state.tracks.find(
+    t => String(t.id) === String(id)
+  );
 
+  if (!track || !track.audio_url) {
+    toast("This track has no valid audio URL.");
+    return;
+  }
+
+  const player = $("musicPreview");
+  player.src = safeURL(track.audio_url);
+  player.classList.remove("hidden");
+
+  player.play().catch(error => {
+    console.error("Music preview failed:", error);
+    toast("Tap Play on the audio player to hear the track.");
+  });
+}
 function selectTrack(id){
   const track=state.tracks.find(t=>String(t.id)===String(id));
   if(!track)return;
