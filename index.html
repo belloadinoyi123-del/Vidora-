@@ -1288,27 +1288,38 @@ function closeReels(){
 }
 
 
-
-function toggleCurrentVideoSound(){
+function toggleCurrentVideoSound() {
   state.videoSound = !state.videoSound;
 
-  if(state.activeReel){
+  if (state.activeReel) {
     state.activeReel.muted = !state.videoSound;
 
-    if(state.videoSound){
-      state.activeReel.play().catch(error=>{
-        console.error("Video sound failed:",error);
-        toast("Tap the video to enable sound.");
+    if (state.videoSound) {
+      // Enable the video's original audio.
+      state.activeReel.play().catch(error => {
+        console.error("Video sound failed:", error);
       });
+
+      // Also start the music attached to this post.
+      const reel = state.activeReel.closest(".reel");
+      const postId = reel?.dataset.postId;
+
+      if (postId) {
+        playPostMusic(postId);
+      }
+    } else {
+      // Stop attached music when sound is turned off.
+      stopPostMusic();
     }
   }
 
   toast(
     state.videoSound
-      ? "Original video sound on"
-      : "Original video sound muted"
+      ? "Video and attached music sound on"
+      : "Video and attached music muted"
   );
 }
+
 
 async function reelLike(id,button){
   await toggleLike(id);
