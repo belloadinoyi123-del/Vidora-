@@ -1348,20 +1348,23 @@ function stopPostMusic(){
   }
 }
 
-function playPostMusic(postId){
-  const post=state.posts.find(p=>String(p.id)===String(postId));
-  if(!post?.sound_url)return;
+function toggleReelPlayback(video){
+  const reel = video.closest(".reel");
+  const postId = reel?.dataset.postId;
 
-  if(postMusicId===String(postId)&&postMusicAudio&&!postMusicAudio.paused)return;
+  if(video.paused){
+    if(postId){
+      playPostMusic(postId);
+    }
 
-  stopPostMusic();
-  postMusicAudio=new Audio(safeURL(post.sound_url));
-  postMusicAudio.loop=true;
-  postMusicAudio.volume=0.75;
-  postMusicId=String(postId);
-  postMusicAudio.play().catch(()=>{
-    /* Mobile browsers may require a user gesture before music can play. */
-  });
+    video.play().catch(error=>{
+      console.error("Video playback failed:", error);
+      toast("Tap the video again to play.");
+    });
+  }else{
+    video.pause();
+    stopPostMusic();
+  }
 }
 
 /* =========================================================
