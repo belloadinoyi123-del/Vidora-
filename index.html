@@ -519,15 +519,20 @@ label{font-size:13px;color:#c5d2d9}
       <textarea id="createCaption" maxlength="2200" placeholder="What's happening?"></textarea>
 
       <h3>Music</h3>
-      <p class="small muted">Choose a track to play alongside your post. Music plays separately; this does not permanently mix the audio into the video file.</p>
       <select id="musicCategory" onchange="loadMusic()">
-        <option value="All">All music</option>
-        <option value="Beat">Beat</option>
-        <option value="Drill">Drill</option>
-        <option value="Funk">Funk</option>
-        <option value="Popular">Popular songs</option>
-        <option value="Other">Other</option>
-      </select>
+  <option value="All">🎵 All Music</option>
+  <option value="Vidora Originals">🔥 Vidora Originals</option>
+  <option value="UK Drill">🎧 UK Drill</option>
+  <option value="Dark Drill">🌑 Dark Drill</option>
+  <option value="Motivational Drill">💪 Motivational Drill</option>
+  <option value="Afro Drill">🇳🇬 Afro Drill</option>
+  <option value="Melodic Drill">🎶 Melodic Drill</option>
+  <option value="Hype Drill">⚡ Hype Drill</option>
+  <option value="Beat">🥁 Beats</option>
+  <option value="Funk">🎸 Funk</option>
+  <option value="Popular">⭐ Popular Songs</option>
+  <option value="Other">🎼 Other</option>
+</select>
       <div id="musicLibrary"></div>
       <div id="selectedMusicLabel" class="badge">No music selected</div>
       <audio id="musicPreview" controls class="hidden" style="width:100%;margin-top:10px"></audio>
