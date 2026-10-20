@@ -1392,8 +1392,7 @@ function playPostMusic(postId) {
 function toggleReelPlayback(video) {
   if (!video) return;
 
-  const reel = video.closest(".reel");
-  const postId = reel?.dataset.postId;
+  const postId = video.dataset.postId;
 
   if (video.paused) {
     // Attempt to play the video.
