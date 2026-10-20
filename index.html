@@ -952,13 +952,20 @@ function mediaElement(post, extraClass=""){
   const filter=filters[post.filter_name||post.filter||"normal"]||"none";
 
   if(mediaIsVideo(post)){
-    return `<video class="post-media ${extraClass}"
-      data-post-id="${escapeHTML(String(post.id))}"
-      src="${escapeHTML(url)}"
-      style="filter:${filter}"
-      controls playsinline preload="metadata"
-      onclick="toggleReelPlayback(this)"
-      ${post.mute_original?"muted":""}></video>`;
+  const postId = escapeHTML(String(post.id));
+
+  return `<video
+    class="post-media ${extraClass}"
+    data-post-id="${postId}"
+    src="${escapeHTML(url)}"
+    style="filter:${filter}"
+    controls
+    playsinline
+    preload="metadata"
+    onplay="playPostMusic('${postId}')"
+    onpause="if(postMusicId==='${postId}')stopPostMusic()"
+    ${post.mute_original ? "muted" : ""}
+  ></video>`;
 }
   
 
