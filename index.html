@@ -1686,4 +1686,2075 @@ a {
 
   </nav>
 
-<!-- PART 4 WILL CONTAIN THE JAVASCRIPT -->
+<script>
+"use strict";
+
+/* ==========================================
+   1. SUPABASE CONFIGURATION
+========================================== */
+
+const SUPABASE_URL =
+  "https://htnrqgzxkfktwoioscjr.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_JT5rBfXYSX3-3_zyC2cazQ_YXg_ih_h";
+
+let db = null;
+let currentUser = null;
+let currentProfile = null;
+let selectedFilter = "none";
+let selectedMusic = null;
+let selectedAvatar = "";
+let activePage = "homePage";
+let currentStoryIndex = 0;
+let visibleStories = [];
+let toastTimer = null;
+
+const PAGE_IDS = [
+  "homePage",
+  "discoverPage",
+  "createPage",
+  "profilePage",
+  "inboxPage",
+  "notificationsPage",
+  "reelsPage"
+];
+
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+
+const DEFAULT_AVATAR =
+  "https://i.pravatar.cc/180?img=12";
+
+
+/* ==========================================
+   2. HELPER FUNCTIONS
+========================================== */
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[character]);
+}
+
+function showToast(message) {
+  const toast = $("toast");
+  if (!toast) {
+    alert(message);
+    return;
+  }
+
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+
+  clearTimeout(toastTimer);
+
+  toastTimer = setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 3200);
+}
+
+function setMessage(id, message, type = "") {
+  const element = $(id);
+  if (!element) return;
+
+  element.textContent = message;
+  element.classList.remove("error", "success");
+
+  if (type) {
+    element.classList.add(type);
+  }
+}
+
+function setBusy(button, busy, busyText = "Please wait...") {
+  if (!button) return;
+
+  if (busy) {
+    button.dataset.originalText = button.textContent;
+    button.textContent = busyText;
+    button.disabled = true;
+  } else {
+    button.textContent =
+      button.dataset.originalText || button.textContent;
+    button.disabled = false;
+  }
+}
+
+function formatDate(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
+}
+
+function getAvatar(profile) {
+  return profile?.avatar_url || DEFAULT_AVATAR;
+}
+
+function getUsername(profile) {
+  return profile?.username || "vidora_user";
+}
+
+function getDisplayName(profile) {
+  return profile?.display_name ||
+    profile?.username ||
+    "Vidora user";
+}
+
+function getErrorMessage(error) {
+  if (!error) return "Something went wrong.";
+
+  return error.message ||
+    error.error_description ||
+    String(error);
+}
+
+function requireDatabase() {
+  if (!db) {
+    showToast("Supabase is not connected. Check the configuration.");
+    return false;
+  }
+
+  return true;
+}
+
+function requireLogin() {
+  if (!currentUser) {
+    showToast("Please log in first.");
+    showAuth();
+    return false;
+  }
+
+  return true;
+}
+
+function setAvatarImage(imageElement, url) {
+  if (!imageElement) return;
+
+  imageElement.onerror = () => {
+    imageElement.onerror = null;
+    imageElement.src = DEFAULT_AVATAR;
+  };
+
+  imageElement.src = url || DEFAULT_AVATAR;
+}
+
+
+/* ==========================================
+   3. SUPABASE INITIALIZATION
+========================================== */
+
+function initializeSupabase() {
+  if (!window.supabase?.createClient) {
+    console.error("Supabase JavaScript library did not load.");
+
+    setMessage(
+      "loginMessage",
+      "The Supabase library did not load. Check your internet connection.",
+      "error"
+    );
+
+    return false;
+  }
+
+  if (
+    !SUPABASE_URL.startsWith("https://") ||
+    !SUPABASE_PUBLISHABLE_KEY.startsWith("sb_publishable_")
+  ) {
+    setMessage(
+      "loginMessage",
+      "Check the Supabase project URL and publishable key.",
+      "error"
+    );
+
+    return false;
+  }
+
+  try {
+    db = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      }
+    );
+
+    return true;
+  } catch (error) {
+    console.error("Supabase initialization error:", error);
+
+    setMessage(
+      "loginMessage",
+      "Could not initialize Supabase: " + getErrorMessage(error),
+      "error"
+    );
+
+    return false;
+  }
+}
+
+
+/* ==========================================
+   4. SHOW LOGIN OR APPLICATION
+========================================== */
+
+function showAuth() {
+  $("authPage")?.classList.remove("hidden");
+  $("appMain")?.classList.add("hidden");
+  $("bottomNav")?.classList.add("hidden");
+}
+
+function showApplication() {
+  $("authPage")?.classList.add("hidden");
+  $("appMain")?.classList.remove("hidden");
+  $("bottomNav")?.classList.remove("hidden");
+}
+
+function switchAuthTab(tab) {
+  const login = tab === "login";
+
+  $("loginForm")?.classList.toggle("hidden", !login);
+  $("signupForm")?.classList.toggle("hidden", login);
+
+  $("loginTab")?.classList.toggle("active", login);
+  $("signupTab")?.classList.toggle("active", !login);
+
+  setMessage("loginMessage", "");
+  setMessage("signupMessage", "");
+}
+
+$("loginTab")?.addEventListener("click", () => {
+  switchAuthTab("login");
+});
+
+$("signupTab")?.addEventListener("click", () => {
+  switchAuthTab("signup");
+});
+
+
+/* ==========================================
+   5. LOGIN
+========================================== */
+
+$("loginForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!requireDatabase()) return;
+
+  const button = $("loginForm").querySelector(
+    'button[type="submit"]'
+  );
+
+  const email = $("loginEmail").value.trim();
+  const password = $("loginPassword").value;
+
+  setBusy(button, true, "Logging in...");
+  setMessage("loginMessage", "");
+
+  try {
+    const { data, error } = await db.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) throw error;
+
+    currentUser = data.user;
+
+    if (!currentUser) {
+      throw new Error("Login succeeded but no user was returned.");
+    }
+
+    await startApp();
+
+    setMessage("loginMessage", "");
+    showToast("Welcome back to Vidora!");
+
+  } catch (error) {
+    console.error("Login error:", error);
+
+    setMessage(
+      "loginMessage",
+      getErrorMessage(error),
+      "error"
+    );
+  } finally {
+    setBusy(button, false);
+  }
+});
+
+
+/* ==========================================
+   6. SIGNUP
+========================================== */
+
+$("signupForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!requireDatabase()) return;
+
+  const button = $("signupForm").querySelector(
+    'button[type="submit"]'
+  );
+
+  const displayName = $("signupName").value.trim();
+  const username = $("signupUsername").value.trim().toLowerCase();
+  const email = $("signupEmail").value.trim();
+  const password = $("signupPassword").value;
+  const country = $("signupCountry").value;
+  const language = $("signupLanguage").value;
+
+  if (!/^[a-z0-9_]{3,24}$/.test(username)) {
+    setMessage(
+      "signupMessage",
+      "Use 3–24 letters, numbers, or underscores for your username.",
+      "error"
+    );
+
+    return;
+  }
+
+  if (password.length < 8) {
+    setMessage(
+      "signupMessage",
+      "Your password must contain at least 8 characters.",
+      "error"
+    );
+
+    return;
+  }
+
+  setBusy(button, true, "Creating account...");
+  setMessage("signupMessage", "");
+
+  try {
+    const { data, error } = await db.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: displayName,
+          username: username,
+          country: country,
+          language: language
+        }
+      }
+    });
+
+    if (error) throw error;
+
+    if (data.user && data.session) {
+      currentUser = data.user;
+
+      /*
+       * Profile creation uses the known core columns.
+       * Country and language are in Auth metadata for now.
+       * Add database columns before saving them to profiles.
+       */
+
+      const { error: profileError } = await db
+        .from("profiles")
+        .upsert({
+          id: currentUser.id,
+          username,
+          display_name: displayName,
+          avatar_url: DEFAULT_AVATAR,
+          bio: ""
+        }, {
+          onConflict: "id"
+        });
+
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+
+        showToast(
+          "Account created, but profile setup needs attention: " +
+          getErrorMessage(profileError)
+        );
+      }
+
+      await startApp();
+      showToast("Your Vidora account is ready!");
+
+    } else {
+      setMessage(
+        "signupMessage",
+        "Check your email for the confirmation link. After confirming, return and log in.",
+        "success"
+      );
+    }
+
+  } catch (error) {
+    console.error("Signup error:", error);
+
+    setMessage(
+      "signupMessage",
+      getErrorMessage(error),
+      "error"
+    );
+
+  } finally {
+    setBusy(button, false);
+  }
+});
+
+
+/* ==========================================
+   7. LOAD PROFILE
+========================================== */
+
+async function loadProfile() {
+  if (!currentUser || !db) return;
+
+  const { data, error } = await db
+    .from("profiles")
+    .select("*")
+    .eq("id", currentUser.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Profile loading error:", error);
+    throw error;
+  }
+
+  currentProfile = data;
+
+  if (!currentProfile) {
+    const metadata = currentUser.user_metadata || {};
+
+    const newProfile = {
+      id: currentUser.id,
+      username: metadata.username ||
+        "user_" + currentUser.id.slice(0, 8),
+      display_name: metadata.display_name || "Vidora user",
+      avatar_url: DEFAULT_AVATAR,
+      bio: ""
+    };
+
+    const { data: created, error: createError } = await db
+      .from("profiles")
+      .upsert(newProfile, {
+        onConflict: "id"
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error("Creating missing profile failed:", createError);
+      throw createError;
+    }
+
+    currentProfile = created;
+  }
+
+  renderProfile();
+}
+
+
+/* ==========================================
+   8. RENDER PROFILE
+========================================== */
+
+function renderProfile() {
+  if (!currentProfile) return;
+
+  const name = getDisplayName(currentProfile);
+  const username = getUsername(currentProfile);
+  const avatar = getAvatar(currentProfile);
+
+  if ($("profileDisplayName")) {
+    $("profileDisplayName").textContent = name;
+  }
+
+  if ($("profileUsername")) {
+    $("profileUsername").textContent = "@" + username;
+  }
+
+  if ($("profileBio")) {
+    $("profileBio").textContent =
+      currentProfile.bio || "Tell the world about yourself.";
+  }
+
+  setAvatarImage($("profileAvatar"), avatar);
+  setAvatarImage($("headerAvatar"), avatar);
+
+  $("editDisplayName") &&
+    ($("editDisplayName").value =
+      currentProfile.display_name || "");
+
+  $("editUsername") &&
+    ($("editUsername").value =
+      currentProfile.username || "");
+
+  $("editBio") &&
+    ($("editBio").value =
+      currentProfile.bio || "");
+
+  const metadata = currentUser?.user_metadata || {};
+
+  if ($("editCountry")) {
+    $("editCountry").value = metadata.country || "Nigeria";
+  }
+
+  if ($("editLanguage")) {
+    $("editLanguage").value = metadata.language || "English";
+  }
+}
+
+
+/* ==========================================
+   9. PAGE NAVIGATION
+========================================== */
+
+function navigateTo(pageId) {
+  if (!PAGE_IDS.includes(pageId)) return;
+
+  activePage = pageId;
+
+  PAGE_IDS.forEach(id => {
+    $(id)?.classList.toggle("hidden", id !== pageId);
+  });
+
+  document.querySelectorAll(".nav-item").forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.page === pageId
+    );
+  });
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  if (!currentUser) return;
+
+  if (pageId === "homePage") {
+    loadFeed();
+  } else if (pageId === "discoverPage") {
+    loadDiscover();
+  } else if (pageId === "profilePage") {
+    loadMyPosts();
+  } else if (pageId === "reelsPage") {
+    loadReels();
+  }
+}
+
+document.querySelectorAll(".nav-item").forEach(button => {
+  button.addEventListener("click", () => {
+    navigateTo(button.dataset.page);
+  });
+});
+
+$("headerSearchBtn")?.addEventListener("click", () => {
+  navigateTo("discoverPage");
+  $("searchInput")?.focus();
+});
+
+$("headerInboxBtn")?.addEventListener("click", () => {
+  navigateTo("inboxPage");
+});
+
+$("headerNotificationsBtn")?.addEventListener("click", () => {
+  navigateTo("notificationsPage");
+});
+
+$("headerProfileBtn")?.addEventListener("click", () => {
+  navigateTo("profilePage");
+});
+
+$("refreshFeedBtn")?.addEventListener("click", loadFeed);
+
+
+/* ==========================================
+   10. START APPLICATION
+========================================== */
+
+async function startApp() {
+  if (!currentUser) {
+    showAuth();
+    return;
+  }
+
+  try {
+    await loadProfile();
+
+    showApplication();
+    navigateTo("homePage");
+
+    await loadFeed();
+
+  } catch (error) {
+    console.error("App startup error:", error);
+
+    showApplication();
+
+    showToast(
+      "Your account is logged in, but setup needs fixing: " +
+      getErrorMessage(error)
+    );
+  }
+}
+
+
+/* ==========================================
+   11. MEDIA UPLOAD
+========================================== */
+
+async function uploadToMedia(file, folder = "posts") {
+  if (!requireLogin()) {
+    throw new Error("You must log in before uploading.");
+  }
+
+  if (!file) {
+    throw new Error("Choose a file first.");
+  }
+
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error("Files must be 50 MB or smaller.");
+  }
+
+  const allowed = [
+    "image/",
+    "video/",
+    "audio/"
+  ];
+
+  if (!allowed.some(prefix => file.type.startsWith(prefix))) {
+    throw new Error("Choose a supported image, video, or audio file.");
+  }
+
+  const extension =
+    file.name.includes(".")
+      ? file.name.split(".").pop().toLowerCase()
+      : "bin";
+
+  const safeExtension = /^[a-z0-9]{1,10}$/.test(extension)
+    ? extension
+    : "bin";
+
+  const path =
+    currentUser.id + "/" +
+    folder + "/" +
+    Date.now() + "-" +
+    crypto.randomUUID() + "." +
+    safeExtension;
+
+  const { data, error } = await db.storage
+    .from("media")
+    .upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type || undefined
+    });
+
+  if (error) throw error;
+
+  const { data: urlData } = db.storage
+    .from("media")
+    .getPublicUrl(data.path);
+
+  if (!urlData?.publicUrl) {
+    throw new Error("Could not obtain the media URL.");
+  }
+
+  return urlData.publicUrl;
+}
+
+
+/* ==========================================
+   12. CREATE MEDIA PREVIEW
+========================================== */
+
+let previewObjectURL = null;
+let selectedPostFile = null;
+
+$("createFile")?.addEventListener("change", event => {
+  const file = event.target.files?.[0];
+
+  selectedPostFile = file || null;
+
+  if (previewObjectURL) {
+    URL.revokeObjectURL(previewObjectURL);
+    previewObjectURL = null;
+  }
+
+  $("mediaPreviewBox")?.classList.add("hidden");
+  $("videoPreview")?.classList.add("hidden");
+  $("imagePreview")?.classList.add("hidden");
+
+  if (!file) return;
+
+  if (file.size > MAX_UPLOAD_BYTES) {
+    showToast("This file is larger than 50 MB.");
+
+    event.target.value = "";
+    selectedPostFile = null;
+
+    return;
+  }
+
+  previewObjectURL = URL.createObjectURL(file);
+
+  $("mediaPreviewBox")?.classList.remove("hidden");
+
+  if (file.type.startsWith("video/")) {
+    $("videoPreview").src = previewObjectURL;
+    $("videoPreview").classList.remove("hidden");
+    $("videoPreview").load();
+
+  } else if (file.type.startsWith("image/")) {
+    $("imagePreview").src = previewObjectURL;
+    $("imagePreview").classList.remove("hidden");
+
+  } else {
+    showToast("Please select a video or image.");
+  }
+});
+
+
+/* ==========================================
+   13. VIDEO FILTERS
+========================================== */
+
+const FILTER_STYLES = {
+  none: "none",
+  bright: "brightness(1.18) contrast(1.04)",
+  warm: "sepia(.22) saturate(1.18)",
+  mono: "grayscale(1)",
+  vivid: "saturate(1.45) contrast(1.08)"
+};
+
+function applyPreviewFilter() {
+  const filter = FILTER_STYLES[selectedFilter] || "none";
+
+  if ($("videoPreview")) {
+    $("videoPreview").style.filter = filter;
+  }
+
+  if ($("imagePreview")) {
+    $("imagePreview").style.filter = filter;
+  }
+}
+
+$("filterOptions")?.addEventListener("click", event => {
+  const button = event.target.closest("[data-filter]");
+
+  if (!button) return;
+
+  selectedFilter = button.dataset.filter || "none";
+
+  document.querySelectorAll(".filter-option").forEach(item => {
+    item.classList.toggle("active", item === button);
+  });
+
+  applyPreviewFilter();
+});
+
+
+/* ==========================================
+   14. MUSIC FILE PREVIEW
+========================================== */
+
+let uploadedMusicFile = null;
+let musicObjectURL = null;
+
+$("musicFileUpload")?.addEventListener("change", event => {
+  const file = event.target.files?.[0];
+
+  uploadedMusicFile = file || null;
+
+  if (musicObjectURL) {
+    URL.revokeObjectURL(musicObjectURL);
+    musicObjectURL = null;
+  }
+
+  if (!file) {
+    $("musicPreview").removeAttribute("src");
+    $("musicPreview").load();
+
+    $("selectedMusicLabel").textContent =
+      "No additional music selected.";
+
+    selectedMusic = null;
+
+    return;
+  }
+
+  if (!file.type.startsWith("audio/")) {
+    showToast("Select an audio file.");
+
+    event.target.value = "";
+    uploadedMusicFile = null;
+
+    return;
+  }
+
+  if (file.size > MAX_UPLOAD_BYTES) {
+    showToast("Audio files must be 50 MB or smaller.");
+
+    event.target.value = "";
+    uploadedMusicFile = null;
+
+    return;
+  }
+
+  musicObjectURL = URL.createObjectURL(file);
+
+  $("musicPreview").src = musicObjectURL;
+  $("musicPreview").load();
+
+  $("selectedMusicLabel").textContent =
+    "Selected track: " + file.name;
+
+  selectedMusic = {
+    title: $("musicTitle").value.trim() || file.name,
+    artist: $("musicArtist").value.trim() || "Uploaded audio",
+    file: file,
+    url: null
+  });
+});
+
+
+/* ==========================================
+   15. PUBLISH POST
+========================================== */
+
+$("createPostForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!requireDatabase() || !requireLogin()) return;
+
+  const file = selectedPostFile;
+
+  if (!file) {
+    showToast("Choose a video or photo first.");
+    return;
+  }
+
+  const button = $("publishButton");
+
+  setBusy(button, true, "Uploading media...");
+  setMessage("publishMessage", "");
+
+  try {
+    const mediaType = file.type.startsWith("video/")
+      ? "video"
+      : "image";
+
+    const mediaURL = await uploadToMedia(file, "posts");
+
+    /*
+     * These are the core posts columns previously identified
+     * in your project:
+     * id, user_id, media_url, media_type, caption, created_at.
+     *
+     * Do not insert unknown music/filter/visibility columns
+     * until they exist in the database.
+     */
+
+    const caption = $("createCaption").value.trim();
+
+    const { data, error } = await db
+      .from("posts")
+      .insert({
+        user_id: currentUser.id,
+        media_url: mediaURL,
+        media_type: mediaType,
+        caption: caption
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    /*
+     * The post's media is uploaded and saved.
+     * A selected extra music track is not yet permanently
+     * attached to the post. That requires a music_url column
+     * plus feed playback logic.
+     */
+
+    $("createPostForm").reset();
+
+    selectedPostFile = null;
+    selectedMusic = null;
+    uploadedMusicFile = null;
+    selectedFilter = "none";
+
+    $("mediaPreviewBox")?.classList.add("hidden");
+    $("videoPreview")?.classList.add("hidden");
+    $("imagePreview")?.classList.add("hidden");
+
+    $("selectedMusicLabel").textContent =
+      "No additional music selected.";
+
+    $("musicPreview").removeAttribute("src");
+    $("musicPreview").load();
+
+    document.querySelectorAll(".filter-option").forEach(item => {
+      item.classList.toggle(
+        "active",
+        item.dataset.filter === "none"
+      );
+    });
+
+    showToast("Your post was published!");
+
+    navigateTo("homePage");
+
+    await loadFeed();
+
+  } catch (error) {
+    console.error("Publishing error:", error);
+
+    setMessage(
+      "publishMessage",
+      "Could not publish: " + getErrorMessage(error),
+      "error"
+    );
+
+  } finally {
+    setBusy(button, false);
+  }
+});
+
+
+/* ==========================================
+   16. LOAD FEED
+========================================== */
+
+async function loadFeed() {
+  if (!db || !currentUser) return;
+
+  const container = $("feedList");
+
+  if (!container) return;
+
+  container.innerHTML =
+    '<div class="loading">Loading videos...</div>';
+
+  try {
+    const { data, error } = await db
+      .from("posts")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    const posts = data || [];
+
+    if (!posts.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <strong>No posts yet</strong>
+          Be the first to share something with Vidora.
+        </div>
+      `;
+
+      return;
+    }
+
+    const profileIds = [
+      ...new Set(posts.map(post => post.user_id).filter(Boolean))
+    ];
+
+    let profiles = [];
+
+    if (profileIds.length) {
+      const result = await db
+        .from("profiles")
+        .select("id,username,display_name,avatar_url")
+        .in("id", profileIds);
+
+      if (result.error) {
+        console.error("Loading post authors failed:", result.error);
+      } else {
+        profiles = result.data || [];
+      }
+    }
+
+    const profileMap = new Map(
+      profiles.map(profile => [profile.id, profile])
+    );
+
+    const postIds = posts.map(post => post.id);
+
+    let likes = [];
+
+    if (postIds.length) {
+      const result = await db
+        .from("post_likes")
+        .select("post_id,user_id")
+        .in("post_id", postIds);
+
+      if (result.error) {
+        console.warn("Loading likes failed:", result.error);
+      } else {
+        likes = result.data || [];
+      }
+    }
+
+    const likesByPost = new Map();
+
+    likes.forEach(like => {
+      const key = String(like.post_id);
+
+      if (!likesByPost.has(key)) {
+        likesByPost.set(key, []);
+      }
+
+      likesByPost.get(key).push(like);
+    });
+
+    let comments = [];
+
+    if (postIds.length) {
+      const result = await db
+        .from("post_comments")
+        .select("id,post_id,user_id,content,created_at")
+        .in("post_id", postIds);
+
+      if (result.error) {
+        console.warn("Loading comments failed:", result.error);
+      } else {
+        comments = result.data || [];
+      }
+    }
+
+    const commentCounts = new Map();
+
+    comments.forEach(comment => {
+      const key = String(comment.post_id);
+
+      commentCounts.set(
+        key,
+        (commentCounts.get(key) || 0) + 1
+      );
+    });
+
+    container.innerHTML = posts.map(post => {
+      const author = profileMap.get(post.user_id) || {};
+
+      const postLikes = likesByPost.get(String(post.id)) || [];
+
+      const liked = postLikes.some(
+        item => item.user_id === currentUser.id
+      );
+
+      const media = post.media_type === "video"
+        ? `
+          <video
+            src="${escapeHTML(post.media_url)}"
+            controls
+            playsinline
+            preload="metadata"
+            data-post-video
+          ></video>
+        `
+        : `
+          <img
+            src="${escapeHTML(post.media_url)}"
+            alt="Post image"
+            loading="lazy"
+          >
+        `;
+
+      const canDelete = post.user_id === currentUser.id;
+
+      return `
+        <article class="post-card" data-post-id="${escapeHTML(post.id)}">
+
+          <div class="post-header">
+            <img
+              class="avatar"
+              src="${escapeHTML(getAvatar(author))}"
+              alt=""
+              loading="lazy"
+            >
+
+            <div class="post-author">
+              <strong>${escapeHTML(getDisplayName(author))}</strong>
+              <small>
+                @${escapeHTML(getUsername(author))}
+                · ${escapeHTML(formatDate(post.created_at))}
+              </small>
+            </div>
+
+            ${canDelete ? `
+              <button
+                type="button"
+                class="icon-btn delete-action"
+                data-delete-post="${escapeHTML(post.id)}"
+                aria-label="Delete your post"
+              >⋯</button>
+            ` : ""}
+          </div>
+
+          <div class="post-media">
+            ${media}
+          </div>
+
+          ${post.caption ? `
+            <div class="post-caption">
+              ${escapeHTML(post.caption)}
+            </div>
+          ` : ""}
+
+          <div class="post-actions">
+            <button
+              type="button"
+              class="post-action ${liked ? "liked" : ""}"
+              data-like-post="${escapeHTML(post.id)}"
+            >
+              ${liked ? "♥" : "♡"}
+              <span>${postLikes.length}</span>
+            </button>
+
+            <button
+              type="button"
+              class="post-action"
+              data-comment-post="${escapeHTML(post.id)}"
+            >
+              ♧
+              <span>${commentCounts.get(String(post.id)) || 0} comments</span>
+            </button>
+
+            <button
+              type="button"
+              class="post-action"
+              data-share-post="${escapeHTML(post.id)}"
+            >
+              ↗
+              <span>Share</span>
+            </button>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+  } catch (error) {
+    console.error("Feed error:", error);
+
+    container.innerHTML = `
+      <div class="empty-state">
+        <strong>Could not load the feed</strong>
+        ${escapeHTML(getErrorMessage(error))}
+        <br><br>
+        Check your posts table and Supabase permissions.
+      </div>
+    `;
+  }
+}
+
+
+/* ==========================================
+   17. LIKE AND DELETE POSTS
+========================================== */
+
+$("feedList")?.addEventListener("click", async event => {
+  const likeButton = event.target.closest("[data-like-post]");
+  const deleteButton = event.target.closest("[data-delete-post]");
+  const commentButton = event.target.closest("[data-comment-post]");
+  const shareButton = event.target.closest("[data-share-post]");
+
+  if (likeButton) {
+    await toggleLike(likeButton.dataset.likePost);
+    return;
+  }
+
+  if (deleteButton) {
+    await deletePost(deleteButton.dataset.deletePost);
+    return;
+  }
+
+  if (commentButton) {
+    await openComments(commentButton.dataset.commentPost);
+    return;
+  }
+
+  if (shareButton) {
+    await sharePost(shareButton.dataset.sharePost);
+  }
+});
+
+async function toggleLike(postId) {
+  if (!requireDatabase() || !requireLogin()) return;
+
+  try {
+    const { data: existing, error: findError } = await db
+      .from("post_likes")
+      .select("post_id,user_id")
+      .eq("post_id", postId)
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+
+    if (findError) throw findError;
+
+    if (existing) {
+      const { error } = await db
+        .from("post_likes")
+        .delete()
+        .eq("post_id", postId)
+        .eq("user_id", currentUser.id);
+
+      if (error) throw error;
+
+    } else {
+      const { error } = await db
+        .from("post_likes")
+        .insert({
+          post_id: postId,
+          user_id: currentUser.id
+        });
+
+      if (error) throw error;
+    }
+
+    await loadFeed();
+
+  } catch (error) {
+    console.error("Like error:", error);
+
+    showToast("Could not update like: " + getErrorMessage(error));
+  }
+}
+
+async function deletePost(postId) {
+  if (!requireDatabase() || !requireLogin()) return;
+
+  const confirmed = confirm(
+    "Delete this post? This cannot be undone."
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const { error } = await db
+      .from("posts")
+      .delete()
+      .eq("id", postId)
+      .eq("user_id", currentUser.id);
+
+    if (error) throw error;
+
+    showToast("Post deleted.");
+
+    await loadFeed();
+
+  } catch (error) {
+    console.error("Delete post error:", error);
+
+    showToast("Could not delete post: " + getErrorMessage(error));
+  }
+}
+
+
+/* ==========================================
+   18. COMMENTS
+========================================== */
+
+async function openComments(postId) {
+  if (!requireDatabase() || !requireLogin()) return;
+
+  const { data, error } = await db
+    .from("post_comments")
+    .select("id,user_id,content,created_at")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    showToast("Could not load comments: " + getErrorMessage(error));
+    return;
+  }
+
+  const comments = data || [];
+
+  const content = `
+    <div id="commentsContainer" style="display:grid;gap:12px">
+      ${
+        comments.length
+          ? comments.map(comment => `
+              <div class="card">
+                <p style="margin:0;white-space:pre-wrap">
+                  ${escapeHTML(comment.content)}
+                </p>
+                <small class="muted">
+                  ${escapeHTML(formatDate(comment.created_at))}
+                </small>
+              </div>
+            `).join("")
+          : '<p class="muted">No comments yet. Start the conversation.</p>'
+      }
+    </div>
+
+    <form id="newCommentForm" style="margin-top:16px">
+      <div class="field">
+        <label for="newCommentText">Write a comment</label>
+        <textarea id="newCommentText"
+          maxlength="500"
+          required
+          placeholder="Write something respectful..."></textarea>
+      </div>
+
+      <button class="primary-btn full-width" type="submit">
+        Post comment
+      </button>
+    </form>
+  `;
+
+  $("generalModalTitle").textContent = "Comments";
+  $("generalModalContent").innerHTML = content;
+  $("generalModal").classList.remove("hidden");
+
+  $("newCommentForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const text = $("newCommentText").value.trim();
+
+    if (!text) return;
+
+    const button = event.currentTarget.querySelector(
+      'button[type="submit"]'
+    );
+
+    setBusy(button, true, "Posting...");
+
+    try {
+      const { error: insertError } = await db
+        .from("post_comments")
+        .insert({
+          post_id: postId,
+          user_id: currentUser.id,
+          content: text
+        });
+
+      if (insertError) throw insertError;
+
+      $("generalModal").classList.add("hidden");
+
+      showToast("Comment posted.");
+
+      await loadFeed();
+
+    } catch (error) {
+      console.error("Comment error:", error);
+
+      showToast("Could not post comment: " + getErrorMessage(error));
+
+    } finally {
+      setBusy(button, false);
+    }
+  });
+}
+
+
+/* ==========================================
+   19. SHARE POSTS
+========================================== */
+
+async function sharePost(postId) {
+  const shareURL = location.origin +
+    location.pathname +
+    "?post=" +
+    encodeURIComponent(postId);
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Vidora",
+        text: "Check out this post on Vidora!",
+        url: shareURL
+      });
+
+    } else if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(shareURL);
+
+      showToast("Post link copied.");
+
+    } else {
+      prompt("Copy this post link:", shareURL);
+    }
+
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      console.error("Share error:", error);
+    }
+  }
+}
+
+
+/* ==========================================
+   20. DISCOVER PUBLIC POSTS
+========================================== */
+
+async function loadDiscover(searchTerm = "") {
+  if (!db || !currentUser) return;
+
+  const container = $("discoverVideos");
+
+  if (!container) return;
+
+  container.innerHTML =
+    '<div class="loading" style="grid-column:1/-1">Loading discover...</div>';
+
+  try {
+    let query = db
+      .from("posts")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(60);
+
+    if (searchTerm.trim()) {
+      const safeTerm = searchTerm.trim().replace(/[%_,]/g, " ");
+
+      query = query.ilike("caption", "%" + safeTerm + "%");
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    const posts = data || [];
+
+    if (!posts.length) {
+      container.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          No matching posts were found.
+        </div>
+      `;
+
+      return;
+    }
+
+    container.innerHTML = posts.map(post => `
+      <button
+        class="discover-tile"
+        type="button"
+        data-open-discover-post="${escapeHTML(post.id)}"
+        aria-label="Open post"
+      >
+        ${
+          post.media_type === "video"
+            ? `<video
+                 src="${escapeHTML(post.media_url)}"
+                 muted
+                 playsinline
+                 preload="metadata"
+               ></video>`
+            : `<img
+                 src="${escapeHTML(post.media_url)}"
+                 alt=""
+                 loading="lazy"
+               >`
+        }
+
+        <span class="tile-count">▶</span>
+      </button>
+    `).join("");
+
+  } catch (error) {
+    console.error("Discover error:", error);
+
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        Could not load discover: ${escapeHTML(getErrorMessage(error))}
+      </div>
+    `;
+  }
+}
+
+$("searchBtn")?.addEventListener("click", async () => {
+  await loadDiscover($("searchInput").value);
+});
+
+$("searchInput")?.addEventListener("keydown", async event => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+
+    await loadDiscover($("searchInput").value);
+  }
+});
+
+$("discoverVideos")?.addEventListener("click", async event => {
+  const button = event.target.closest("[data-open-discover-post]");
+
+  if (!button) return;
+
+  navigateTo("homePage");
+
+  await loadFeed();
+
+  const postCard = document.querySelector(
+    `[data-post-id="${CSS.escape(button.dataset.openDiscoverPost)}"]`
+  );
+
+  postCard?.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+});
+
+
+/* ==========================================
+   21. MY POSTS
+========================================== */
+
+async function loadMyPosts() {
+  if (!db || !currentUser) return;
+
+  const container = $("profilePosts");
+
+  if (!container) return;
+
+  try {
+    const { data, error } = await db
+      .from("posts")
+      .select("*")
+      .eq("user_id", currentUser.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const posts = data || [];
+
+    $("profilePostCount").textContent = String(posts.length);
+
+    if (!posts.length) {
+      container.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          You haven't published any posts yet.
+        </div>
+      `;
+
+      return;
+    }
+
+    container.innerHTML = posts.map(post => `
+      <button
+        class="discover-tile"
+        type="button"
+        data-profile-post="${escapeHTML(post.id)}"
+      >
+        ${
+          post.media_type === "video"
+            ? `<video
+                 src="${escapeHTML(post.media_url)}"
+                 muted
+                 playsinline
+                 preload="metadata"
+               ></video>`
+            : `<img
+                 src="${escapeHTML(post.media_url)}"
+                 alt=""
+                 loading="lazy"
+               >`
+        }
+
+        <span class="tile-count">▶</span>
+      </button>
+    `).join("");
+
+  } catch (error) {
+    console.error("Profile posts error:", error);
+
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        Could not load your posts.
+        ${escapeHTML(getErrorMessage(error))}
+      </div>
+    `;
+  }
+}
+
+$("profilePosts")?.addEventListener("click", async event => {
+  const button = event.target.closest("[data-profile-post]");
+
+  if (!button) return;
+
+  navigateTo("homePage");
+
+  await loadFeed();
+
+  const card = document.querySelector(
+    `[data-post-id="${CSS.escape(button.dataset.profilePost)}"]`
+  );
+
+  card?.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+});
+
+
+/* ==========================================
+   22. VIDEO PLAYBACK
+========================================== */
+
+/*
+ * Use normal video controls so viewers can enable sound.
+ * Do not autoplay videos with audio.
+ */
+
+document.addEventListener("play", event => {
+  if (!(event.target instanceof HTMLVideoElement)) return;
+
+  if (!event.target.closest("#feedList, #reelsList")) return;
+
+  document.querySelectorAll(
+    "#feedList video, #reelsList video"
+  ).forEach(video => {
+    if (video !== event.target) {
+      video.pause();
+    }
+  });
+}, true);
+
+
+/* ==========================================
+   23. AVATAR CHOICES
+========================================== */
+
+const avatarOptions = Array.from(
+  { length: 30 },
+  (_, index) => ({
+    name: "Avatar " + (index + 1),
+    url: "https://i.pravatar.cc/180?img=" + (index + 1)
+  })
+);
+
+avatarOptions.push(
+  { name: "Skye", url: "avatars/skye.png" },
+  { name: "Neo", url: "avatars/neo.png" },
+  { name: "Nova", url: "avatars/nova.png" },
+  { name: "Luna", url: "avatars/luna.png" },
+  { name: "Blaze", url: "avatars/blaze.png" },
+  { name: "Pixel", url: "avatars/pixel.png" },
+  { name: "Aria", url: "avatars/aria.png" },
+  { name: "Jett", url: "avatars/jett.png" },
+  { name: "Kai", url: "avatars/kai.png" },
+  { name: "Zara", url: "avatars/zara.png" },
+  { name: "Onyx", url: "avatars/onyx.png" },
+  { name: "Rex", url: "avatars/rex.png" },
+  { name: "Ivy", url: "avatars/ivy.png" },
+  { name: "Orion", url: "avatars/orion.png" },
+  { name: "Zeno", url: "avatars/zeno.png" },
+  { name: "Sage", url: "avatars/sage.png" },
+  { name: "Vexa", url: "avatars/vexa.png" },
+  { name: "Nia", url: "avatars/nia.png" },
+  { name: "Kairo", url: "avatars/kairo.png" },
+  { name: "Axel", url: "avatars/axel.png" }
+);
+
+function renderAvatarChoices() {
+  const grid = $("avatarGrid");
+
+  if (!grid) return;
+
+  grid.innerHTML = avatarOptions.map((avatar, index) => `
+    <button
+      class="avatar-choice ${
+        selectedAvatar === avatar.url ? "selected" : ""
+      }"
+      type="button"
+      data-avatar-index="${index}"
+      aria-label="${escapeHTML(avatar.name)}"
+      title="${escapeHTML(avatar.name)}"
+    >
+      <img
+        src="${escapeHTML(avatar.url)}"
+        alt="${escapeHTML(avatar.name)}"
+        loading="lazy"
+      >
+    </button>
+  `).join("");
+}
+
+$("avatarGrid")?.addEventListener("click", event => {
+  const button = event.target.closest("[data-avatar-index]");
+
+  if (!button) return;
+
+  const avatar = avatarOptions[
+    Number(button.dataset.avatarIndex)
+  ];
+
+  if (!avatar) return;
+
+  selectedAvatar = avatar.url;
+
+  renderAvatarChoices();
+});
+
+
+/* ==========================================
+   24. EDIT PROFILE
+========================================== */
+
+$("editProfileBtn")?.addEventListener("click", () => {
+  if (!currentUser) return;
+
+  selectedAvatar = currentProfile?.avatar_url || DEFAULT_AVATAR;
+
+  renderAvatarChoices();
+
+  $("editProfileModal")?.classList.remove("hidden");
+});
+
+$("closeEditProfile")?.addEventListener("click", () => {
+  $("editProfileModal")?.classList.add("hidden");
+});
+
+$("editProfileModal")?.addEventListener("click", event => {
+  if (event.target === $("editProfileModal")) {
+    $("editProfileModal").classList.add("hidden");
+  }
+});
+
+$("editProfileForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!requireDatabase() || !requireLogin()) return;
+
+  const button = event.currentTarget.querySelector(
+    'button[type="submit"]'
+  );
+
+  const displayName = $("editDisplayName").value.trim();
+  const username = $("editUsername").value.trim().toLowerCase();
+  const bio = $("editBio").value.trim();
+
+  if (!/^[a-z0-9_]{3,24}$/.test(username)) {
+    setMessage(
+      "editProfileMessage",
+      "Use 3–24 letters, numbers, or underscores.",
+      "error"
+    );
+
+    return;
+  }
+
+  setBusy(button, true, "Saving profile...");
+  setMessage("editProfileMessage", "");
+
+  try {
+    let avatarURL = selectedAvatar || getAvatar(currentProfile);
+
+    const photoFile = $("profilePhotoUpload").files?.[0];
+
+    if (photoFile) {
+      if (!photoFile.type.startsWith("image/")) {
+        throw new Error("Choose an image for your profile photo.");
+      }
+
+      avatarURL = await uploadToMedia(photoFile, "avatars");
+    }
+
+    /*
+     * This updates only the known core profile columns.
+     * Country and language currently remain in auth metadata.
+     */
+
+    const { data, error } = await db
+      .from("profiles")
+      .upsert({
+        id: currentUser.id,
+        username,
+        display_name: displayName,
+        avatar_url: avatarURL,
+        bio
+      }, {
+        onConflict: "id"
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    currentProfile = data;
+
+    const country = $("editCountry").value;
+    const language = $("editLanguage").value;
+
+    const { error: metadataError } = await db.auth.updateUser({
+      data: {
+        country,
+        language,
+        username,
+        display_name: displayName
+      }
+    });
+
+    if (metadataError) {
+      console.warn("Could not update account metadata:", metadataError);
+    }
+
+    renderProfile();
+
+    $("editProfileModal").classList.add("hidden");
+
+    showToast("Profile updated.");
+
+  } catch (error) {
+    console.error("Profile update error:", error);
+
+    setMessage(
+      "editProfileMessage",
+      "Could not save profile: " + getErrorMessage(error),
+      "error"
+    );
+
+  } finally {
+    setBusy(button, false);
+  }
+});
+
+
+/* ==========================================
+   25. LOGOUT
+========================================== */
+
+$("logoutBtn")?.addEventListener("click", async () => {
+  if (!db) return;
+
+  const confirmed = confirm("Log out of Vidora?");
+
+  if (!confirmed) return;
+
+  try {
+    const { error } = await db.auth.signOut();
+
+    if (error) throw error;
+
+    currentUser = null;
+    currentProfile = null;
+
+    showAuth();
+
+    switchAuthTab("login");
+
+    showToast("You have logged out.");
+
+  } catch (error) {
+    console.error("Logout error:", error);
+
+    showToast("Could not log out: " + getErrorMessage(error));
+  }
+});
+
+
+/* ==========================================
+   26. LOAD REELS
+========================================== */
+
+async function loadReels() {
+  if (!db || !currentUser) return;
+
+  const container = $("reelsList");
+
+  if (!container) return;
+
+  container.innerHTML =
+    '<div class="loading">Loading videos...</div>';
+
+  try {
+    const { data, error } = await db
+      .from("posts")
+      .select("*")
+      .eq("media_type", "video")
+      .order("created_at", { ascending: false })
+      .limit(40);
+
+    if (error) throw error;
+
+    const videos = data || [];
+
+    if (!videos.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <strong>No videos yet</strong>
+          Upload the first video to Vidora.
+        </div>
+      `;
+
+      return;
+    }
+
+    container.innerHTML = videos.map(video => `
+      <article class="post-card" data-post-id="${escapeHTML(video.id)}">
+        <div class="post-media">
+          <video
+            src="${escapeHTML(video.media_url)}"
+            controls
+            playsinline
+            preload="metadata"
+          ></video>
+        </div>
+
+        ${
+          video.caption
+            ? `<div class="post-caption">${escapeHTML(video.caption)}</div>`
+            : ""
+        }
+      </article>
+    `).join("");
+
+  } catch (error) {
+    console.error("Reels loading error:", error);
+
+    container.innerHTML = `
+      <div class="empty-state">
+        Could not load videos.
+        ${escapeHTML(getErrorMessage(error))}
+      </div>
+    `;
+  }
+}
+
+
+/* ==========================================
+   27. STORY UPLOAD PLACEHOLDER
+========================================== */
+
+/*
+ * The story interface exists, but a working story system
+ * requires a stories table, storage rules, expiry logic,
+ * and follower-based read policies.
+ *
+ * Do not publish stories to the posts table: that would
+ * incorrectly mix story permissions with public posts.
+ */
+
+$("publishStoryBtn")?.addEventListener("click", () => {
+  if (!requireLogin()) return;
+
+  showToast(
+    "Stories need the stories table and follower-only security policies before publishing."
+  );
+});
+
+
+/* ==========================================
+   28. MESSAGES PLACEHOLDER
+========================================== */
+
+$("chatForm")?.addEventListener("submit", event => {
+  event.preventDefault();
+
+  if (!requireLogin()) return;
+
+  showToast(
+    "Messaging needs the correct conversations and messages tables before sending."
+  );
+});
+
+
+/* ==========================================
+   29. MODAL CONTROLS
+========================================== */
+
+$("closeGeneralModal")?.addEventListener("click", () => {
+  $("generalModal")?.classList.add("hidden");
+});
+
+$("generalModal")?.addEventListener("click", event => {
+  if (event.target === $("generalModal")) {
+    $("generalModal").classList.add("hidden");
+  }
+});
+
+$("closeStoryViewer")?.addEventListener("click", () => {
+  $("storyViewer")?.classList.add("hidden");
+
+  const player = $("storyMusicPlayer");
+
+  if (player) {
+    player.pause();
+    player.removeAttribute("src");
+    player.load();
+  }
+});
+
+
+/* ==========================================
+   30. AUTH SESSION RESTORATION
+========================================== */
+
+async function restoreSession() {
+  if (!initializeSupabase()) {
+    showAuth();
+    return;
+  }
+
+  try {
+    const { data, error } = await db.auth.getSession();
+
+    if (error) throw error;
+
+    currentUser = data.session?.user || null;
+
+    if (currentUser) {
+      await startApp();
+    } else {
+      showAuth();
+    }
+
+    db.auth.onAuthStateChange((event, session) => {
+      /*
+       * Avoid loading the app inside the auth callback.
+       * Supabase recommends keeping this callback quick.
+       */
+
+      currentUser = session?.user || null;
+
+      if (event === "SIGNED_OUT") {
+        currentProfile = null;
+        showAuth();
+      }
+    });
+
+  } catch (error) {
+    console.error("Session restoration error:", error);
+
+    showAuth();
+
+    setMessage(
+      "loginMessage",
+      "Could not restore your session: " + getErrorMessage(error),
+      "error"
+    );
+  }
+}
+
+
+/* ==========================================
+   31. START
+========================================== */
+
+document.addEventListener("DOMContentLoaded", () => {
+  restoreSession();
+});
+</script>
+
+</div>
+</body>
+</html>
