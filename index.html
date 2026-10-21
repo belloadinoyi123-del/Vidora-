@@ -2525,12 +2525,12 @@ $("musicFileUpload")?.addEventListener("change", event => {
   $("selectedMusicLabel").textContent =
     "Selected track: " + file.name;
 
-  selectedMusic = {
+    selectedMusic = {
     title: $("musicTitle").value.trim() || file.name,
     artist: $("musicArtist").value.trim() || "Uploaded audio",
     file: file,
     url: null
-  });
+  };
 });
 
 
