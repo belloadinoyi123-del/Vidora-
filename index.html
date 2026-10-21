@@ -3999,153 +3999,193 @@ async function getChatProfile(userId) {
 
 /* Load the conversation list */
 async function loadConversationList() {
-  if (!db || !currentUser) return;
+  if (!db || !currentUser) {
+    console.warn("Vidora: Supabase or user is not ready.");
+    return;
+  }
 
   const list = document.getElementById("conversationList");
 
-  if (!list) return;
+  if (!list) {
+    console.error("Vidora: conversationList element was not found.");
+    return;
+  }
+
+  list.innerHTML = `
+    <div class="empty-state">Loading people...</div>
+  `;
 
   try {
-    const { data: messages, error } = await db
+    // 1. Load all available profiles.
+    const { data: profiles, error: profilesError } = await db
+      .from("profiles")
+      .select("id, username, display_name, avatar_url")
+      .neq("id", currentUser.id)
+      .order("username", { ascending: true })
+      .limit(100);
+
+    if (profilesError) throw profilesError;
+
+    // 2. Load recent messages for the signed-in user.
+    const { data: messages, error: messagesError } = await db
       .from("messages")
-      .select(
-        "id, sender_id, receiver_id, content, created_at"
-      )
+      .select("id, sender_id, receiver_id, content, created_at")
       .or(
         `sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`
       )
       .order("created_at", { ascending: false })
       .limit(300);
 
-    if (error) throw error;
+    if (messagesError) {
+      console.warn(
+        "Vidora: Could not load recent messages:",
+        messagesError.message
+      );
+    }
 
-    const latest = new Map();
+    // 3. Remember each person's latest message.
+    const latestMessages = new Map();
 
     (messages || []).forEach(message => {
-      const otherUser =
+      const otherUserId =
         message.sender_id === currentUser.id
           ? message.receiver_id
           : message.sender_id;
 
-      if (otherUser && !latest.has(otherUser)) {
-        latest.set(otherUser, message);
+      if (otherUserId && !latestMessages.has(otherUserId)) {
+        latestMessages.set(otherUserId, message);
       }
     });
 
-    const userIds = [...latest.keys()];
+    // 4. Sort people with existing conversations first.
+    const sortedProfiles = [...(profiles || [])].sort((a, b) => {
+      const messageA = latestMessages.get(a.id);
+      const messageB = latestMessages.get(b.id);
 
-   if (!userIds.length) {
-  const { data: users, error: usersError } = await db
-    .from("profiles")
-    .select("id, username, display_name, avatar_url")
-    .neq("id", currentUser.id)
-    .limit(50);
+      if (messageA && !messageB) return -1;
+      if (!messageA && messageB) return 1;
 
-  if (usersError) throw usersError;
+      if (messageA && messageB) {
+        return (
+          new Date(messageB.created_at).getTime() -
+          new Date(messageA.created_at).getTime()
+        );
+      }
 
-  if (!users || users.length === 0) {
+      return chatDisplayName(a).localeCompare(chatDisplayName(b));
+    });
+
+    // 5. Show an empty state if no other profiles are available.
+    if (sortedProfiles.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <p>No other users found.</p>
+          <p class="muted small">
+            Create another Vidora account to test messaging.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    // 6. Render every available profile.
     list.innerHTML = `
-      <div class="empty-state">
-        No other users found.
-      </div>
+      <p class="muted small">
+        People on Vidora — select someone to open a chat.
+      </p>
+      ${
+        sortedProfiles.map(profile => {
+          const message = latestMessages.get(profile.id);
+          const name = chatDisplayName(profile);
+          const avatar = profile.avatar_url
+            ? `<img
+                src="${escapeHTML(profile.avatar_url)}"
+                alt=""
+                class="chat-avatar"
+                loading="lazy"
+              >`
+            : `<div class="chat-avatar chat-avatar-placeholder">
+                ${escapeHTML(name.charAt(0).toUpperCase())}
+              </div>`;
+
+          const preview = message
+            ? escapeHTML(message.content || "Message")
+            : "Start a conversation";
+
+          const time = message && message.created_at
+            ? new Date(message.created_at).toLocaleDateString()
+            : "";
+
+          return `
+            <button
+              type="button"
+              class="conversation-item"
+              data-chat-user="${escapeHTML(profile.id)}"
+              style="
+                display:flex;
+                align-items:center;
+                gap:12px;
+                width:100%;
+                padding:12px;
+                text-align:left;
+                cursor:pointer;
+              "
+            >
+              ${avatar}
+
+              <span style="flex:1;min-width:0;">
+                <strong style="display:block;">
+                  ${escapeHTML(name)}
+                </strong>
+
+                <span
+                  class="muted small"
+                  style="
+                    display:block;
+                    overflow:hidden;
+                    text-overflow:ellipsis;
+                    white-space:nowrap;
+                  "
+                >
+                  ${preview}
+                </span>
+              </span>
+
+              <span class="muted small">
+                ${escapeHTML(time)}
+              </span>
+            </button>
+          `;
+        }).join("")
+      }
     `;
-    return;
-  }
 
-  list.innerHTML = `
-    <p class="muted small">
-      People on Vidora — tap a user to open a chat.
-    </p>
-  ` + users.map(profile => `
-    <button
-      type="button"
-      class="conversation-item"
-      data-chat-user="${escapeHTML(profile.id)}"
-    >
-      <span class="conversation-avatar">
-        ${
-          profile.avatar_url
-            ? `<img src="${escapeHTML(profile.avatar_url)}" alt="">`
-            : "👤"
-        }
-      </span>
-
-      <span class="conversation-copy">
-        <strong>
-          ${escapeHTML(chatDisplayName(profile))}
-        </strong>
-
-        <small>
-          @${escapeHTML(profile.username || "user")}
-        </small>
-      </span>
-    </button>
-  `).join("");
-
-  return;
-} 
-    
-
-    const { data: profiles, error: profileError } = await db
-      .from("profiles")
-      .select("id, username, display_name, avatar_url")
-      .in("id", userIds);
-
-    if (profileError) throw profileError;
-
-    const profileMap = new Map(
-      (profiles || []).map(profile => [profile.id, profile])
+    console.log(
+      `Vidora: displayed ${sortedProfiles.length} other profiles.`
     );
 
-    list.innerHTML = userIds.map(userId => {
-      const profile = profileMap.get(userId);
-      const message = latest.get(userId);
-
-      if (!profile) return "";
-
-      const preview = message.content || "New message";
-
-      return `
-        <button
-          type="button"
-          class="conversation-item ${
-            userId === activeChatUserId ? "active" : ""
-          }"
-          data-chat-user="${escapeHTML(userId)}"
-        >
-          <span class="conversation-avatar">
-            ${
-              profile.avatar_url
-                ? `<img
-                     src="${escapeHTML(profile.avatar_url)}"
-                     alt=""
-                   >`
-                : "👤"
-            }
-          </span>
-
-          <span class="conversation-copy">
-            <strong>
-              ${escapeHTML(chatDisplayName(profile))}
-            </strong>
-
-            <small>${escapeHTML(preview)}</small>
-          </span>
-        </button>
-      `;
-    }).join("");
-
   } catch (error) {
-    console.error("Conversation list error:", error);
+    console.error("Vidora conversation list error:", error);
 
     list.innerHTML = `
       <div class="empty-state">
-        Could not load conversations:
-        ${escapeHTML(getErrorMessage(error))}
+        <p>Could not load people.</p>
+        <p class="muted small">
+          ${escapeHTML(getErrorMessage(error))}
+        </p>
+        <button type="button" id="retryConversationList">
+          Try again
+        </button>
       </div>
     `;
+
+    document
+      .getElementById("retryConversationList")
+      ?.addEventListener("click", loadConversationList);
   }
 }
+    
+      
 
 /* Load messages for the selected user */
 async function loadActiveConversation() {
