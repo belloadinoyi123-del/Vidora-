@@ -1380,3 +1380,310 @@ a {
       Log out
     </button>
   </main>
+  <!-- INBOX / MESSAGES -->
+  <main id="inboxPage" class="page hidden">
+    <h1 class="page-title">Messages</h1>
+    <p class="page-description">
+      Chat with people you follow.
+    </p>
+
+    <div class="inbox-layout">
+      <section>
+        <input id="messageSearch"
+          type="search"
+          placeholder="Search conversations..."
+          autocomplete="off">
+
+        <div id="messageSearchResults"></div>
+
+        <h3 style="font-size:14px;margin-top:20px">
+          Conversations
+        </h3>
+
+        <div id="conversationList" class="conversation-list">
+          <div class="empty-state">
+            Your conversations will appear here.
+          </div>
+        </div>
+      </section>
+
+      <section id="chatPanel" class="chat-panel">
+        <div id="chatHeading" class="chat-heading">
+          Select a conversation
+        </div>
+
+        <div id="chatMessages" class="chat-messages">
+          <div class="empty-state">
+            Select a conversation to view messages.
+          </div>
+        </div>
+
+        <form id="chatForm" class="chat-form">
+          <input id="chatInput"
+            type="text"
+            maxlength="2000"
+            placeholder="Write a message..."
+            autocomplete="off"
+            required>
+
+          <button class="primary-btn" type="submit">
+            Send
+          </button>
+        </form>
+
+        <p id="chatMessageStatus"
+          class="muted small"
+          style="padding:0 12px"></p>
+      </section>
+    </div>
+  </main>
+
+
+  <!-- NOTIFICATIONS -->
+  <main id="notificationsPage" class="page hidden">
+    <h1 class="page-title">Notifications</h1>
+    <p class="page-description">
+      Keep up with activity on your account.
+    </p>
+
+    <div id="notificationList" class="card">
+      <div class="empty-state">
+        You're all caught up.
+      </div>
+    </div>
+  </main>
+
+
+  <!-- REELS / VIDEO FEED -->
+  <main id="reelsPage" class="page hidden">
+    <h1 class="page-title">Videos</h1>
+    <p class="page-description">
+      Watch videos from the Vidora community.
+    </p>
+
+    <div id="reelsList" class="feed-list">
+      <div class="empty-state">
+        <strong>Videos are loading</strong>
+        Public videos will appear here once the feed is connected.
+      </div>
+    </div>
+  </main>
+
+
+  <!-- STORY VIEWER -->
+  <div id="storyViewer" class="modal hidden"
+    role="dialog" aria-modal="true"
+    aria-labelledby="storyViewerTitle">
+
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="storyViewerTitle">Story</h2>
+
+        <button id="closeStoryViewer"
+          class="icon-btn"
+          type="button"
+          aria-label="Close story">
+          ×
+        </button>
+      </div>
+
+      <div id="storyViewerContent"
+        class="story-viewer-content">
+        <p class="muted">Select a story to view it.</p>
+      </div>
+
+      <p id="storyViewerCaption"
+        style="line-height:1.6"></p>
+
+      <audio id="storyMusicPlayer"
+        controls
+        class="full-width hidden"></audio>
+
+      <div style="display:flex;gap:10px;margin-top:15px">
+        <button id="previousStoryBtn"
+          class="secondary-btn"
+          type="button">
+          ← Previous
+        </button>
+
+        <button id="nextStoryBtn"
+          class="primary-btn"
+          type="button"
+          style="flex:1">
+          Next →
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- EDIT PROFILE MODAL -->
+  <div id="editProfileModal" class="modal hidden"
+    role="dialog" aria-modal="true"
+    aria-labelledby="editProfileTitle">
+
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="editProfileTitle">Edit profile</h2>
+
+        <button id="closeEditProfile"
+          class="icon-btn"
+          type="button"
+          aria-label="Close">
+          ×
+        </button>
+      </div>
+
+      <form id="editProfileForm">
+        <div class="field">
+          <label for="editDisplayName">Display name</label>
+          <input id="editDisplayName"
+            type="text"
+            maxlength="60"
+            required>
+        </div>
+
+        <div class="field">
+          <label for="editUsername">Username</label>
+          <input id="editUsername"
+            type="text"
+            minlength="3"
+            maxlength="24"
+            pattern="[A-Za-z0-9_]+"
+            required>
+        </div>
+
+        <div class="field">
+          <label for="editBio">Bio</label>
+          <textarea id="editBio"
+            maxlength="300"
+            placeholder="Tell people about yourself"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="editCountry">Country</label>
+          <select id="editCountry">
+            <option value="Nigeria">Nigeria</option>
+            <option value="Ghana">Ghana</option>
+            <option value="South Africa">South Africa</option>
+            <option value="Kenya">Kenya</option>
+            <option value="United States">United States</option>
+            <option value="United Kingdom">United Kingdom</option>
+            <option value="Canada">Canada</option>
+            <option value="India">India</option>
+            <option value="Brazil">Brazil</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="editLanguage">Preferred language</label>
+          <select id="editLanguage">
+            <option value="English">English</option>
+            <option value="French">French</option>
+            <option value="Spanish">Spanish</option>
+            <option value="Portuguese">Portuguese</option>
+            <option value="Arabic">Arabic</option>
+            <option value="Hausa">Hausa</option>
+            <option value="Yoruba">Yoruba</option>
+            <option value="Igbo">Igbo</option>
+            <option value="Swahili">Swahili</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="profilePhotoUpload">
+            Upload a profile photo
+          </label>
+          <input id="profilePhotoUpload"
+            type="file"
+            accept="image/*">
+        </div>
+
+        <h3 style="font-size:14px">Choose an avatar</h3>
+
+        <div id="avatarGrid" class="avatar-grid"></div>
+
+        <button class="primary-btn full-width"
+          type="submit">
+          Save profile
+        </button>
+
+        <p id="editProfileMessage"
+          class="auth-message"
+          role="status"></p>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- GENERAL NOTIFICATION MODAL -->
+  <div id="generalModal" class="modal hidden"
+    role="dialog" aria-modal="true">
+
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="generalModalTitle">Vidora</h2>
+
+        <button id="closeGeneralModal"
+          class="icon-btn"
+          type="button"
+          aria-label="Close">
+          ×
+        </button>
+      </div>
+
+      <div id="generalModalContent"></div>
+    </div>
+  </div>
+
+
+  <!-- TOAST MESSAGE -->
+  <div id="toast"
+    class="toast hidden"
+    role="status"
+    aria-live="polite"></div>
+
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav id="bottomNav" class="bottom-nav"
+    aria-label="Main navigation">
+
+    <button class="nav-item active"
+      data-page="homePage"
+      type="button">
+      <span class="nav-icon">⌂</span>
+      <span>Home</span>
+    </button>
+
+    <button class="nav-item"
+      data-page="discoverPage"
+      type="button">
+      <span class="nav-icon">⌕</span>
+      <span>Discover</span>
+    </button>
+
+    <button class="nav-item nav-create"
+      data-page="createPage"
+      type="button">
+      <span class="nav-icon">＋</span>
+      <span>Create</span>
+    </button>
+
+    <button class="nav-item"
+      data-page="inboxPage"
+      type="button">
+      <span class="nav-icon">✉</span>
+      <span>Inbox</span>
+    </button>
+
+    <button class="nav-item"
+      data-page="profilePage"
+      type="button">
+      <span class="nav-icon">◉</span>
+      <span>Profile</span>
+    </button>
+
+  </nav>
+
+<!-- PART 4 WILL CONTAIN THE JAVASCRIPT -->
