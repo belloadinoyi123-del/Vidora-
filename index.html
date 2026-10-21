@@ -4034,15 +4034,57 @@ async function loadConversationList() {
 
     const userIds = [...latest.keys()];
 
-    if (!userIds.length) {
-      list.innerHTML = `
-        <div class="empty-state">
-          No conversations yet.
-          Search for a user to start chatting.
-        </div>
-      `;
-      return;
-    }
+   if (!userIds.length) {
+  const { data: users, error: usersError } = await db
+    .from("profiles")
+    .select("id, username, display_name, avatar_url")
+    .neq("id", currentUser.id)
+    .limit(50);
+
+  if (usersError) throw usersError;
+
+  if (!users || users.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        No other users found.
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = `
+    <p class="muted small">
+      People on Vidora — tap a user to open a chat.
+    </p>
+  ` + users.map(profile => `
+    <button
+      type="button"
+      class="conversation-item"
+      data-chat-user="${escapeHTML(profile.id)}"
+    >
+      <span class="conversation-avatar">
+        ${
+          profile.avatar_url
+            ? `<img src="${escapeHTML(profile.avatar_url)}" alt="">`
+            : "👤"
+        }
+      </span>
+
+      <span class="conversation-copy">
+        <strong>
+          ${escapeHTML(chatDisplayName(profile))}
+        </strong>
+
+        <small>
+          @${escapeHTML(profile.username || "user")}
+        </small>
+      </span>
+    </button>
+  `).join("");
+
+  return;
+} 
+    
 
     const { data: profiles, error: profileError } = await db
       .from("profiles")
