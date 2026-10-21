@@ -2533,7 +2533,274 @@ $("musicFileUpload")?.addEventListener("change", event => {
     url: null
   };
 });
+/* ==========================================
+   14.5 VIDORA BUILT-IN MUSIC LIBRARY
+========================================== */
 
+const BUILTIN_SONGS = [
+  {
+    id: "rf-01",
+    title: "Afro Drill Beat",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-02",
+    title: "Lagos Night Drill",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-03",
+    title: "Street Drill Wave",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-04",
+    title: "Dark Block Beat",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-05",
+    title: "Naija Drill Flex",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-06",
+    title: "Gbedu Drill",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-07",
+    title: "Hype Drill Energy",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-08",
+    title: "Party Drill Mix",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-09",
+    title: "Motivation Drill",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-10",
+    title: "Night Runner Drill",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-11",
+    title: "Soft Drill Vibes",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-12",
+    title: "Chill Drill Flow",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-13",
+    title: "Main Character Drill",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-14",
+    title: "Slide Out Beat",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-15",
+    title: "Afro Heat Beat",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-16",
+    title: "Block Anthem Beat",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-17",
+    title: "Dance Floor Drill",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-18",
+    title: "Win Today Beat",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-19",
+    title: "POV Drill",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  },
+  {
+    id: "rf-20",
+    title: "Future Drill Glow",
+    artist: "Instrumentals.com.ng",
+    category: "instrumental",
+    audio_url: "https://instrumentals.com.ng/wp-content/uploads/2026/03/Afro-drills-.mp3"
+  }
+];
+
+const SOUNDHELIX_TITLES = [
+  "Neon Drive",
+  "City Night",
+  "Hype Mode",
+  "Soft Life",
+  "Go Hard",
+  "Weekend Anthem",
+  "Late Night",
+  "Rise Up",
+  "Main Character",
+  "Lagos Bounce",
+  "Shadow Steps",
+  "Party Don't Stop",
+  "Heart Race",
+  "No Cap Energy",
+  "Gbedu Mode",
+  "Green Light",
+  "Slide Out",
+  "POV: You Made It",
+  "Dance for Me",
+  "Win Today"
+];
+
+SOUNDHELIX_TITLES.forEach((title, index) => {
+  const number = index < 16 ? index + 1 : index - 15;
+
+  BUILTIN_SONGS.push({
+    id: "hx-" + String(index + 1).padStart(2, "0"),
+    title,
+    artist: "SoundHelix",
+    category: "pop",
+    audio_url:
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-" +
+      number +
+      ".mp3"
+  });
+});
+
+function renderVidoraMusic() {
+  const library = $("musicLibrary");
+  const categorySelect = $("uploadMusicCategory");
+
+  if (!library || !categorySelect) return;
+
+  const category = categorySelect.value;
+
+  const songs = BUILTIN_SONGS.filter(song =>
+    category === "all" || song.category === category
+  );
+
+  library.innerHTML = songs.map(song => `
+    <div class="card" style="
+      margin:8px 0;
+      padding:12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    ">
+      <div style="min-width:0">
+        <strong>${escapeHTML(song.title)}</strong>
+        <div class="muted small">
+          ${escapeHTML(song.artist)}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="music-select-button"
+        data-vidora-song="${song.id}"
+      >
+        ▶ Select
+      </button>
+    </div>
+  `).join("");
+
+  library.querySelectorAll("[data-vidora-song]").forEach(button => {
+    button.addEventListener("click", () => {
+      const song = BUILTIN_SONGS.find(
+        item => item.id === button.dataset.vidoraSong
+      );
+
+      if (!song) return;
+
+      selectedMusic = {
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        url: song.audio_url,
+        file: null
+      };
+
+      const preview = $("musicPreview");
+
+      if (preview) {
+        preview.src = song.audio_url;
+        preview.load();
+
+        preview.play().catch(() => {
+          showToast("Tap Play on the audio player to preview this track.");
+        });
+      }
+
+      const label = $("selectedMusicLabel");
+
+      if (label) {
+        label.textContent =
+          "Selected: " + song.title + " — " + song.artist;
+      }
+
+      showToast("Selected " + song.title);
+    });
+  });
+}
+
+$("uploadMusicCategory")?.addEventListener(
+  "change",
+  renderVidoraMusic
+);
+
+renderVidoraMusic();
 
 /* ==========================================
    15. PUBLISH POST
