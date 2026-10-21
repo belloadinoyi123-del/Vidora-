@@ -3945,17 +3945,526 @@ $("publishStoryBtn")?.addEventListener("click", () => {
 
 
 /* ==========================================
-   28. MESSAGES PLACEHOLDER
+   28. VIDORA DIRECT MESSAGING
 ========================================== */
 
-$("chatForm")?.addEventListener("submit", event => {
-  event.preventDefault();
+let activeChatUserId = null;
+let chatRefreshTimer = null;
 
+function chatDisplayName(profile) {
+  return profile?.display_name ||
+         profile?.username ||
+         "Vidora user";
+}
+
+/* Check whether both users follow each other */
+async function canChatWith(userId) {
+  if (!db || !currentUser || !userId) return false;
+
+  const [following, followedBy] = await Promise.all([
+    db.from("follows")
+      .select("id")
+      .eq("follower_id", currentUser.id)
+      .eq("following_id", userId)
+      .limit(1),
+
+    db.from("follows")
+      .select("id")
+      .eq("follower_id", userId)
+      .eq("following_id", currentUser.id)
+      .limit(1)
+  ]);
+
+  if (following.error) throw following.error;
+  if (followedBy.error) throw followedBy.error;
+
+  return Boolean(
+    following.data?.length &&
+    followedBy.data?.length
+  );
+}
+
+/* Find a user's public profile */
+async function getChatProfile(userId) {
+  const { data, error } = await db
+    .from("profiles")
+    .select("id, username, display_name, avatar_url")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return data;
+}
+
+/* Load the conversation list */
+async function loadConversationList() {
+  if (!db || !currentUser) return;
+
+  const list = document.getElementById("conversationList");
+
+  if (!list) return;
+
+  try {
+    const { data: messages, error } = await db
+      .from("messages")
+      .select(
+        "id, sender_id, receiver_id, content, created_at"
+      )
+      .or(
+        `sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`
+      )
+      .order("created_at", { ascending: false })
+      .limit(300);
+
+    if (error) throw error;
+
+    const latest = new Map();
+
+    (messages || []).forEach(message => {
+      const otherUser =
+        message.sender_id === currentUser.id
+          ? message.receiver_id
+          : message.sender_id;
+
+      if (otherUser && !latest.has(otherUser)) {
+        latest.set(otherUser, message);
+      }
+    });
+
+    const userIds = [...latest.keys()];
+
+    if (!userIds.length) {
+      list.innerHTML = `
+        <div class="empty-state">
+          No conversations yet.
+          Search for a user to start chatting.
+        </div>
+      `;
+      return;
+    }
+
+    const { data: profiles, error: profileError } = await db
+      .from("profiles")
+      .select("id, username, display_name, avatar_url")
+      .in("id", userIds);
+
+    if (profileError) throw profileError;
+
+    const profileMap = new Map(
+      (profiles || []).map(profile => [profile.id, profile])
+    );
+
+    list.innerHTML = userIds.map(userId => {
+      const profile = profileMap.get(userId);
+      const message = latest.get(userId);
+
+      if (!profile) return "";
+
+      const preview = message.content || "New message";
+
+      return `
+        <button
+          type="button"
+          class="conversation-item ${
+            userId === activeChatUserId ? "active" : ""
+          }"
+          data-chat-user="${escapeHTML(userId)}"
+        >
+          <span class="conversation-avatar">
+            ${
+              profile.avatar_url
+                ? `<img
+                     src="${escapeHTML(profile.avatar_url)}"
+                     alt=""
+                   >`
+                : "👤"
+            }
+          </span>
+
+          <span class="conversation-copy">
+            <strong>
+              ${escapeHTML(chatDisplayName(profile))}
+            </strong>
+
+            <small>${escapeHTML(preview)}</small>
+          </span>
+        </button>
+      `;
+    }).join("");
+
+  } catch (error) {
+    console.error("Conversation list error:", error);
+
+    list.innerHTML = `
+      <div class="empty-state">
+        Could not load conversations:
+        ${escapeHTML(getErrorMessage(error))}
+      </div>
+    `;
+  }
+}
+
+/* Load messages for the selected user */
+async function loadActiveConversation() {
+  if (!db || !currentUser || !activeChatUserId) return;
+
+  const container = document.getElementById("chatMessages");
+
+  if (!container) return;
+
+  try {
+    const myId = currentUser.id;
+    const otherId = activeChatUserId;
+
+    const [sent, received] = await Promise.all([
+      db.from("messages")
+        .select(
+          "id, sender_id, receiver_id, content, created_at"
+        )
+        .eq("sender_id", myId)
+        .eq("receiver_id", otherId)
+        .order("created_at", { ascending: true })
+        .limit(300),
+
+      db.from("messages")
+        .select(
+          "id, sender_id, receiver_id, content, created_at"
+        )
+        .eq("sender_id", otherId)
+        .eq("receiver_id", myId)
+        .order("created_at", { ascending: true })
+        .limit(300)
+    ]);
+
+    if (sent.error) throw sent.error;
+    if (received.error) throw received.error;
+
+    const messages = [
+      ...(sent.data || []),
+      ...(received.data || [])
+    ].sort(
+      (a, b) =>
+        new Date(a.created_at) - new Date(b.created_at)
+    );
+
+    if (!messages.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          No messages yet. Say hello!
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = messages.map(message => `
+      <div class="chat-bubble ${
+        message.sender_id === myId ? "mine" : ""
+      }">
+        <div>${escapeHTML(message.content || "")}</div>
+
+        <small>
+          ${new Date(message.created_at).toLocaleString()}
+        </small>
+      </div>
+    `).join("");
+
+    container.scrollTop = container.scrollHeight;
+
+  } catch (error) {
+    console.error("Load messages error:", error);
+
+    container.innerHTML = `
+      <div class="empty-state">
+        Could not load messages:
+        ${escapeHTML(getErrorMessage(error))}
+      </div>
+    `;
+  }
+}
+
+/* Open a conversation */
+async function openChatConversation(userId) {
   if (!requireLogin()) return;
 
-  showToast(
-    "Messaging needs the correct conversations and messages tables before sending."
-  );
+  if (!userId || userId === currentUser.id) {
+    showToast("Choose another user.");
+    return;
+  }
+
+  try {
+    const profile = await getChatProfile(userId);
+
+    if (!profile) {
+      showToast("User not found.");
+      return;
+    }
+
+    activeChatUserId = userId;
+
+    document.getElementById("chatHeading").textContent =
+      chatDisplayName(profile);
+
+    const input = document.getElementById("chatInput");
+    const sendButton = document.querySelector(
+      "#chatForm button[type='submit']"
+    );
+    const status = document.getElementById(
+      "chatMessageStatus"
+    );
+
+    const allowed = await canChatWith(userId);
+
+    input.disabled = !allowed;
+
+    if (sendButton) {
+      sendButton.disabled = !allowed;
+    }
+
+    input.placeholder = allowed
+      ? "Write a message..."
+      : "Follow each other to chat";
+
+    status.textContent = allowed
+      ? ""
+      : "You both need to follow each other before you can chat.";
+
+    await loadActiveConversation();
+    await loadConversationList();
+
+  } catch (error) {
+    console.error("Open chat error:", error);
+
+    showToast(
+      "Could not open chat: " + getErrorMessage(error)
+    );
+  }
+}
+
+/* Search Vidora users */
+document.getElementById("messageSearch")
+  ?.addEventListener("input", async event => {
+    if (!db || !currentUser) return;
+
+    const results = document.getElementById(
+      "messageSearchResults"
+    );
+
+    const term = event.target.value.trim();
+
+    if (!term) {
+      results.innerHTML = "";
+      return;
+    }
+
+    try {
+      const safeTerm = term
+        .replace(/[%_,]/g, " ")
+        .trim();
+
+      if (!safeTerm) {
+        results.innerHTML = "";
+        return;
+      }
+
+      const { data, error } = await db
+        .from("profiles")
+        .select("id, username, display_name, avatar_url")
+        .or(
+          `username.ilike.%${safeTerm}%,display_name.ilike.%${safeTerm}%`
+        )
+        .neq("id", currentUser.id)
+        .limit(15);
+
+      if (error) throw error;
+
+      if (!data?.length) {
+        results.innerHTML = `
+          <div class="empty-state">
+            No users found.
+          </div>
+        `;
+        return;
+      }
+
+      results.innerHTML = data.map(profile => `
+        <button
+          type="button"
+          class="conversation-item"
+          data-chat-user="${escapeHTML(profile.id)}"
+        >
+          <span class="conversation-avatar">
+            ${
+              profile.avatar_url
+                ? `<img
+                     src="${escapeHTML(profile.avatar_url)}"
+                     alt=""
+                   >`
+                : "👤"
+            }
+          </span>
+
+          <span class="conversation-copy">
+            <strong>
+              ${escapeHTML(chatDisplayName(profile))}
+            </strong>
+
+            <small>
+              @${escapeHTML(profile.username || "user")}
+            </small>
+          </span>
+        </button>
+      `).join("");
+
+    } catch (error) {
+      console.error("User search error:", error);
+
+      results.innerHTML = `
+        <div class="empty-state">
+          Search failed:
+          ${escapeHTML(getErrorMessage(error))}
+        </div>
+      `;
+    }
+  });
+
+/* Handle taps on search results */
+document.getElementById("messageSearchResults")
+  ?.addEventListener("click", event => {
+    const button = event.target.closest("[data-chat-user]");
+
+    if (button) {
+      openChatConversation(button.dataset.chatUser);
+    }
+  });
+
+/* Handle taps on existing conversations */
+document.getElementById("conversationList")
+  ?.addEventListener("click", event => {
+    const button = event.target.closest("[data-chat-user]");
+
+    if (button) {
+      openChatConversation(button.dataset.chatUser);
+    }
+  });
+
+/* Send a message */
+document.getElementById("chatForm")
+  ?.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!requireLogin()) return;
+
+    const input = document.getElementById("chatInput");
+    const status = document.getElementById(
+      "chatMessageStatus"
+    );
+
+    const content = input.value.trim();
+
+    if (!activeChatUserId) {
+      showToast("Search for and select a user first.");
+      return;
+    }
+
+    if (!content) return;
+
+    if (content.length > 2000) {
+      showToast("Message is too long.");
+      return;
+    }
+
+    const sendButton = document.querySelector(
+      "#chatForm button[type='submit']"
+    );
+
+    try {
+      const allowed = await canChatWith(activeChatUserId);
+
+      if (!allowed) {
+        showToast(
+          "You both need to follow each other before chatting."
+        );
+        return;
+      }
+
+      if (sendButton) sendButton.disabled = true;
+
+      const { error } = await db
+        .from("messages")
+        .insert({
+          sender_id: currentUser.id,
+          receiver_id: activeChatUserId,
+          content: content
+        });
+
+      if (error) throw error;
+
+      input.value = "";
+
+      if (status) status.textContent = "";
+
+      await Promise.all([
+        loadActiveConversation(),
+        loadConversationList()
+      ]);
+
+    } catch (error) {
+      console.error("Send message error:", error);
+
+      if (status) {
+        status.textContent =
+          "Message not sent: " + getErrorMessage(error);
+      }
+
+      showToast(
+        "Message not sent: " + getErrorMessage(error)
+      );
+
+    } finally {
+      if (sendButton) {
+        sendButton.disabled = false;
+      }
+    }
+  });
+
+/* Refresh messages to show new replies */
+function startChatRefresh() {
+  if (chatRefreshTimer) {
+    clearInterval(chatRefreshTimer);
+  }
+
+  chatRefreshTimer = setInterval(async () => {
+    if (
+      !currentUser ||
+      !activeChatUserId ||
+      document.hidden
+    ) {
+      return;
+    }
+
+    await Promise.all([
+      loadActiveConversation(),
+      loadConversationList()
+    ]);
+  }, 5000);
+}
+
+/* Open inbox and load existing conversations */
+document.getElementById("headerInboxBtn")
+  ?.addEventListener("click", async () => {
+    if (!requireLogin()) return;
+
+    await loadConversationList();
+    startChatRefresh();
+  });
+
+/* Stop unnecessary refreshes when the page is hidden */
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && currentUser && activeChatUserId) {
+    loadActiveConversation();
+    loadConversationList();
+  }
 });
 
 
