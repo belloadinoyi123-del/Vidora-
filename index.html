@@ -2841,18 +2841,41 @@ $("createPostForm")?.addEventListener("submit", async event => {
 
     const caption = $("createCaption").value.trim();
 
-    const { data, error } = await db
-      .from("posts")
-      .insert({
-        user_id: currentUser.id,
-        media_url: mediaURL,
-        media_type: mediaType,
-        caption: caption
-      })
-      .select()
-      .single();
+let musicURL = null;
 
-    if (error) throw error;
+if (selectedMusic) {
+  if (selectedMusic.file) {
+    musicURL = await uploadToMedia(
+      selectedMusic.file,
+      "music"
+    );
+  } else {
+    musicURL = selectedMusic.url || null;
+  }
+}
+
+const { data, error } = await db
+  .from("posts")
+  .insert({
+    user_id: currentUser.id,
+    media_url: mediaURL,
+    media_type: mediaType,
+    caption: caption,
+
+    music_url: musicURL,
+    music_title: selectedMusic?.title || null,
+    music_artist: selectedMusic?.artist || null,
+
+    sound_url: musicURL,
+    sound_name: selectedMusic?.title || null,
+    sound_artist: selectedMusic?.artist || null,
+    sound_id: selectedMusic?.id || null,
+    music_id: selectedMusic?.id || null
+  })
+  .select()
+  .single();
+
+if (error) throw error;
 
     /*
      * The post's media is uploaded and saved.
