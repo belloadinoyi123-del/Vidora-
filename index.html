@@ -3053,23 +3053,41 @@ async function loadFeed() {
       );
 
       const media = post.media_type === "video"
-        ? `
-          <video
-            src="${escapeHTML(post.media_url)}"
-            controls
-            playsinline
-            preload="metadata"
-            data-post-video
-          ></video>
-        `
-        : `
-          <img
-            src="${escapeHTML(post.media_url)}"
-            alt="Post image"
-            loading="lazy"
-          >
-        `;
+  ? `
+    <video
+      src="${escapeHTML(post.media_url)}"
+      controls
+      playsinline
+      preload="metadata"
+      data-post-video
+      style="width:100%;max-height:75vh;display:block;background:#000;"
+    ></video>
 
+    ${post.music_url ? `
+      <div class="post-music">
+        <p>
+          🎵 ${escapeHTML(post.music_title || "Added music")}
+          ${post.music_artist
+            ? " — " + escapeHTML(post.music_artist)
+            : ""}
+        </p>
+        <audio
+          src="${escapeHTML(post.music_url)}"
+          controls
+          preload="none"
+          style="width:100%;"
+        ></audio>
+      </div>
+    ` : ""}
+  `
+  : `
+    <img
+      src="${escapeHTML(post.media_url)}"
+      alt="Post image"
+      loading="lazy"
+      style="width:100%;display:block;"
+    >
+  `;
       const canDelete = post.user_id === currentUser.id;
 
       return `
