@@ -948,3 +948,435 @@ a {
 }
 </style>
 </head>
+<body>
+
+<!-- AUTHENTICATION -->
+<section id="authPage">
+  <div class="auth-container">
+    <div class="brand auth-brand">
+      <svg class="va-logo" viewBox="0 0 100 100" aria-label="Vidora logo">
+        <path d="M12 18 L43 82 L55 82 L86 18 L68 18 L49 58 L30 18 Z"
+          fill="#20e879"/>
+        <path d="M48 82 L70 40 L88 40 L66 82 Z" fill="#36baff"/>
+      </svg>
+      <span class="brand-name">V<span>idora</span></span>
+    </div>
+
+    <p class="auth-tagline">Watch. Swipe. Connect.</p>
+
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="loginTab" type="button">
+          Log in
+        </button>
+        <button class="auth-tab" id="signupTab" type="button">
+          Create account
+        </button>
+      </div>
+
+      <form id="loginForm">
+        <h1 class="auth-heading">Welcome back</h1>
+        <p class="muted">Log in to continue to Vidora.</p>
+
+        <div class="field">
+          <label for="loginEmail">Email address</label>
+          <input id="loginEmail" type="email"
+            placeholder="you@example.com" autocomplete="email" required>
+        </div>
+
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" type="password"
+            placeholder="Enter your password"
+            autocomplete="current-password" required>
+        </div>
+
+        <button class="primary-btn full-width" type="submit">
+          Log in
+        </button>
+
+        <p class="auth-message" id="loginMessage" role="status"></p>
+      </form>
+
+      <form id="signupForm" class="hidden">
+        <h1 class="auth-heading">Join Vidora</h1>
+        <p class="muted">Create your account and get started.</p>
+
+        <div class="field">
+          <label for="signupName">Display name</label>
+          <input id="signupName" type="text"
+            placeholder="Your name" maxlength="60" required>
+        </div>
+
+        <div class="field">
+          <label for="signupUsername">Username</label>
+          <input id="signupUsername" type="text"
+            placeholder="Choose a username"
+            minlength="3" maxlength="24"
+            pattern="[A-Za-z0-9_]+"
+            autocomplete="username" required>
+        </div>
+
+        <div class="field">
+          <label for="signupEmail">Email address</label>
+          <input id="signupEmail" type="email"
+            placeholder="you@example.com"
+            autocomplete="email" required>
+        </div>
+
+        <div class="field">
+          <label for="signupPassword">Password</label>
+          <input id="signupPassword" type="password"
+            placeholder="At least 8 characters"
+            minlength="8" autocomplete="new-password" required>
+        </div>
+
+        <div class="field">
+          <label for="signupCountry">Country</label>
+          <select id="signupCountry" required>
+            <option value="">Select your country</option>
+            <option value="Nigeria">Nigeria</option>
+            <option value="Ghana">Ghana</option>
+            <option value="South Africa">South Africa</option>
+            <option value="Kenya">Kenya</option>
+            <option value="United States">United States</option>
+            <option value="United Kingdom">United Kingdom</option>
+            <option value="Canada">Canada</option>
+            <option value="India">India</option>
+            <option value="Brazil">Brazil</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="signupLanguage">Preferred language</label>
+          <select id="signupLanguage" required>
+            <option value="English">English</option>
+            <option value="French">French</option>
+            <option value="Spanish">Spanish</option>
+            <option value="Portuguese">Portuguese</option>
+            <option value="Arabic">Arabic</option>
+            <option value="Hausa">Hausa</option>
+            <option value="Yoruba">Yoruba</option>
+            <option value="Igbo">Igbo</option>
+            <option value="Swahili">Swahili</option>
+          </select>
+        </div>
+
+        <button class="primary-btn full-width" type="submit">
+          Create account
+        </button>
+
+        <p class="auth-message" id="signupMessage" role="status"></p>
+      </form>
+    </div>
+
+    <p class="muted small" style="text-align:center;margin-top:18px">
+      Your next video is waiting.
+    </p>
+  </div>
+</section>
+
+
+<!-- MAIN APPLICATION -->
+<div id="appMain" class="hidden">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="brand">
+      <svg class="va-logo" viewBox="0 0 100 100" aria-label="Vidora logo">
+        <path d="M12 18 L43 82 L55 82 L86 18 L68 18 L49 58 L30 18 Z"
+          fill="#20e879"/>
+        <path d="M48 82 L70 40 L88 40 L66 82 Z" fill="#36baff"/>
+      </svg>
+      <span class="brand-name">V<span>idora</span></span>
+    </div>
+
+    <div class="header-actions">
+      <button class="icon-btn" id="headerSearchBtn"
+        type="button" aria-label="Search">⌕</button>
+      <button class="icon-btn" id="headerInboxBtn"
+        type="button" aria-label="Messages">✉</button>
+      <button class="icon-btn" id="headerNotificationsBtn"
+        type="button" aria-label="Notifications">♧</button>
+      <button class="icon-btn" id="headerProfileBtn"
+        type="button" aria-label="My profile">
+        <img id="headerAvatar" class="avatar small-avatar"
+          src="https://i.pravatar.cc/100?img=12" alt="My profile">
+      </button>
+    </div>
+  </header>
+
+
+  <!-- HOME FEED -->
+  <main id="homePage" class="page">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h1 class="page-title">For You</h1>
+        <p class="page-description" style="margin-bottom:0">
+          Discover videos from the Vidora community.
+        </p>
+      </div>
+
+      <button class="secondary-btn" id="refreshFeedBtn" type="button">
+        ↻ Refresh
+      </button>
+    </div>
+
+    <div class="story-strip" id="storyStrip">
+      <button class="story-item" id="addStoryBtn" type="button">
+        <span class="story-add">+</span>
+        <span>Your story</span>
+      </button>
+    </div>
+
+    <div id="feedList" class="feed-list">
+      <div class="empty-state">
+        <strong>Welcome to Vidora</strong>
+        Videos will appear here when the feed is connected.
+      </div>
+    </div>
+  </main>
+
+
+  <!-- DISCOVER -->
+  <main id="discoverPage" class="page hidden">
+    <h1 class="page-title">Discover</h1>
+    <p class="page-description">
+      Find creators and explore public posts.
+    </p>
+
+    <div class="search-box">
+      <input id="searchInput" type="search"
+        placeholder="Search people or captions..."
+        autocomplete="off">
+      <button class="primary-btn" id="searchBtn" type="button">
+        Search
+      </button>
+    </div>
+
+    <div id="searchResults"></div>
+
+    <h2 style="font-size:17px;margin-top:25px">Explore videos</h2>
+
+    <div id="discoverVideos" class="discover-grid">
+      <div class="empty-state" style="grid-column:1/-1">
+        Public videos will appear here.
+      </div>
+    </div>
+  </main>
+
+
+  <!-- CREATE POST -->
+  <main id="createPage" class="page hidden">
+    <h1 class="page-title">Create</h1>
+    <p class="page-description">
+      Share a video or photo with the Vidora community.
+    </p>
+
+    <form id="createPostForm">
+      <div class="card">
+        <div class="upload-zone">
+          <div>
+            <div class="upload-icon">＋</div>
+            <strong>Choose a video or photo</strong>
+            <p class="muted small">
+              Select media from your phone.
+            </p>
+
+            <input id="createFile" type="file"
+              accept="video/*,image/*" required>
+          </div>
+        </div>
+
+        <div id="mediaPreviewBox" class="media-preview hidden">
+          <video id="videoPreview" controls playsinline
+            class="hidden"></video>
+          <img id="imagePreview" class="hidden" alt="Post preview">
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h2 style="font-size:17px;margin-top:0">Video settings</h2>
+
+        <div class="field">
+          <label for="originalSound">Original video sound</label>
+          <select id="originalSound">
+            <option value="on">Keep original sound</option>
+            <option value="off">Mute original sound</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Visual filters</label>
+          <div class="option-row" id="filterOptions">
+            <button type="button" class="filter-option active"
+              data-filter="none">Original</button>
+            <button type="button" class="filter-option"
+              data-filter="bright">Bright</button>
+            <button type="button" class="filter-option"
+              data-filter="warm">Warm</button>
+            <button type="button" class="filter-option"
+              data-filter="mono">Black &amp; white</button>
+            <button type="button" class="filter-option"
+              data-filter="vivid">Vivid</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h2 style="font-size:17px;margin-top:0">Add music</h2>
+
+        <div class="field">
+          <label for="uploadMusicCategory">Music category</label>
+          <select id="uploadMusicCategory">
+            <option value="all">All music</option>
+            <option value="afrobeats">Afrobeats</option>
+            <option value="instrumental">Instrumental</option>
+            <option value="pop">Pop</option>
+            <option value="relaxing">Relaxing</option>
+          </select>
+        </div>
+
+        <div id="musicLibrary">
+          <p class="muted small">
+            The music library will load when the music code is connected.
+          </p>
+        </div>
+
+        <div class="field" style="margin-top:14px">
+          <label for="musicFileUpload">Or select your own audio file</label>
+          <input id="musicFileUpload" type="file"
+            accept="audio/*">
+        </div>
+
+        <div class="field">
+          <label for="musicTitle">Track title</label>
+          <input id="musicTitle" type="text"
+            placeholder="Song title" maxlength="100">
+        </div>
+
+        <div class="field">
+          <label for="musicArtist">Artist</label>
+          <input id="musicArtist" type="text"
+            placeholder="Artist name" maxlength="100">
+        </div>
+
+        <p id="selectedMusicLabel" class="muted small">
+          No additional music selected.
+        </p>
+
+        <audio id="musicPreview" controls class="full-width"></audio>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h2 style="font-size:17px;margin-top:0">Post details</h2>
+
+        <div class="field">
+          <label for="createCaption">Caption</label>
+          <textarea id="createCaption"
+            placeholder="What's happening?"
+            maxlength="2200"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="postVisibility">Who can see this post?</label>
+          <select id="postVisibility">
+            <option value="public">Everyone — public</option>
+            <option value="followers">Followers only</option>
+          </select>
+        </div>
+
+        <button class="primary-btn full-width" id="publishButton"
+          type="submit">
+          🚀 Publish to Vidora
+        </button>
+
+        <p id="publishMessage" class="auth-message" role="status"></p>
+      </div>
+    </form>
+
+
+    <!-- STORY CREATION -->
+    <div class="card" style="margin-top:18px">
+      <h2 style="font-size:17px;margin-top:0">Create a story</h2>
+      <p class="muted">
+        Share a moment with your followers.
+      </p>
+
+      <div class="field">
+        <label for="storyFile">Story photo or video</label>
+        <input id="storyFile" type="file"
+          accept="video/*,image/*">
+      </div>
+
+      <div class="field">
+        <label for="storyCaption">Story caption</label>
+        <textarea id="storyCaption"
+          placeholder="Add a caption..."
+          maxlength="500"></textarea>
+      </div>
+
+      <button class="secondary-btn full-width"
+        id="publishStoryBtn" type="button">
+        Publish story
+      </button>
+
+      <p id="storyMessage" class="auth-message" role="status"></p>
+    </div>
+  </main>
+
+
+  <!-- PROFILE -->
+  <main id="profilePage" class="page hidden">
+    <h1 class="page-title">Your profile</h1>
+
+    <div class="card">
+      <div class="profile-heading">
+        <img id="profileAvatar" class="avatar large-avatar"
+          src="https://i.pravatar.cc/180?img=12"
+          alt="Profile picture">
+
+        <div class="profile-heading-info">
+          <h2 id="profileDisplayName">Vidora user</h2>
+          <p id="profileUsername" class="muted">@username</p>
+          <div class="profile-stats">
+            <div class="profile-stat">
+              <strong id="profilePostCount">0</strong>
+              <span>Posts</span>
+            </div>
+            <div class="profile-stat">
+              <strong id="profileFollowerCount">0</strong>
+              <span>Followers</span>
+            </div>
+            <div class="profile-stat">
+              <strong id="profileFollowingCount">0</strong>
+              <span>Following</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p id="profileBio" class="muted">
+        Tell the world about yourself.
+      </p>
+
+      <button class="primary-btn full-width"
+        id="editProfileBtn" type="button">
+        Edit profile
+      </button>
+    </div>
+
+    <h2 style="font-size:18px;margin-top:25px">Your posts</h2>
+
+    <div id="profilePosts" class="discover-grid">
+      <div class="empty-state" style="grid-column:1/-1">
+        Your published posts will appear here.
+      </div>
+    </div>
+
+    <button class="secondary-btn full-width"
+      id="logoutBtn" type="button" style="margin-top:22px">
+      Log out
+    </button>
+  </main>
