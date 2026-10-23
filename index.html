@@ -4024,24 +4024,110 @@ async function loadReels() {
 
 
 /* ==========================================
-   27. STORY UPLOAD PLACEHOLDER
+   27. STORY UPLOAD (with optional song)
 ========================================== */
 
-/*
- * The story interface exists, but a working story system
- * requires a stories table, storage rules, expiry logic,
- * and follower-based read policies.
- *
- * Do not publish stories to the posts table: that would
- * incorrectly mix story permissions with public posts.
- */
+function updateStoryMusicLabel() {
+  const label = $("storySelectedMusicLabel");
+  if (!label) return;
 
-$("publishStoryBtn")?.addEventListener("click", () => {
-  if (!requireLogin()) return;
+  if (selectedMusic) {
+    label.textContent =
+      "Story song: " +
+      (selectedMusic.title || "Track") +
+      (selectedMusic.artist ? " — " + selectedMusic.artist : "");
+  } else {
+    label.textContent = "No song selected for this story.";
+  }
+}
 
-  showToast(
-    "Stories need the stories table and follower-only security policies before publishing."
-  );
+// Keep story music label in sync when user picks a built-in song
+document.getElementById("musicLibrary")?.addEventListener("click", () => {
+  setTimeout(updateStoryMusicLabel, 0);
+});
+
+$("musicFileUpload")?.addEventListener("change", () => {
+  setTimeout(updateStoryMusicLabel, 0);
+});
+
+$("publishStoryBtn")?.addEventListener("click", async () => {
+  if (!requireLogin() || !requireDatabase()) return;
+
+  const fileInput = $("storyFile");
+  const file = fileInput?.files?.[0];
+  const caption = ($("storyCaption")?.value || "").trim();
+  const button = $("publishStoryBtn");
+  const status = $("storyMessage");
+
+  if (!file) {
+    showToast("Choose a story photo or video first.");
+    return;
+  }
+
+  if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+    showToast("Story must be an image or video.");
+    return;
+  }
+
+  try {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Publishing...";
+    }
+    if (status) {
+      status.textContent = "Uploading story...";
+      status.className = "auth-message";
+    }
+
+    const mediaType = file.type.startsWith("video/") ? "video" : "image";
+    const mediaURL = await uploadToMedia(file, "stories");
+
+    let musicURL = null;
+    if (selectedMusic) {
+      if (selectedMusic.file) {
+        musicURL = await uploadToMedia(selectedMusic.file, "music");
+      } else {
+        musicURL = selectedMusic.url || null;
+      }
+    }
+
+    const { error } = await db.from("stories").insert({
+      user_id: currentUser.id,
+      media_url: mediaURL,
+      media_type: mediaType,
+      caption: caption || null,
+      music_url: musicURL,
+      music_title: selectedMusic?.title || null,
+      music_artist: selectedMusic?.artist || null
+    });
+
+    if (error) throw error;
+
+    if (fileInput) fileInput.value = "";
+    if ($("storyCaption")) $("storyCaption").value = "";
+
+    if (status) {
+      status.textContent = musicURL
+        ? "Story published with song!"
+        : "Story published!";
+      status.className = "auth-message success";
+    }
+    showToast(musicURL ? "Story published with song!" : "Story published!");
+
+  } catch (error) {
+    console.error("Story publish error:", error);
+    const msg = getErrorMessage(error);
+    if (status) {
+      status.textContent = "Could not publish story: " + msg;
+      status.className = "auth-message error";
+    }
+    showToast("Could not publish story: " + msg);
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Publish story";
+    }
+  }
 });
 
 
