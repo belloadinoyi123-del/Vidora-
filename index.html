@@ -3191,7 +3191,48 @@ async function loadFeed() {
     `;
   }
 }
+function bindPostMusicSync(root = document) {
+  root.querySelectorAll(".post-card").forEach(card => {
+    const video = card.querySelector("[data-post-video]");
+    const music = card.querySelector("[data-post-music]");
+    if (!video || !music) return;
 
+    if (video.dataset.musicBound === "1") return;
+    video.dataset.musicBound = "1";
+
+    video.muted = true;
+
+    const syncPlay = () => {
+      music.currentTime = video.currentTime || 0;
+      music.play().catch(() => {});
+    };
+
+    const syncPause = () => {
+      music.pause();
+    };
+
+    video.addEventListener("play", syncPlay);
+    video.addEventListener("pause", syncPause);
+    video.addEventListener("ended", syncPause);
+
+    video.addEventListener("seeking", () => {
+      music.currentTime = video.currentTime || 0;
+    });
+
+    video.addEventListener("seeked", () => {
+      music.currentTime = video.currentTime || 0;
+      if (!video.paused) music.play().catch(() => {});
+    });
+
+    video.addEventListener("volumechange", () => {
+      if (!video.muted && video.volume > 0) {
+        music.volume = 0.35;
+      } else {
+        music.volume = 1;
+      }
+    });
+  });
+}
 
 /* ==========================================
    17. LIKE AND DELETE POSTS
