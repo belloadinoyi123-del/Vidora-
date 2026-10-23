@@ -778,7 +778,33 @@ a {
 .conversation-item.active {
   border-color: var(--green);
 }
+.chat-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--surface3);
+}
 
+.chat-avatar-placeholder {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface3);
+  color: var(--green);
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.conversation-item img.chat-avatar {
+  width: 48px;
+  height: 48px;
+  max-width: 48px;
+  max-height: 48px;
+}
 .chat-panel {
   display: flex;
   flex-direction: column;
