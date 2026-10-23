@@ -1355,6 +1355,12 @@ a {
         id="publishStoryBtn" type="button">
         Publish story
       </button>
+      $("addStoryBtn")?.addEventListener("click", () => {
+  navigateTo("createPage");
+  setTimeout(() => {
+    $("storyFile")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 200);
+});
 
       <p id="storyMessage" class="auth-message" role="status"></p>
     </div> 
