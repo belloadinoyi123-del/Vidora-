@@ -3178,6 +3178,8 @@ async function loadFeed() {
       `;
     }).join("");
 
+    bindPostMusicSync(container);
+
   } catch (error) {
     console.error("Feed error:", error);
 
