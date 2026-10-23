@@ -3052,35 +3052,59 @@ async function loadFeed() {
         item => item.user_id === currentUser.id
       );
 
-      const media = post.media_type === "video"
-  ? `
-    <video
-      src="${escapeHTML(post.media_url)}"
-      controls
-      playsinline
-      preload="metadata"
-      data-post-video
-      style="width:100%;max-height:75vh;display:block;background:#000;"
-    ></video>
+      const musicURL = post.music_url || post.sound_url || null;
+const musicTitle = post.music_title || post.sound_name || "Original sound";
+const musicArtist = post.music_artist || post.sound_artist || "";
 
-    ${post.music_url ? `
-      <div class="post-music">
-        <p>
-          🎵 ${escapeHTML(post.music_title || "Added music")}
-          ${post.music_artist
-            ? " — " + escapeHTML(post.music_artist)
-            : ""}
-        </p>
+const media = post.media_type === "video"
+  ? `
+    <div class="post-media-inner" style="position:relative;">
+      <video
+        src="${escapeHTML(post.media_url)}"
+        controls
+        playsinline
+        preload="metadata"
+        data-post-video
+        ${musicURL ? "muted" : ""}
+        style="width:100%;max-height:75vh;display:block;background:#000;"
+      ></video>
+
+      ${musicURL ? `
         <audio
-          src="${escapeHTML(post.music_url)}"
-          controls
-          preload="none"
-          style="width:100%;"
+          data-post-music
+          src="${escapeHTML(musicURL)}"
+          preload="auto"
+          loop
+          style="display:none;"
         ></audio>
-      </div>
-    ` : ""}
+
+        <div class="sound-label">
+          🎵 ${escapeHTML(musicTitle)}
+          ${musicArtist ? " — " + escapeHTML(musicArtist) : ""}
+        </div>
+      ` : ""}
+    </div>
   `
   : `
+    <img
+      src="${escapeHTML(post.media_url)}"
+      alt="Post image"
+      loading="lazy"
+      style="width:100%;display:block;"
+    >
+    ${musicURL ? `
+      <div class="sound-label" style="position:relative;margin:8px 12px;">
+        🎵 ${escapeHTML(musicTitle)}
+        ${musicArtist ? " — " + escapeHTML(musicArtist) : ""}
+      </div>
+      <audio
+        src="${escapeHTML(musicURL)}"
+        controls
+        preload="none"
+        style="width:100%;padding:0 12px 12px;"
+      ></audio>
+    ` : ""}
+  `;
     <img
       src="${escapeHTML(post.media_url)}"
       alt="Post image"
