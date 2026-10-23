@@ -1324,8 +1324,20 @@ a {
     </form>
 
 
-    <!-- STORY CREATION -->
-   <div class="field">
+   <!-- STORY CREATION -->
+    <div class="card" style="margin-top:18px">
+      <h2 style="font-size:17px;margin-top:0">Create a story</h2>
+      <p class="muted">
+        Share a moment with your followers. Optional: pick a song in Add music above.
+      </p>
+
+      <div class="field">
+        <label for="storyFile">Story photo or video</label>
+        <input id="storyFile" type="file"
+          accept="video/*,image/*">
+      </div>
+
+      <div class="field">
         <label for="storyCaption">Story caption</label>
         <textarea id="storyCaption"
           placeholder="Add a caption..."
@@ -1333,7 +1345,7 @@ a {
       </div>
 
       <p class="muted small" style="margin:8px 0 4px">
-        Song: use <strong>Add music</strong> above on this Create page, then publish the story.
+        Song: use <strong>Add music</strong> above, then publish the story.
       </p>
       <p id="storySelectedMusicLabel" class="muted small">
         No song selected for this story.
@@ -1342,10 +1354,11 @@ a {
       <button class="secondary-btn full-width"
         id="publishStoryBtn" type="button">
         Publish story
-      </button> 
+      </button>
 
       <p id="storyMessage" class="auth-message" role="status"></p>
-    </div>
+    </div> 
+   
   </main>
 
 
