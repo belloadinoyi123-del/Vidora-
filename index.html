@@ -2282,9 +2282,8 @@ function navigateTo(pageId) {
     loadMyPosts();
  } else if (pageId === "reelsPage") {
     loadReels();
-  } else if (pageId === "inboxPage") {
+    } else if (pageId === "inboxPage") {
     loadConversationList();
-    startChatRefresh();
   }
 }
 
@@ -4419,8 +4418,7 @@ async function openChatConversation(userId) {
       : "You both need to follow each other before you can chat.";
 
     await loadActiveConversation();
-    await loadConversationList();
-
+    startChatRefresh();
   } catch (error) {
     console.error("Open chat error:", error);
 
@@ -4632,11 +4630,13 @@ function startChatRefresh() {
       return;
     }
 
-    await Promise.all([
-      loadActiveConversation(),
-      loadConversationList()
-    ]);
-  }, 5000);
+    const input = document.getElementById("chatInput");
+    if (input && document.activeElement === input) {
+      return;
+    }
+
+    await loadActiveConversation();
+  }, 8000);
 }
 
 /* Open inbox and load existing conversations */
