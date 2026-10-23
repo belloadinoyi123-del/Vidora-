@@ -3053,10 +3053,10 @@ async function loadFeed() {
       );
 
       const musicURL = post.music_url || post.sound_url || null;
-const musicTitle = post.music_title || post.sound_name || "Original sound";
-const musicArtist = post.music_artist || post.sound_artist || "";
+      const musicTitle = post.music_title || post.sound_name || "Original sound";
+      const musicArtist = post.music_artist || post.sound_artist || "";
 
-const media = post.media_type === "video"
+      const media = post.media_type === "video"
   ? `
     <div class="post-media-inner" style="position:relative;">
       <video
@@ -3104,13 +3104,6 @@ const media = post.media_type === "video"
         style="width:100%;padding:0 12px 12px;"
       ></audio>
     ` : ""}
-  `;
-    <img
-      src="${escapeHTML(post.media_url)}"
-      alt="Post image"
-      loading="lazy"
-      style="width:100%;display:block;"
-    >
   `;
       const canDelete = post.user_id === currentUser.id;
 
