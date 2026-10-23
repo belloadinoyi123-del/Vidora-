@@ -2254,8 +2254,11 @@ function navigateTo(pageId) {
     loadDiscover();
   } else if (pageId === "profilePage") {
     loadMyPosts();
-  } else if (pageId === "reelsPage") {
+ } else if (pageId === "reelsPage") {
     loadReels();
+  } else if (pageId === "inboxPage") {
+    loadConversationList();
+    startChatRefresh();
   }
 }
 
