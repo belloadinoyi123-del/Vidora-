@@ -4035,7 +4035,191 @@ async function loadReels() {
   }
 }
 
+/* ==========================================
+   26.5 LOAD & VIEW STORIES
+========================================== */
 
+let activeStories = [];
+let activeStoryIndex = 0;
+
+async function loadStories() {
+  if (!db || !currentUser) return;
+
+  const strip = $("storyStrip");
+  if (!strip) return;
+
+  const addBtn = $("addStoryBtn");
+
+  try {
+    const { data, error } = await db
+      .from("stories")
+      .select("id, user_id, media_url, media_type, caption, music_url, music_title, music_artist, created_at, expires_at")
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    const stories = data || [];
+    activeStories = stories;
+
+    // Keep the + button, clear the rest
+    strip.innerHTML = "";
+    if (addBtn) strip.appendChild(addBtn);
+
+    if (!stories.length) {
+      return;
+    }
+
+    const userIds = [...new Set(stories.map(s => s.user_id).filter(Boolean))];
+    let profiles = [];
+
+    if (userIds.length) {
+      const result = await db
+        .from("profiles")
+        .select("id, username, display_name, avatar_url")
+        .in("id", userIds);
+
+      if (!result.error) profiles = result.data || [];
+    }
+
+    const profileMap = new Map(profiles.map(p => [p.id, p]));
+
+    // One circle per user (latest story)
+    const seen = new Set();
+
+    stories.forEach(story => {
+      if (seen.has(story.user_id)) return;
+      seen.add(story.user_id);
+
+      const profile = profileMap.get(story.user_id) || {};
+      const name = profile.display_name || profile.username || "User";
+      const avatar = profile.avatar_url || story.media_url;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "story-item";
+      btn.dataset.storyUser = story.user_id;
+      btn.innerHTML = `
+        <div class="story-ring">
+          <img src="${escapeHTML(avatar)}" alt=""
+            onerror="this.src='https://i.pravatar.cc/100?u=${escapeHTML(story.user_id)}'">
+        </div>
+        <span>${escapeHTML(name)}</span>
+      `;
+
+      btn.addEventListener("click", () => {
+        openUserStories(story.user_id);
+      });
+
+      strip.appendChild(btn);
+    });
+  } catch (error) {
+    console.error("Load stories error:", error);
+  }
+}
+
+function openUserStories(userId) {
+  const list = activeStories.filter(s => s.user_id === userId);
+  if (!list.length) {
+    showToast("No active stories.");
+    return;
+  }
+
+  activeStoryIndex = 0;
+  window._currentUserStoryList = list;
+  showStoryAt(0);
+}
+
+function showStoryAt(index) {
+  const list = window._currentUserStoryList || [];
+  if (!list.length || index < 0 || index >= list.length) {
+    closeStoryViewer();
+    return;
+  }
+
+  activeStoryIndex = index;
+  const story = list[index];
+
+  const viewer = $("storyViewer");
+  const content = $("storyViewerContent");
+  const caption = $("storyViewerCaption");
+  const music = $("storyMusicPlayer");
+  const title = $("storyViewerTitle");
+
+  if (!viewer || !content) return;
+
+  if (title) {
+    title.textContent = story.music_title
+      ? "Story · " + story.music_title
+      : "Story";
+  }
+
+  if (story.media_type === "video") {
+    content.innerHTML = `
+      <video src="${escapeHTML(story.media_url)}"
+        autoplay playsinline controls
+        ${story.music_url ? "muted" : ""}
+        style="width:100%;max-height:70vh;border-radius:12px;background:#000;">
+      </video>
+    `;
+  } else {
+    content.innerHTML = `
+      <img src="${escapeHTML(story.media_url)}" alt="Story"
+        style="width:100%;max-height:70vh;object-fit:contain;border-radius:12px;">
+    `;
+  }
+
+  if (caption) {
+    caption.textContent = story.caption || "";
+  }
+
+  if (music) {
+    if (story.music_url) {
+      music.src = story.music_url;
+      music.classList.remove("hidden");
+      music.loop = true;
+      music.play().catch(() => {});
+    } else {
+      music.pause();
+      music.removeAttribute("src");
+      music.classList.add("hidden");
+    }
+  }
+
+  viewer.classList.remove("hidden");
+}
+
+function closeStoryViewer() {
+  const viewer = $("storyViewer");
+  const music = $("storyMusicPlayer");
+  const video = $("storyViewerContent")?.querySelector("video");
+
+  if (video) video.pause();
+  if (music) {
+    music.pause();
+    music.removeAttribute("src");
+    music.classList.add("hidden");
+  }
+  viewer?.classList.add("hidden");
+}
+
+$("closeStoryViewer")?.addEventListener("click", closeStoryViewer);
+
+$("previousStoryBtn")?.addEventListener("click", () => {
+  showStoryAt(activeStoryIndex - 1);
+});
+
+$("nextStoryBtn")?.addEventListener("click", () => {
+  showStoryAt(activeStoryIndex + 1);
+});
+
+$("addStoryBtn")?.addEventListener("click", () => {
+  navigateTo("createPage");
+  setTimeout(() => {
+    $("storyFile")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 200);
+});
 /* ==========================================
    27. STORY UPLOAD (with optional song)
 ========================================== */
