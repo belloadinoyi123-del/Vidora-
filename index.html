@@ -4126,13 +4126,11 @@ function openUserStories(userId) {
     showToast("No active stories.");
     return;
   }
-await loadStories();
-    navigateTo("homePage");
+
   activeStoryIndex = 0;
   window._currentUserStoryList = list;
   showStoryAt(0);
 }
-
 function showStoryAt(index) {
   const list = window._currentUserStoryList || [];
   if (!list.length || index < 0 || index >= list.length) {
@@ -4314,6 +4312,8 @@ $("publishStoryBtn")?.addEventListener("click", async () => {
     showToast(musicURL ? "Story published with song!" : "Story published!");
 
   } catch (error) {
+    await loadStories();
+    navigateTo("homePage");
     console.error("Story publish error:", error);
     const msg = getErrorMessage(error);
     if (status) {
