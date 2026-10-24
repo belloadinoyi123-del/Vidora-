@@ -2282,8 +2282,9 @@ function navigateTo(pageId) {
 
   if (!currentUser) return;
 
-  if (pageId === "homePage") {
+ if (pageId === "homePage") {
     loadFeed();
+    loadStories(); 
   } else if (pageId === "discoverPage") {
     loadDiscover();
   } else if (pageId === "profilePage") {
@@ -4125,7 +4126,8 @@ function openUserStories(userId) {
     showToast("No active stories.");
     return;
   }
-
+await loadStories();
+    navigateTo("homePage");
   activeStoryIndex = 0;
   window._currentUserStoryList = list;
   showStoryAt(0);
