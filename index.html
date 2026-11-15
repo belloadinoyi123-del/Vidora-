@@ -984,7 +984,7 @@ a {
 </div>
   z-index: 99999;
   background: #000;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   opacity: 1;
@@ -2428,7 +2428,11 @@ async function startApp() {
     showApplication();
     navigateTo("homePage");
 
-    await loadFeed();
+if (window.VidoraIntro) {
+  setTimeout(() => VidoraIntro.play(), 400);
+}
+
+await loadFeed();
 
   } catch (error) {
     console.error("App startup error:", error);
