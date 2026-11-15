@@ -5239,53 +5239,7 @@ const VidoraIntro = {
     intro.classList.remove("active");
   }, 950);
 }
-    // Reset state
-    intro.classList.remove("hide");
-    intro.style.display = "flex";
-    logoWrap.classList.remove("show");
-    letters.forEach((letter) => letter.classList.remove("show"));
-
-    // Small delay then start logo animation
-    await new Promise((r) => setTimeout(r, 200));
-    logoWrap.classList.add("show");
-
-    // Wait for logo to finish assembling
-    await new Promise((r) => setTimeout(r, 1700));
-
-    // Assemble letters one by one
-    for (let i = 0; i < letters.length; i++) {
-      letters[i].classList.add("show");
-      await new Promise((r) => setTimeout(r, 110));
-    }
-
-    // Build voice message
-    const name = this.getName();
-    const timePart = this.getTimeGreeting();
-    let message;
-
-    if (this.isFirstTime()) {
-      message = name
-        ? `${timePart}, ${name}. Welcome to Vidora.`
-        : `${timePart}. Welcome to Vidora.`;
-      this.markAsSeen();
-    } else {
-      message = name
-        ? `${timePart}, ${name}. Welcome back.`
-        : `${timePart}. Welcome back.`;
-    }
-
-    // Speak the greeting
-    await this.speak(message);
-
-    // Small pause then fade out
-    await new Promise((r) => setTimeout(r, 600));
-    intro.classList.add("hide");
-
-    setTimeout(() => {
-      intro.style.display = "none";
-    }, 900);
-  },
-
+    
   async sayGoodbye() {
     if (!this.enabled) return;
     const name = this.getName();
