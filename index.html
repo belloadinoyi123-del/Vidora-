@@ -5173,14 +5173,71 @@ const VidoraIntro = {
   },
 
   async play() {
-    if (!this.enabled) return;
+  if (!this.enabled) return;
 
-    const intro = document.getElementById("vidoraIntro");
-    const logoWrap = document.querySelector(".intro-logo-wrap");
-    const letters = document.querySelectorAll("#introText span");
+  const intro = document.getElementById("vidoraIntro");
+  const logoWrap = document.querySelector(".intro-logo-wrap");
+  const letters = document.querySelectorAll("#introText span");
+  const status = document.getElementById("introStatus");
 
-    if (!intro || !logoWrap) return;
+  if (!intro || !logoWrap) return;
 
+  // Show loading screen
+  intro.classList.remove("hide");
+  intro.classList.add("active");
+  intro.style.display = "flex";
+
+  // Reset
+  logoWrap.classList.remove("show");
+  letters.forEach((l) => l.classList.remove("show"));
+  if (status) {
+    status.textContent = "";
+    status.classList.add("show");
+  }
+
+  // 1. Greet the user first
+  const name = this.getName();
+  const timePart = this.getTimeGreeting();
+  let greeting;
+
+  if (this.isFirstTime()) {
+    greeting = name
+      ? `${timePart}, ${name}. Welcome to Vidora.`
+      : `${timePart}. Welcome to Vidora.`;
+    this.markAsSeen();
+  } else {
+    greeting = name
+      ? `${timePart}, ${name}. Welcome back.`
+      : `${timePart}. Welcome back.`;
+  }
+
+  if (status) status.textContent = greeting;
+  await this.speak(greeting);
+
+  // 2. Then say loading message
+  if (status) status.textContent = "Please wait while Vidora loads...";
+  await this.speak("Please wait while Vidora loads");
+
+  // 3. Assemble logo
+  await new Promise((r) => setTimeout(r, 250));
+  logoWrap.classList.add("show");
+  await new Promise((r) => setTimeout(r, 1800));
+
+  // 4. Assemble letters one by one
+  for (let i = 0; i < letters.length; i++) {
+    letters[i].classList.add("show");
+    await new Promise((r) => setTimeout(r, 120));
+  }
+
+  // 5. Finish and show the app
+  await new Promise((r) => setTimeout(r, 600));
+  intro.classList.add("hide");
+
+  setTimeout(() => {
+    intro.style.display = "none";
+    intro.classList.remove("active");
+  }, 950);
+}
     // Reset state
     intro.classList.remove("hide");
     intro.style.display = "flex";
