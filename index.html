@@ -5108,7 +5108,150 @@ async function restoreSession() {
 /* ==========================================
    31. START
 ========================================== */
+/* ========== VIDORA INTRO SYSTEM ========== */
+const VidoraIntro = {
+  enabled: localStorage.getItem("vidora_intro_enabled") !== "false",
 
+  getTimeGreeting() {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  },
+
+  getName() {
+    const user = window.currentUser;
+    if (!user) return null;
+    return (
+      user.user_metadata?.display_name ||
+      user.user_metadata?.username ||
+      user.email?.split("@")[0] ||
+      null
+    );
+  },
+
+  isFirstTime() {
+    return !localStorage.getItem("vidora_has_logged_in_before");
+  },
+
+  markAsSeen() {
+    localStorage.setItem("vidora_has_logged_in_before", "true");
+  },
+
+  speak(text) {
+    return new Promise((resolve) => {
+      if (!window.speechSynthesis) {
+        resolve();
+        return;
+      }
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      utterance.pitch = 1.05;
+      utterance.volume = 1;
+
+      const voices = speechSynthesis.getVoices();
+      const preferred =
+        voices.find(
+          (v) =>
+            v.lang.startsWith("en") &&
+            (v.name.includes("Google") ||
+              v.name.includes("Samantha") ||
+              v.name.includes("Female") ||
+              v.name.includes("Natural"))
+        ) || voices.find((v) => v.lang.startsWith("en"));
+
+      if (preferred) utterance.voice = preferred;
+      utterance.onend = resolve;
+      utterance.onerror = resolve;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utterance);
+    });
+  },
+
+  async play() {
+    if (!this.enabled) return;
+
+    const intro = document.getElementById("vidoraIntro");
+    const logoWrap = document.querySelector(".intro-logo-wrap");
+    const letters = document.querySelectorAll("#introText span");
+
+    if (!intro || !logoWrap) return;
+
+    // Reset state
+    intro.classList.remove("hide");
+    intro.style.display = "flex";
+    logoWrap.classList.remove("show");
+    letters.forEach((letter) => letter.classList.remove("show"));
+
+    // Small delay then start logo animation
+    await new Promise((r) => setTimeout(r, 200));
+    logoWrap.classList.add("show");
+
+    // Wait for logo to finish assembling
+    await new Promise((r) => setTimeout(r, 1700));
+
+    // Assemble letters one by one
+    for (let i = 0; i < letters.length; i++) {
+      letters[i].classList.add("show");
+      await new Promise((r) => setTimeout(r, 110));
+    }
+
+    // Build voice message
+    const name = this.getName();
+    const timePart = this.getTimeGreeting();
+    let message;
+
+    if (this.isFirstTime()) {
+      message = name
+        ? `${timePart}, ${name}. Welcome to Vidora.`
+        : `${timePart}. Welcome to Vidora.`;
+      this.markAsSeen();
+    } else {
+      message = name
+        ? `${timePart}, ${name}. Welcome back.`
+        : `${timePart}. Welcome back.`;
+    }
+
+    // Speak the greeting
+    await this.speak(message);
+
+    // Small pause then fade out
+    await new Promise((r) => setTimeout(r, 600));
+    intro.classList.add("hide");
+
+    setTimeout(() => {
+      intro.style.display = "none";
+    }, 900);
+  },
+
+  async sayGoodbye() {
+    if (!this.enabled) return;
+    const name = this.getName();
+    const hour = new Date().getHours();
+    let message;
+
+    if (hour >= 20 || hour < 5) {
+      message = name
+        ? `Goodnight, ${name}. Have a wonderful night.`
+        : `Goodnight. Have a wonderful night.`;
+    } else {
+      message = name ? `See you later, ${name}.` : `See you later.`;
+    }
+
+    await this.speak(message);
+  },
+
+  toggle(force) {
+    this.enabled = force !== undefined ? force : !this.enabled;
+    localStorage.setItem(
+      "vidora_intro_enabled",
+      this.enabled ? "true" : "false"
+    );
+    return this.enabled;
+  },
+};
+
+window.VidoraIntro = VidoraIntro;
 document.addEventListener("DOMContentLoaded", () => {
   restoreSession();
 });
